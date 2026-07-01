@@ -12,8 +12,10 @@ export interface User {
   avatar: string | null
   is_profile_complete: boolean
   is_online: boolean
+  is_active: boolean
   last_active: string | null
   referral_code: string
+  login_count: number
   created_at: string
   client_profile?: ClientProfile
   expert_profile?: ExpertProfile

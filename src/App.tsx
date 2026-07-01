@@ -21,6 +21,7 @@ import ClientProjectDetail from '@/pages/client/ClientProjectDetail'
 import ClientProfile from '@/pages/client/ClientProfile'
 import ClientChat from '@/pages/client/ClientChat'
 import ClientWallet from '@/pages/client/ClientWallet'
+import ClientSubmitProject from '@/pages/public/SubmitProjectPublicPage'
 
 // Expert
 import ExpertDashboard from '@/pages/expert/ExpertDashboard'
@@ -56,6 +57,15 @@ function RoleGuard({ roles, children }: GuardProps) {
   return <>{children}</>
 }
 
+// Redirect logged-in clients to their own submit form; guests go to public form
+function SmartSubmitRoute() {
+  const { isAuthenticated, user } = useAuthStore()
+  if (isAuthenticated && user?.role === 'client') {
+    return <Navigate to="/client/projects/new" replace />
+  }
+  return <SubmitProjectPublicPage />
+}
+
 function AuthRedirect({ children }: { children: React.ReactNode }) {
   const { isAuthenticated, user } = useAuthStore()
   if (isAuthenticated && user) {
@@ -73,7 +83,7 @@ export default function App() {
       <Routes>
         {/* Public */}
         <Route path="/" element={<LandingPage />} />
-        <Route path="/submit" element={<SubmitProjectPublicPage />} />
+        <Route path="/submit" element={<SmartSubmitRoute />} />
         <Route path="/apply-expert" element={<ApplyExpertPage />} />
         <Route path="/set-password" element={<SetPasswordPage />} />
         <Route path="/unauthorized" element={<div className="flex items-center justify-center min-h-screen text-gray-600 text-xl">Access Denied</div>} />
@@ -87,6 +97,7 @@ export default function App() {
           <Route index element={<ClientDashboard />} />
           <Route path="projects" element={<ClientProjects />} />
           <Route path="projects/:id" element={<ClientProjectDetail />} />
+          <Route path="projects/new" element={<ClientSubmitProject />} />
           <Route path="chat" element={<ClientChat />} />
           <Route path="wallet" element={<ClientWallet />} />
           <Route path="profile" element={<ClientProfile />} />

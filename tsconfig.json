@@ -13,12 +13,16 @@
     "jsx": "react-jsx",
     "strict": true,
     "noUnusedLocals": false,
-    "ignoreDeprecations": "6.0",
     "noUnusedParameters": false,
     "noFallthroughCasesInSwitch": true,
+    "ignoreDeprecations": "5.0",
     "baseUrl": ".",
-    "paths": { "@/*": ["./src/*"] }
+    "paths": {
+      "@/*": ["./src/*"]
+    }
   },
   "include": ["src"],
-  "references": [{ "path": "./tsconfig.node.json" }]
+  "references": [
+    { "path": "./tsconfig.node.json" }
+  ]
 }

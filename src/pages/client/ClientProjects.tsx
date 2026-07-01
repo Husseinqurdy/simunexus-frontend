@@ -52,7 +52,7 @@ export default function ClientProjects() {
           <h1 style={{ fontFamily:'Syne,sans-serif', fontSize:24, fontWeight:800, color:'#0F172A', margin:0 }}>My Projects</h1>
           <p style={{ color:'#94A3B8', fontSize:13, margin:'4px 0 0' }}>{data?.count || 0} total projects</p>
         </div>
-        <Link to="/submit" style={{ display:'inline-flex', alignItems:'center', gap:7, background:'#0EA5E9', color:'#fff', fontFamily:'Syne,sans-serif', fontWeight:700, fontSize:13, padding:'10px 20px', borderRadius:12, textDecoration:'none' }}>
+        <Link to="/client/projects/new" style={{ display:'inline-flex', alignItems:'center', gap:7, background:'#0EA5E9', color:'#fff', fontFamily:'Syne,sans-serif', fontWeight:700, fontSize:13, padding:'10px 20px', borderRadius:12, textDecoration:'none' }}>
           + New Project
         </Link>
       </div>
@@ -80,7 +80,7 @@ export default function ClientProjects() {
           <p style={{ fontFamily:'Syne,sans-serif', fontSize:18, fontWeight:700, color:'#0F172A', margin:'0 0 8px' }}>{search || statusFilter ? 'No matching projects' : 'No projects yet'}</p>
           <p style={{ fontSize:13, color:'#94A3B8', margin:'0 0 20px' }}>{search || statusFilter ? 'Try a different filter.' : 'Submit your first simulation project to get started.'}</p>
           {!search && !statusFilter && (
-            <Link to="/submit" style={{ display:'inline-flex', alignItems:'center', gap:7, background:'#0EA5E9', color:'#fff', fontFamily:'Syne,sans-serif', fontWeight:700, fontSize:13, padding:'11px 22px', borderRadius:12, textDecoration:'none' }}>Submit a Project →</Link>
+            <Link to="/client/projects/new" style={{ display:'inline-flex', alignItems:'center', gap:7, background:'#0EA5E9', color:'#fff', fontFamily:'Syne,sans-serif', fontWeight:700, fontSize:13, padding:'11px 22px', borderRadius:12, textDecoration:'none' }}>Submit a Project →</Link>
           )}
         </div>
       ) : (
