@@ -10,6 +10,8 @@ import SetPasswordPage from '@/pages/auth/SetPasswordPage'
 // Public
 import LandingPage from '@/pages/public/LandingPage'
 import SubmitProjectPublicPage from '@/pages/public/SubmitProjectPublicPage'
+import ApplyExpertPage from '@/pages/public/ApplyExpertPage'
+import RegisterExpertPage from '@/pages/auth/RegisterExpertPage'
 
 // Layouts
 import DashboardLayout from '@/components/layout/DashboardLayout'
@@ -21,7 +23,7 @@ import ClientProjectDetail from '@/pages/client/ClientProjectDetail'
 import ClientProfile from '@/pages/client/ClientProfile'
 import ClientChat from '@/pages/client/ClientChat'
 import ClientWallet from '@/pages/client/ClientWallet'
-import ClientSubmitProject from '@/pages/public/SubmitProjectPublicPage'
+import ClientSubmitProject from '@/pages/client/ClientSubmitProject'
 
 // Expert
 import ExpertDashboard from '@/pages/expert/ExpertDashboard'
@@ -30,6 +32,9 @@ import ExpertProjects from '@/pages/expert/ExpertProjects'
 import ExpertProjectDetail from '@/pages/expert/ExpertProjectDetail'
 import ExpertProfile from '@/pages/expert/ExpertProfile'
 import ExpertChat from '@/pages/expert/ExpertChat'
+import ExpertApplyPage from '@/pages/expert/ExpertApplyPage'
+import ExpertTestPage from '@/pages/expert/ExpertTestPage'
+
 
 // Admin
 import AdminDashboard from '@/pages/admin/AdminDashboard'
@@ -45,9 +50,6 @@ import DevDashboard from '@/pages/developer/DevDashboard'
 import DevCommissions from '@/pages/developer/DevCommissions'
 import DevSystemControl from '@/pages/developer/DevSystemControl'
 
-// Recruitment
-import ApplyExpertPage from '@/pages/public/ApplyExpertPage'
-
 interface GuardProps { roles: Role[]; children: React.ReactNode }
 
 function RoleGuard({ roles, children }: GuardProps) {
@@ -57,7 +59,27 @@ function RoleGuard({ roles, children }: GuardProps) {
   return <>{children}</>
 }
 
-// Redirect logged-in clients to their own submit form; guests go to public form
+// Guard maalum kwa ExpertApply — inaruhusu client NA expert (client anaweza omba kuwa expert)
+function ExpertApplyGuard() {
+  const { isAuthenticated, user } = useAuthStore()
+  if (!isAuthenticated) return <Navigate to="/login?from=expert" replace />
+  // Admin/Developer hawawezi apply
+  if (user?.role === 'admin' || user?.role === 'developer') {
+    return <Navigate to="/unauthorized" replace />
+  }
+  return <ExpertApplyPage />
+}
+
+// Guard kwa Test page — client aliyeomba au expert
+function ExpertTestGuard({ children }: { children: React.ReactNode }) {
+  const { isAuthenticated, user } = useAuthStore()
+  if (!isAuthenticated) return <Navigate to="/login?from=expert" replace />
+  if (user?.role === 'admin' || user?.role === 'developer') {
+    return <Navigate to="/unauthorized" replace />
+  }
+  return <>{children}</>
+}
+
 function SmartSubmitRoute() {
   const { isAuthenticated, user } = useAuthStore()
   if (isAuthenticated && user?.role === 'client') {
@@ -68,6 +90,17 @@ function SmartSubmitRoute() {
 
 function AuthRedirect({ children }: { children: React.ReactNode }) {
   const { isAuthenticated, user } = useAuthStore()
+  const params = new URLSearchParams(window.location.search)
+  const fromExpert = params.get('from') === 'expert'
+
+  // Kama alikuja kutoka apply-expert na ameingia tayari → peleka /expert/apply moja kwa moja
+  if (isAuthenticated && user && fromExpert) {
+    if (user.role === 'admin' || user.role === 'developer') {
+      return <Navigate to="/unauthorized" replace />
+    }
+    return <Navigate to="/expert/apply" replace />
+  }
+
   if (isAuthenticated && user) {
     const roleHome: Record<Role, string> = {
       client: '/client', expert: '/expert', admin: '/admin', developer: '/developer'
@@ -86,18 +119,27 @@ export default function App() {
         <Route path="/submit" element={<SmartSubmitRoute />} />
         <Route path="/apply-expert" element={<ApplyExpertPage />} />
         <Route path="/set-password" element={<SetPasswordPage />} />
-        <Route path="/unauthorized" element={<div className="flex items-center justify-center min-h-screen text-gray-600 text-xl">Access Denied</div>} />
+        <Route path="/unauthorized" element={
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh', color: '#64748B', fontSize: 18 }}>
+            Access Denied
+          </div>
+        } />
 
         {/* Auth */}
         <Route path="/login" element={<AuthRedirect><LoginPage /></AuthRedirect>} />
         <Route path="/register" element={<AuthRedirect><RegisterPage /></AuthRedirect>} />
 
+        {/* ✅ Expert Apply & Test — nje ya dashboard, inaruhusu client pia */}
+        <Route path="/expert/apply" element={<ExpertApplyGuard />} />
+        <Route path="/expert/test/:id" element={<ExpertTestGuard><ExpertTestPage /></ExpertTestGuard>} />
+        <Route path="/register-expert" element={<RegisterExpertPage />} />
+
         {/* Client */}
         <Route path="/client" element={<RoleGuard roles={['client']}><DashboardLayout /></RoleGuard>}>
           <Route index element={<ClientDashboard />} />
           <Route path="projects" element={<ClientProjects />} />
-          <Route path="projects/:id" element={<ClientProjectDetail />} />
           <Route path="projects/new" element={<ClientSubmitProject />} />
+          <Route path="projects/:id" element={<ClientProjectDetail />} />
           <Route path="chat" element={<ClientChat />} />
           <Route path="wallet" element={<ClientWallet />} />
           <Route path="profile" element={<ClientProfile />} />

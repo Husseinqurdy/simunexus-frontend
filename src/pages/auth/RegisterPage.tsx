@@ -1,4 +1,4 @@
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
@@ -24,6 +24,8 @@ const ROLE_HOME: Record<Role, string> = {
 
 export default function RegisterPage() {
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
+  const fromExpert = searchParams.get('from') === 'expert'
   const { setAuth } = useAuthStore()
 
   const { register, handleSubmit, watch, formState: { errors } } = useForm<F>({
@@ -41,7 +43,13 @@ export default function RegisterPage() {
       const { access, refresh, user } = res.data
       setAuth(user, access, refresh)
       toast.success('Account created! Welcome to GSH 🎉')
-      navigate(ROLE_HOME[user.role as Role])
+
+      // If came from apply-expert page → go directly to expert application form
+      if (fromExpert) {
+        navigate('/expert/apply')
+      } else {
+        navigate(ROLE_HOME[user.role as Role])
+      }
     },
     onError: (e: any) => {
       const msg = e.response?.data?.email?.[0] || 'Registration failed. Try again.'
@@ -66,8 +74,24 @@ export default function RegisterPage() {
           </div>
         </div>
 
-        <h1 className="dp au1" style={{ color: '#fff', fontSize: 26, fontWeight: 800, marginBottom: 4 }}>Create your account</h1>
-        <p className="au1" style={{ color: '#64748B', fontSize: 13, marginBottom: 28 }}>Join GSH — submit projects, track progress, get results.</p>
+        {/* Show different header if coming from expert apply */}
+        {fromExpert ? (
+          <>
+            <div style={{ background: 'rgba(16,185,129,.08)', border: '1px solid rgba(16,185,129,.2)', borderRadius: 12, padding: '10px 14px', marginBottom: 20, display: 'flex', alignItems: 'center', gap: 8 }}>
+              <span style={{ fontSize: 16 }}>🎓</span>
+              <p style={{ fontSize: 12, color: '#6EE7B7', margin: 0, lineHeight: 1.5 }}>
+                <strong>Expert Application</strong> — Create your account, then you'll be taken to the application form.
+              </p>
+            </div>
+            <h1 className="dp au1" style={{ color: '#fff', fontSize: 26, fontWeight: 800, marginBottom: 4 }}>Create Expert Account</h1>
+            <p className="au1" style={{ color: '#64748B', fontSize: 13, marginBottom: 28 }}>Step 1 of 2 — Basic info. Next: skills & test.</p>
+          </>
+        ) : (
+          <>
+            <h1 className="dp au1" style={{ color: '#fff', fontSize: 26, fontWeight: 800, marginBottom: 4 }}>Create your account</h1>
+            <p className="au1" style={{ color: '#64748B', fontSize: 13, marginBottom: 28 }}>Join GSH — submit projects, track progress, get results.</p>
+          </>
+        )}
 
         <form onSubmit={handleSubmit(d => mutation.mutate(d))}>
           {/* Name row */}
@@ -120,34 +144,44 @@ export default function RegisterPage() {
             </div>
           )}
 
-          {/* Referral */}
-          <div className="afield au2" style={{ marginBottom: 24 }}>
-            <label>Referral Code <span style={{ color: '#334155', textTransform: 'none', fontWeight: 400, letterSpacing: 0 }}>(optional)</span></label>
-            <div style={{ position: 'relative' }}>
-              <span style={{ position: 'absolute', left: 13, top: '50%', transform: 'translateY(-50%)', color: '#64748B' }}>
-                <svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.8"><path strokeLinecap="round" strokeLinejoin="round" d="M13.19 8.688a4.5 4.5 0 011.242 7.244l-4.5 4.5a4.5 4.5 0 01-6.364-6.364l1.757-1.757m13.35-.622l1.757-1.757a4.5 4.5 0 00-6.364-6.364l-4.5 4.5a4.5 4.5 0 001.242 7.244" /></svg>
-              </span>
-              <input {...register('referral_code')} placeholder="Enter referral code" style={{ paddingLeft: 38 }} />
+          {/* Referral — hide if coming from expert flow */}
+          {!fromExpert && (
+            <div className="afield au2" style={{ marginBottom: 24 }}>
+              <label>Referral Code <span style={{ color: '#334155', textTransform: 'none', fontWeight: 400, letterSpacing: 0 }}>(optional)</span></label>
+              <div style={{ position: 'relative' }}>
+                <span style={{ position: 'absolute', left: 13, top: '50%', transform: 'translateY(-50%)', color: '#64748B' }}>
+                  <svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.8"><path strokeLinecap="round" strokeLinejoin="round" d="M13.19 8.688a4.5 4.5 0 011.242 7.244l-4.5 4.5a4.5 4.5 0 01-6.364-6.364l1.757-1.757m13.35-.622l1.757-1.757a4.5 4.5 0 00-6.364-6.364l-4.5 4.5a4.5 4.5 0 001.242 7.244" /></svg>
+                </span>
+                <input {...register('referral_code')} placeholder="Enter referral code" style={{ paddingLeft: 38 }} />
+              </div>
             </div>
-          </div>
+          )}
+
+          <div style={{ marginBottom: fromExpert ? 24 : 0 }} />
 
           <button type="submit" className="abtn au3" disabled={mutation.isPending}>
             {mutation.isPending
               ? <><span style={{ width: 15, height: 15, border: '2px solid rgba(255,255,255,.3)', borderTop: '2px solid #fff', borderRadius: '50%', display: 'inline-block', animation: 'spin .7s linear infinite' }} />Creating account...</>
-              : <>Create Account <svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5"><path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" /></svg></>
+              : fromExpert
+                ? <>Continue to Application →</>
+                : <>Create Account <svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5"><path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" /></svg></>
             }
           </button>
         </form>
 
         <div className="divider au4"><span>already have an account?</span></div>
 
-        <Link to="/login" className="abtn-outline au4">Sign In</Link>
+        <Link to={fromExpert ? '/login?from=expert' : '/login'} className="abtn-outline au4">Sign In</Link>
       </div>
 
       <div className="au4" style={{ textAlign: 'center', marginTop: 20, fontSize: 12, color: '#334155' }}>
         <Link to="/" style={{ color: '#334155', textDecoration: 'none' }}>← Back to home</Link>
-        <span style={{ margin: '0 10px' }}>·</span>
-        <Link to="/submit" style={{ color: '#334155', textDecoration: 'none' }}>Submit without account</Link>
+        {!fromExpert && (
+          <>
+            <span style={{ margin: '0 10px' }}>·</span>
+            <Link to="/submit" style={{ color: '#334155', textDecoration: 'none' }}>Submit without account</Link>
+          </>
+        )}
       </div>
 
       <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>

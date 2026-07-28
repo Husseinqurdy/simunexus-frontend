@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
@@ -22,6 +22,8 @@ const ROLE_HOME: Record<Role, string> = {
 
 export default function LoginPage() {
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
+  const fromExpert = searchParams.get('from') === 'expert'
   const { setAuth } = useAuthStore()
   const [showPw, setShowPw] = useState(false)
 
@@ -35,7 +37,13 @@ export default function LoginPage() {
       const { access, refresh, user } = res.data
       setAuth(user, access, refresh)
       toast.success(`Welcome back! 👋`)
-      navigate(ROLE_HOME[user.role as Role])
+
+      // Kama alikuja kutoka apply-expert → peleka moja kwa moja kwenye application form
+      if (fromExpert && (user.role === 'client' || user.role === 'expert')) {
+        navigate('/expert/apply')
+      } else {
+        navigate(ROLE_HOME[user.role as Role])
+      }
     },
     onError: () => toast.error('Invalid email or password.'),
   })
@@ -58,8 +66,24 @@ export default function LoginPage() {
           </div>
         </div>
 
-        <h1 className="dp au1" style={{ color: '#fff', fontSize: 28, fontWeight: 800, marginBottom: 6 }}>Welcome back</h1>
-        <p className="au1" style={{ color: '#64748B', fontSize: 14, marginBottom: 32 }}>Sign in to your GSH account</p>
+        {/* Header — tofauti kama alikuja kutoka apply-expert */}
+        {fromExpert ? (
+          <>
+            <div style={{ background: 'rgba(16,185,129,.08)', border: '1px solid rgba(16,185,129,.2)', borderRadius: 12, padding: '10px 14px', marginBottom: 20, display: 'flex', alignItems: 'center', gap: 8 }}>
+              <span style={{ fontSize: 16 }}>🎓</span>
+              <p style={{ fontSize: 12, color: '#6EE7B7', margin: 0, lineHeight: 1.5 }}>
+                <strong>Expert Application</strong> — Sign in, then you'll be taken to the application form.
+              </p>
+            </div>
+            <h1 className="dp au1" style={{ color: '#fff', fontSize: 28, fontWeight: 800, marginBottom: 6 }}>Sign in to apply</h1>
+            <p className="au1" style={{ color: '#64748B', fontSize: 14, marginBottom: 32 }}>Sign in to your GSH account to continue.</p>
+          </>
+        ) : (
+          <>
+            <h1 className="dp au1" style={{ color: '#fff', fontSize: 28, fontWeight: 800, marginBottom: 6 }}>Welcome back</h1>
+            <p className="au1" style={{ color: '#64748B', fontSize: 14, marginBottom: 32 }}>Sign in to your GSH account</p>
+          </>
+        )}
 
         <form onSubmit={handleSubmit(d => mutation.mutate(d))}>
           {/* Email */}
@@ -115,13 +139,20 @@ export default function LoginPage() {
 
         <div className="au4" style={{ textAlign: 'center', fontSize: 13, color: '#64748B' }}>
           Don't have an account?{' '}
-          <Link to="/register" style={{ color: '#0EA5E9', fontWeight: 600, textDecoration: 'none' }}>Create one</Link>
+          <Link
+            to={fromExpert ? '/register?from=expert' : '/register'}
+            style={{ color: '#0EA5E9', fontWeight: 600, textDecoration: 'none' }}
+          >
+            Create one
+          </Link>
         </div>
 
-        <div className="au4" style={{ textAlign: 'center', fontSize: 13, color: '#64748B', marginTop: 10 }}>
-          Want to submit without account?{' '}
-          <Link to="/submit" style={{ color: '#38BDF8', fontWeight: 600, textDecoration: 'none' }}>Submit here →</Link>
-        </div>
+        {!fromExpert && (
+          <div className="au4" style={{ textAlign: 'center', fontSize: 13, color: '#64748B', marginTop: 10 }}>
+            Want to submit without account?{' '}
+            <Link to="/submit" style={{ color: '#38BDF8', fontWeight: 600, textDecoration: 'none' }}>Submit here →</Link>
+          </div>
+        )}
       </div>
 
       {/* Bottom links */}

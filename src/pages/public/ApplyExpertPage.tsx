@@ -55,7 +55,7 @@ export default function ApplyExpertPage() {
         {/* Perks */}
         <div className="au1" style={{ display: 'grid', gridTemplateColumns: 'repeat(2,1fr)', gap: 14, marginBottom: 48 }}>
           {PERKS.map(p => (
-            <div key={p.title} style={{ background: 'rgba(255,255,255,.03)', border: '1px solid rgba(255,255,255,.07)', borderRadius: 16, padding: '22px 20px', transition: 'all .3s' }}>
+            <div key={p.title} style={{ background: 'rgba(255,255,255,.03)', border: '1px solid rgba(255,255,255,.07)', borderRadius: 16, padding: '22px 20px' }}>
               <div style={{ fontSize: 24, marginBottom: 10 }}>{p.icon}</div>
               <p style={{ fontFamily: 'Syne,sans-serif', color: '#fff', fontWeight: 700, fontSize: 15, margin: '0 0 6px' }}>{p.title}</p>
               <p style={{ color: '#64748B', fontSize: 13, lineHeight: 1.6, margin: 0 }}>{p.body}</p>
@@ -88,7 +88,7 @@ export default function ApplyExpertPage() {
 
         {/* Skills preview */}
         <div className="au3" style={{ marginBottom: 48 }}>
-          <p style={{ fontFamily: 'Syne,sans-serif', color: '#fff', fontWeight: 700, fontSize: 17, margin: '0 0 16px' }}>Which software do you specialize in?</p>
+          <p style={{ fontFamily: 'Syne,sans-serif', color: '#fff', fontWeight: 700, fontSize: 17, margin: '0 0 8px' }}>Which software do you specialize in?</p>
           <p style={{ color: '#64748B', fontSize: 13, margin: '0 0 16px' }}>Select your skills to see what projects you could claim (preview only — actual selection is in your dashboard).</p>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
             {SKILLS.map(s => (
@@ -104,7 +104,7 @@ export default function ApplyExpertPage() {
           </div>
           {selected.length > 0 && (
             <p style={{ color: '#10B981', fontSize: 13, margin: '12px 0 0', fontWeight: 600 }}>
-              ✓ You selected {selected.length} skill{selected.length > 1 ? 's' : ''} — great! You can find matching projects on the job board.
+              ✓ You selected {selected.length} skill{selected.length > 1 ? 's' : ''} — great match for projects on the job board!
             </p>
           )}
         </div>
@@ -112,12 +112,22 @@ export default function ApplyExpertPage() {
         {/* CTA */}
         <div className="au4" style={{ background: 'linear-gradient(135deg,rgba(14,165,233,.08),rgba(129,140,248,.08))', border: '1px solid rgba(14,165,233,.15)', borderRadius: 20, padding: '32px', textAlign: 'center' }}>
           <p style={{ fontFamily: 'Syne,sans-serif', color: '#fff', fontWeight: 800, fontSize: 22, margin: '0 0 8px' }}>Ready to start?</p>
-          <p style={{ color: '#64748B', fontSize: 14, margin: '0 0 24px' }}>Create your account first, then apply as an expert from your dashboard.</p>
+          <p style={{ color: '#64748B', fontSize: 14, margin: '0 0 24px' }}>Create your account first, then complete the expert application form.</p>
           <div style={{ display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap' }}>
-            <Link to="/register" style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: '#0EA5E9', color: '#fff', fontFamily: 'Syne,sans-serif', fontWeight: 700, fontSize: 15, padding: '14px 28px', borderRadius: 12, textDecoration: 'none' }}>
+
+            {/* ✅ KEY CHANGE: ?from=expert parameter */}
+            <Link
+              to="/register-expert"
+              style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: '#0EA5E9', color: '#fff', fontFamily: 'Syne,sans-serif', fontWeight: 700, fontSize: 15, padding: '14px 28px', borderRadius: 12, textDecoration: 'none' }}
+            >
               Create Account & Apply →
             </Link>
-            <Link to="/login" style={{ display: 'inline-flex', alignItems: 'center', background: 'rgba(255,255,255,.04)', color: 'rgba(255,255,255,.7)', fontSize: 14, padding: '14px 24px', borderRadius: 12, textDecoration: 'none', border: '1px solid rgba(255,255,255,.1)' }}>
+
+            {/* Already have account → login then redirect to /expert/apply */}
+            <Link
+              to="/login?from=expert"
+              style={{ display: 'inline-flex', alignItems: 'center', background: 'rgba(255,255,255,.04)', color: 'rgba(255,255,255,.7)', fontSize: 14, padding: '14px 24px', borderRadius: 12, textDecoration: 'none', border: '1px solid rgba(255,255,255,.1)' }}
+            >
               Already have account
             </Link>
           </div>

@@ -3,11 +3,11 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { authApi } from '@/api/client'
 import {
   PageHeader, ExpertLevelBadge, StarRating, LoadingSpinner,
-  EmptyState, Table, Tr, Td, Btn, Card
+  EmptyState, Table, Tr, Td, Card, SectionTitle
 } from '@/components/shared'
 import { formatDistanceToNow } from 'date-fns'
 import toast from 'react-hot-toast'
-import type { User } from '../../types'
+import type { User } from '@/types'
 
 const ROLE_TABS = [
   { value: '', label: 'All Users' },
@@ -23,18 +23,20 @@ const ROLE_COLORS: Record<string, { bg: string; color: string }> = {
   developer: { bg: '#FFFBEB', color: '#D97706' },
 }
 
+type ExpertForm = { email: string; first_name: string; last_name: string; phone: string; password: string }
+
 export default function AdminUsers() {
   const qc = useQueryClient()
   const [roleFilter, setRoleFilter] = useState('')
   const [search, setSearch] = useState('')
   const [selectedUser, setSelectedUser] = useState<User | null>(null)
+  const [showAddExpert, setShowAddExpert] = useState(false)
+  const [expertForm, setExpertForm] = useState<ExpertForm>({ email: '', first_name: '', last_name: '', phone: '', password: '' })
+  const [showPassword, setShowPassword] = useState(false)
 
   const { data, isLoading } = useQuery({
     queryKey: ['admin-users', roleFilter, search],
-    queryFn: () => authApi.adminUsers({
-      ...(roleFilter && { role: roleFilter }),
-      ...(search && { search }),
-    }).then(r => r.data),
+    queryFn: () => authApi.adminUsers({ ...(roleFilter && { role: roleFilter }), ...(search && { search }) }).then(r => r.data),
   })
 
   const banMutation = useMutation({
@@ -48,25 +50,110 @@ export default function AdminUsers() {
     onError: () => toast.error('Action failed.'),
   })
 
+  const createExpertMutation = useMutation({
+    mutationFn: () => authApi.adminCreateExpert(expertForm),
+    onSuccess: (res: any) => {
+      toast.success(`✅ Expert account created for ${res.data.email}!`)
+      qc.invalidateQueries({ queryKey: ['admin-users'] })
+      setShowAddExpert(false)
+      setExpertForm({ email: '', first_name: '', last_name: '', phone: '', password: '' })
+    },
+    onError: (e: any) => {
+      toast.error(e.response?.data?.error || 'Failed to create expert.')
+    },
+  })
+
   const users: User[] = data?.results || []
+
+  const inp: React.CSSProperties = {
+    width: '100%', padding: '9px 12px', borderRadius: 10,
+    border: '1.5px solid #E2E8F0', fontSize: 13, outline: 'none',
+    fontFamily: 'inherit', color: '#0F172A', boxSizing: 'border-box',
+  }
 
   return (
     <div>
-      <PageHeader title="User Management" subtitle={`${data?.count || 0} total users`} />
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 20, flexWrap: 'wrap', gap: 12 }}>
+        <PageHeader title="User Management" subtitle={`${data?.count || 0} total users`} />
+        <button
+          onClick={() => setShowAddExpert(!showAddExpert)}
+          style={{ padding: '9px 18px', borderRadius: 10, background: '#059669', color: '#fff', border: 'none', cursor: 'pointer', fontSize: 13, fontWeight: 700, fontFamily: 'Syne,sans-serif', display: 'flex', alignItems: 'center', gap: 6 }}
+        >
+          + Add Expert
+        </button>
+      </div>
+
+      {/* Add Expert Form */}
+      {showAddExpert && (
+        <Card style={{ marginBottom: 20, border: '1.5px solid #BBF7D0', background: '#F0FDF4' }}>
+          <SectionTitle>Create Expert Account</SectionTitle>
+          <p style={{ fontSize: 12, color: '#64748B', margin: '0 0 16px', lineHeight: 1.5 }}>
+            Create an expert account directly. If no password is set, a set-password link will be emailed to the expert.
+          </p>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 12 }}>
+            <div>
+              <label style={{ fontSize: 11, fontWeight: 700, color: '#64748B', textTransform: 'uppercase', letterSpacing: '0.05em', display: 'block', marginBottom: 5 }}>First Name</label>
+              <input style={inp} placeholder="Ahmed" value={expertForm.first_name} onChange={e => setExpertForm(p => ({ ...p, first_name: e.target.value }))} />
+            </div>
+            <div>
+              <label style={{ fontSize: 11, fontWeight: 700, color: '#64748B', textTransform: 'uppercase', letterSpacing: '0.05em', display: 'block', marginBottom: 5 }}>Last Name</label>
+              <input style={inp} placeholder="Khalid" value={expertForm.last_name} onChange={e => setExpertForm(p => ({ ...p, last_name: e.target.value }))} />
+            </div>
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 12 }}>
+            <div>
+              <label style={{ fontSize: 11, fontWeight: 700, color: '#64748B', textTransform: 'uppercase', letterSpacing: '0.05em', display: 'block', marginBottom: 5 }}>Email *</label>
+              <input style={inp} type="email" placeholder="expert@email.com" value={expertForm.email} onChange={e => setExpertForm(p => ({ ...p, email: e.target.value }))} />
+            </div>
+            <div>
+              <label style={{ fontSize: 11, fontWeight: 700, color: '#64748B', textTransform: 'uppercase', letterSpacing: '0.05em', display: 'block', marginBottom: 5 }}>Phone / WhatsApp</label>
+              <input style={inp} placeholder="+255 7XX XXX XXX" value={expertForm.phone} onChange={e => setExpertForm(p => ({ ...p, phone: e.target.value }))} />
+            </div>
+          </div>
+          <div style={{ marginBottom: 16 }}>
+            <label style={{ fontSize: 11, fontWeight: 700, color: '#64748B', textTransform: 'uppercase', letterSpacing: '0.05em', display: 'block', marginBottom: 5 }}>
+              Password <span style={{ color: '#CBD5E1', fontWeight: 400, textTransform: 'none' }}>(leave blank to send email link)</span>
+            </label>
+            <div style={{ position: 'relative' }}>
+              <input
+                style={inp}
+                type={showPassword ? 'text' : 'password'}
+                placeholder="Min 8 characters"
+                value={expertForm.password}
+                onChange={e => setExpertForm(p => ({ ...p, password: e.target.value }))}
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                style={{ position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: '#94A3B8', fontSize: 12 }}
+              >
+                {showPassword ? '🙈' : '👁'}
+              </button>
+            </div>
+          </div>
+          <div style={{ display: 'flex', gap: 10 }}>
+            <button
+              onClick={() => createExpertMutation.mutate()}
+              disabled={!expertForm.email || createExpertMutation.isPending}
+              style={{ padding: '10px 20px', borderRadius: 10, background: !expertForm.email || createExpertMutation.isPending ? '#6EE7B7' : '#059669', color: '#fff', border: 'none', cursor: !expertForm.email || createExpertMutation.isPending ? 'not-allowed' : 'pointer', fontSize: 13, fontWeight: 700 }}
+            >
+              {createExpertMutation.isPending ? 'Creating…' : '✓ Create Expert'}
+            </button>
+            <button
+              onClick={() => { setShowAddExpert(false); setExpertForm({ email: '', first_name: '', last_name: '', phone: '', password: '' }) }}
+              style={{ padding: '10px 18px', borderRadius: 10, background: '#F1F5F9', color: '#64748B', border: 'none', cursor: 'pointer', fontSize: 13, fontWeight: 600 }}
+            >
+              Cancel
+            </button>
+          </div>
+        </Card>
+      )}
 
       {/* Role tabs */}
       <div style={{ display: 'flex', gap: 8, marginBottom: 20, flexWrap: 'wrap' }}>
         {ROLE_TABS.map(r => (
-          <button
-            key={r.value}
-            onClick={() => setRoleFilter(r.value)}
-            style={{
-              padding: '6px 16px', borderRadius: 999, fontSize: 12, fontWeight: 700,
-              cursor: 'pointer', border: 'none', transition: 'all .2s',
-              background: roleFilter === r.value ? '#0B1C3D' : '#F1F5F9',
-              color: roleFilter === r.value ? '#fff' : '#64748B',
-            }}
-          >
+          <button key={r.value} onClick={() => setRoleFilter(r.value)}
+            style={{ padding: '6px 16px', borderRadius: 999, fontSize: 12, fontWeight: 700, cursor: 'pointer', border: 'none', transition: 'all .2s', background: roleFilter === r.value ? '#0B1C3D' : '#F1F5F9', color: roleFilter === r.value ? '#fff' : '#64748B' }}>
             {r.label}
           </button>
         ))}
@@ -74,136 +161,98 @@ export default function AdminUsers() {
 
       {/* Search */}
       <div style={{ marginBottom: 20 }}>
-        <input
-          type="text"
-          placeholder="Search by name or email..."
-          value={search}
-          onChange={e => setSearch(e.target.value)}
-          style={{ width: '100%', maxWidth: 380, padding: '9px 14px', borderRadius: 10, border: '1.5px solid #E2E8F0', fontSize: 13, outline: 'none', fontFamily: 'inherit', color: '#0F172A' }}
-        />
+        <input type="text" placeholder="Search by name or email..." value={search} onChange={e => setSearch(e.target.value)}
+          style={{ width: '100%', maxWidth: 380, padding: '9px 14px', borderRadius: 10, border: '1.5px solid #E2E8F0', fontSize: 13, outline: 'none', fontFamily: 'inherit', color: '#0F172A' }} />
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: selectedUser ? '1fr 320px' : '1fr', gap: 20 }}>
-        {/* Table */}
-        {isLoading ? (
-          <LoadingSpinner label="Loading users..." />
-        ) : users.length === 0 ? (
-          <EmptyState icon="👥" title="No users found" />
-        ) : (
-          <div style={{ background: '#fff', borderRadius: 16, border: '1px solid #F1F5F9', overflow: 'hidden' }}>
-            <Table headers={['User', 'Role', 'Country', 'Status', 'Joined', 'Actions']}>
-              {users.map(u => {
-                const roleStyle = ROLE_COLORS[u.role] || ROLE_COLORS.client
-                return (
-                  <Tr key={u.id} onClick={() => setSelectedUser(u)}>
-                    <Td>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                        <div style={{
-                          width: 34, height: 34, borderRadius: '50%', display: 'flex',
-                          alignItems: 'center', justifyContent: 'center', fontWeight: 700,
-                          fontSize: 13, flexShrink: 0,
-                          background: roleStyle.bg, color: roleStyle.color,
-                        }}>
-                          {(u.first_name?.[0] || u.email[0]).toUpperCase()}
+        {isLoading ? <LoadingSpinner label="Loading users..." /> :
+          users.length === 0 ? <EmptyState icon="👥" title="No users found" /> : (
+            <div style={{ background: '#fff', borderRadius: 16, border: '1px solid #F1F5F9', overflow: 'hidden' }}>
+              <Table headers={['User', 'Role', 'Country', 'Status', 'Joined', 'Actions']}>
+                {users.map(u => {
+                  const roleStyle = ROLE_COLORS[u.role] || ROLE_COLORS.client
+                  return (
+                    <Tr key={u.id} onClick={() => setSelectedUser(u)}>
+                      <Td>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                          <div style={{ width: 34, height: 34, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: 13, flexShrink: 0, background: roleStyle.bg, color: roleStyle.color }}>
+                            {(u.first_name?.[0] || u.email[0]).toUpperCase()}
+                          </div>
+                          <div>
+                            <p style={{ fontSize: 13, fontWeight: 700, margin: 0, color: '#0F172A' }}>{u.first_name || u.last_name ? `${u.first_name} ${u.last_name}` : '—'}</p>
+                            <p style={{ fontSize: 11, color: '#94A3B8', margin: '2px 0 0' }}>{u.email}</p>
+                          </div>
                         </div>
-                        <div>
-                          <p style={{ fontSize: 13, fontWeight: 700, margin: 0, color: '#0F172A' }}>
-                            {u.first_name || u.last_name ? `${u.first_name} ${u.last_name}` : '—'}
-                          </p>
-                          <p style={{ fontSize: 11, color: '#94A3B8', margin: '2px 0 0' }}>{u.email}</p>
-                        </div>
-                      </div>
-                    </Td>
-                    <Td>
-                      <span style={{ padding: '4px 10px', borderRadius: 999, fontSize: 11, fontWeight: 700, background: roleStyle.bg, color: roleStyle.color, border: `1px solid ${roleStyle.color}20` }}>
-                        {u.role.charAt(0).toUpperCase() + u.role.slice(1)}
-                      </span>
-                    </Td>
-                    <Td><span style={{ fontSize: 13, color: '#64748B' }}>{u.country || '—'}</span></Td>
-                    <Td>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                        <span style={{ width: 7, height: 7, borderRadius: '50%', background: u.is_online ? '#10B981' : '#CBD5E1', flexShrink: 0 }} />
-                        <span style={{ fontSize: 12, color: u.is_active ? '#374151' : '#EF4444', fontWeight: u.is_active ? 400 : 700 }}>
-                          {!u.is_active ? 'Banned' : u.is_online ? 'Online' : 'Offline'}
+                      </Td>
+                      <Td>
+                        <span style={{ padding: '4px 10px', borderRadius: 999, fontSize: 11, fontWeight: 700, background: roleStyle.bg, color: roleStyle.color, border: `1px solid ${roleStyle.color}20` }}>
+                          {u.role.charAt(0).toUpperCase() + u.role.slice(1)}
                         </span>
-                      </div>
-                    </Td>
-                    <Td><span style={{ fontSize: 12, color: '#94A3B8' }}>{formatDistanceToNow(new Date(u.created_at), { addSuffix: true })}</span></Td>
-                    <Td>
-                      <div style={{ display: 'flex', gap: 6 }} onClick={e => e.stopPropagation()}>
-                        <button
-                          onClick={() => banMutation.mutate(u.id)}
-                          disabled={banMutation.isPending}
-                          style={{
-                            padding: '5px 12px', borderRadius: 8, border: 'none', cursor: 'pointer', fontSize: 12, fontWeight: 700,
-                            background: u.is_active ? '#FFF1F2' : '#F0FDF4',
-                            color: u.is_active ? '#E11D48' : '#059669',
-                          }}
-                        >
-                          {u.is_active ? 'Ban' : 'Unban'}
-                        </button>
-                      </div>
-                    </Td>
-                  </Tr>
-                )
-              })}
-            </Table>
-          </div>
-        )}
+                      </Td>
+                      <Td><span style={{ fontSize: 13, color: '#64748B' }}>{u.country || '—'}</span></Td>
+                      <Td>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                          <span style={{ width: 7, height: 7, borderRadius: '50%', background: u.is_online ? '#10B981' : '#CBD5E1', flexShrink: 0 }} />
+                          <span style={{ fontSize: 12, color: u.is_active ? '#374151' : '#EF4444', fontWeight: u.is_active ? 400 : 700 }}>
+                            {!u.is_active ? 'Banned' : u.is_online ? 'Online' : 'Offline'}
+                          </span>
+                        </div>
+                      </Td>
+                      <Td><span style={{ fontSize: 12, color: '#94A3B8' }}>{formatDistanceToNow(new Date(u.created_at), { addSuffix: true })}</span></Td>
+                      <Td>
+                        <div style={{ display: 'flex', gap: 6 }} onClick={e => e.stopPropagation()}>
+                          <button onClick={() => banMutation.mutate(u.id)} disabled={banMutation.isPending}
+                            style={{ padding: '5px 12px', borderRadius: 8, border: 'none', cursor: 'pointer', fontSize: 12, fontWeight: 700, background: u.is_active ? '#FFF1F2' : '#F0FDF4', color: u.is_active ? '#E11D48' : '#059669' }}>
+                            {u.is_active ? 'Ban' : 'Unban'}
+                          </button>
+                        </div>
+                      </Td>
+                    </Tr>
+                  )
+                })}
+              </Table>
+            </div>
+          )}
 
         {/* User Detail Sidebar */}
         {selectedUser && (
           <Card style={{ height: 'fit-content' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 16 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                <div style={{
-                  width: 48, height: 48, borderRadius: '50%', display: 'flex',
-                  alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: 18,
-                  background: (ROLE_COLORS[selectedUser.role] || ROLE_COLORS.client).bg,
-                  color: (ROLE_COLORS[selectedUser.role] || ROLE_COLORS.client).color,
-                }}>
+                <div style={{ width: 48, height: 48, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: 18, background: (ROLE_COLORS[selectedUser.role] || ROLE_COLORS.client).bg, color: (ROLE_COLORS[selectedUser.role] || ROLE_COLORS.client).color }}>
                   {(selectedUser.first_name?.[0] || selectedUser.email[0]).toUpperCase()}
                 </div>
                 <div>
-                  <p style={{ fontFamily: 'Syne,sans-serif', fontSize: 15, fontWeight: 800, margin: 0, color: '#0F172A' }}>
-                    {selectedUser.first_name} {selectedUser.last_name}
-                  </p>
+                  <p style={{ fontFamily: 'Syne,sans-serif', fontSize: 15, fontWeight: 800, margin: 0, color: '#0F172A' }}>{selectedUser.first_name} {selectedUser.last_name}</p>
                   <p style={{ fontSize: 11, color: '#94A3B8', margin: '2px 0 0' }}>{selectedUser.email}</p>
                 </div>
               </div>
               <button onClick={() => setSelectedUser(null)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#94A3B8', fontSize: 18 }}>×</button>
             </div>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
-              {[
-                { label: 'Role', value: selectedUser.role },
-                { label: 'Phone', value: selectedUser.phone || '—' },
-                { label: 'WhatsApp', value: selectedUser.whatsapp || '—' },
-                { label: 'Country', value: selectedUser.country || '—' },
-                { label: 'Status', value: selectedUser.is_active ? (selectedUser.is_online ? '🟢 Online' : '⚫ Offline') : '🚫 Banned' },
-                { label: 'Logins', value: selectedUser.login_count ?? '—' },
-                { label: 'Joined', value: formatDistanceToNow(new Date(selectedUser.created_at), { addSuffix: true }) },
-              ].map(({ label, value }) => (
-                <div key={label} style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0', borderBottom: '1px solid #F8FAFC' }}>
-                  <span style={{ fontSize: 11, color: '#94A3B8', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.04em' }}>{label}</span>
-                  <span style={{ fontSize: 12, color: '#374151', fontWeight: 600 }}>{String(value)}</span>
-                </div>
-              ))}
-            </div>
+            {[
+              { label: 'Role',    value: selectedUser.role },
+              { label: 'Phone',   value: selectedUser.phone   || '—' },
+              { label: 'WhatsApp',value: selectedUser.whatsapp|| '—' },
+              { label: 'Country', value: selectedUser.country || '—' },
+              { label: 'Status',  value: selectedUser.is_active ? (selectedUser.is_online ? '🟢 Online' : '⚫ Offline') : '🚫 Banned' },
+              { label: 'Logins',  value: selectedUser.login_count },
+              { label: 'Joined',  value: formatDistanceToNow(new Date(selectedUser.created_at), { addSuffix: true }) },
+            ].map(({ label, value }) => (
+              <div key={label} style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0', borderBottom: '1px solid #F8FAFC' }}>
+                <span style={{ fontSize: 11, color: '#94A3B8', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.04em' }}>{label}</span>
+                <span style={{ fontSize: 12, color: '#374151', fontWeight: 600 }}>{String(value)}</span>
+              </div>
+            ))}
 
             {selectedUser.expert_profile && (
               <div style={{ marginTop: 14 }}>
                 <p style={{ fontSize: 11, color: '#94A3B8', fontWeight: 700, textTransform: 'uppercase', marginBottom: 8, letterSpacing: '0.05em' }}>Expert Profile</p>
                 <ExpertLevelBadge level={selectedUser.expert_profile.level} />
-                <div style={{ marginTop: 8 }}>
-                  <StarRating rating={Number(selectedUser.expert_profile.rating)} />
-                </div>
-                <p style={{ fontSize: 12, color: '#64748B', margin: '8px 0 0' }}>
-                  {selectedUser.expert_profile.completed_projects} projects · {Number(selectedUser.expert_profile.success_rate).toFixed(0)}% success
-                </p>
-                <p style={{ fontSize: 12, color: '#059669', fontWeight: 700, margin: '4px 0 0' }}>
-                  ${Number(selectedUser.expert_profile.total_earned).toFixed(2)} earned
-                </p>
+                <div style={{ marginTop: 8 }}><StarRating rating={Number(selectedUser.expert_profile.rating)} /></div>
+                <p style={{ fontSize: 12, color: '#64748B', margin: '8px 0 0' }}>{selectedUser.expert_profile.completed_projects} projects · {Number(selectedUser.expert_profile.success_rate).toFixed(0)}% success</p>
+                <p style={{ fontSize: 12, color: '#059669', fontWeight: 700, margin: '4px 0 0' }}>${Number(selectedUser.expert_profile.total_earned).toFixed(2)} earned</p>
                 {selectedUser.expert_profile.skills?.length > 0 && (
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5, marginTop: 8 }}>
                     {selectedUser.expert_profile.skills.map((s: string) => (
@@ -215,15 +264,13 @@ export default function AdminUsers() {
             )}
 
             <div style={{ marginTop: 16 }}>
-              <Btn
-                variant={selectedUser.is_active ? 'danger' : 'primary'}
-                size="sm"
-                style={{ width: '100%', background: selectedUser.is_active ? '#EF4444' : '#059669' }}
+              <button
                 onClick={() => banMutation.mutate(selectedUser.id)}
                 disabled={banMutation.isPending}
+                style={{ width: '100%', padding: '10px', borderRadius: 10, border: 'none', cursor: 'pointer', fontSize: 13, fontWeight: 700, background: selectedUser.is_active ? '#EF4444' : '#059669', color: '#fff' }}
               >
                 {selectedUser.is_active ? '🚫 Ban User' : '✅ Reactivate User'}
-              </Btn>
+              </button>
             </div>
           </Card>
         )}

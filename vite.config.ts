@@ -9,10 +9,10 @@ export default defineConfig({
   },
   server: {
     host: '0.0.0.0',
-    port: 5173,
+    port: 5174,
     proxy: {
-      '/api': { target: 'http://backend:8000', changeOrigin: true },
-      '/ws': { target: 'ws://backend:8000', ws: true },
+      '/api': { target: 'http://backend:8001', changeOrigin: true },
+      '/ws': { target: 'ws://backend:8001', ws: true },
     },
   },
 })
