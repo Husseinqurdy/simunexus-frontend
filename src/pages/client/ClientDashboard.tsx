@@ -1,9 +1,10 @@
-import { useQuery } from '@tanstack/react-query'
-import { projectApi, paymentApi } from '@/api/client'
-import { LoadingSpinner, ProgressBar, Alert } from '@/components/shared'
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { projectApi, paymentApi, recruitApi } from '@/api/client'
+import { LoadingSpinner } from '@/components/shared'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuthStore } from '@/store/authStore'
-import { formatDistanceToNow, isPast, format } from 'date-fns'
+import { formatDistanceToNow, isPast } from 'date-fns'
+import toast from 'react-hot-toast'
 import type { Project } from '@/types'
 
 const STATUS_CFG: Record<string, { label: string; color: string; bg: string; dot: string }> = {
@@ -35,18 +36,12 @@ function StageTracker({ status }: { status: string }) {
   return (
     <div style={{ display:'flex', alignItems:'flex-start', gap:0, overflowX:'auto', paddingBottom:4 }}>
       {STAGE_STEPS.map((s, i) => {
-        const done    = i < cur || (status === 'completed' && i <= cur)
-        const active  = i === cur && !isRevision
+        const done   = i < cur || (status === 'completed' && i <= cur)
+        const active = i === cur && !isRevision
         return (
           <div key={s} style={{ display:'flex', alignItems:'center', flexShrink:0 }}>
             <div style={{ display:'flex', flexDirection:'column', alignItems:'center' }}>
-              <div style={{
-                width:28, height:28, borderRadius:'50%', display:'flex', alignItems:'center', justifyContent:'center',
-                fontSize:11, fontWeight:700, transition:'all .3s',
-                background: done ? '#10B981' : active ? '#0EA5E9' : '#F1F5F9',
-                color: done || active ? '#fff' : '#94A3B8',
-                border: `2px solid ${done ? '#10B981' : active ? '#0EA5E9' : '#E2E8F0'}`,
-              }}>
+              <div style={{ width:28, height:28, borderRadius:'50%', display:'flex', alignItems:'center', justifyContent:'center', fontSize:11, fontWeight:700, transition:'all .3s', background: done ? '#10B981' : active ? '#0EA5E9' : '#F1F5F9', color: done || active ? '#fff' : '#94A3B8', border: `2px solid ${done ? '#10B981' : active ? '#0EA5E9' : '#E2E8F0'}` }}>
                 {done ? '✓' : i+1}
               </div>
               <span style={{ fontSize:10, marginTop:5, whiteSpace:'nowrap', color: done ? '#10B981' : active ? '#0EA5E9' : '#94A3B8', fontWeight: active ? 700 : 400 }}>
@@ -54,7 +49,7 @@ function StageTracker({ status }: { status: string }) {
               </span>
             </div>
             {i < STAGE_STEPS.length - 1 && (
-              <div style={{ width:32, height:2, background: i < cur ? '#10B981' : '#E2E8F0', margin:'0 4px', marginBottom:18, flexShrink:0, transition:'background .5s' }} />
+              <div style={{ width:32, height:2, background: i < cur ? '#10B981' : '#E2E8F0', margin:'0 4px', marginBottom:18, flexShrink:0 }} />
             )}
           </div>
         )
@@ -68,6 +63,85 @@ function StageTracker({ status }: { status: string }) {
   )
 }
 
+// ── Expert Application Status Card ──────────────────────────────────────────
+function ExpertApplicationCard() {
+  const navigate = useNavigate()
+  const qc = useQueryClient()
+
+  const { data: app, isLoading } = useQuery({
+    queryKey: ['my-application'],
+    queryFn: () => recruitApi.myApplication().then(r => r.data),
+  })
+
+  const startTestMutation = useMutation({
+    mutationFn: (appId: number) => recruitApi.startTest(appId),
+    onSuccess: (_, appId) => {
+      toast.success('Test started! You have 2 hours.')
+      qc.invalidateQueries({ queryKey: ['my-application'] })
+      navigate(`/expert/test/${appId}`)
+    },
+    onError: () => toast.error('Failed to start test.'),
+  })
+
+  if (isLoading || !app) return null
+
+  const STATUS_CFG_APP: Record<string, { label: string; color: string; bg: string; border: string }> = {
+    pending:   { label: '⏳ Pending Test',     color: '#D97706', bg: '#FFFBEB', border: '#FDE68A' },
+    testing:   { label: '⏱ Test In Progress', color: '#2563EB', bg: '#EFF6FF', border: '#BFDBFE' },
+    submitted: { label: '📋 Under Review',     color: '#7C3AED', bg: '#F5F3FF', border: '#DDD6FE' },
+    passed:    { label: '✅ Passed!',           color: '#059669', bg: '#F0FDF4', border: '#BBF7D0' },
+    failed:    { label: '❌ Not Passed',        color: '#E11D48', bg: '#FFF1F2', border: '#FECDD3' },
+    retry:     { label: '🔄 Retry Allowed',    color: '#64748B', bg: '#F8FAFC', border: '#E2E8F0' },
+  }
+
+  const cfg = STATUS_CFG_APP[app.status] || STATUS_CFG_APP.pending
+
+  return (
+    <div style={{ background: cfg.bg, border: `1.5px solid ${cfg.border}`, borderRadius: 16, padding: '18px 20px', marginBottom: 24 }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
+        <div>
+          <p style={{ fontFamily: 'Syne,sans-serif', fontWeight: 800, fontSize: 14, color: '#0F172A', margin: '0 0 4px' }}>
+            🎓 Expert Application
+          </p>
+          <span style={{ fontSize: 12, fontWeight: 700, color: cfg.color }}>
+            {cfg.label}
+          </span>
+          {app.admin_notes && (
+            <p style={{ fontSize: 12, color: '#64748B', margin: '4px 0 0' }}>
+              Admin: {app.admin_notes}
+            </p>
+          )}
+        </div>
+
+        {/* Action buttons based on status */}
+        {(app.status === 'pending' || app.status === 'retry') && (
+          <button
+            onClick={() => startTestMutation.mutate(app.id)}
+            disabled={startTestMutation.isPending}
+            style={{ padding: '9px 18px', borderRadius: 10, background: '#F59E0B', color: '#fff', border: 'none', cursor: 'pointer', fontFamily: 'Syne,sans-serif', fontWeight: 700, fontSize: 13, whiteSpace: 'nowrap' }}
+          >
+            {startTestMutation.isPending ? 'Starting…' : '🚀 Start 2-Hour Test'}
+          </button>
+        )}
+        {app.status === 'testing' && (
+          <button
+            onClick={() => navigate(`/expert/test/${app.id}`)}
+            style={{ padding: '9px 18px', borderRadius: 10, background: '#EF4444', color: '#fff', border: 'none', cursor: 'pointer', fontFamily: 'Syne,sans-serif', fontWeight: 700, fontSize: 13, whiteSpace: 'nowrap', animation: 'pulse 2s infinite' }}
+          >
+            ⏱ Continue Test →
+          </button>
+        )}
+        {app.status === 'passed' && (
+          <p style={{ fontSize: 13, fontWeight: 700, color: '#059669', margin: 0 }}>
+            🎉 You're now a verified Expert!
+          </p>
+        )}
+      </div>
+    </div>
+  )
+}
+
+// ── Main Dashboard ───────────────────────────────────────────────────────────
 export default function ClientDashboard() {
   const { user } = useAuthStore()
   const navigate = useNavigate()
@@ -82,11 +156,11 @@ export default function ClientDashboard() {
     queryFn: () => paymentApi.wallet().then(r => r.data),
   })
 
-  const projects: Project[] = projectsData?.results || []
-  const active        = projects.filter(p => !['completed','cancelled'].includes(p.status))
-  const completed     = projects.filter(p => p.status === 'completed')
-  const pendingPayment = projects.filter(p => p.client_price && !p.is_fully_paid && !['completed','cancelled'].includes(p.status))
-  const inQC          = projects.filter(p => p.status === 'qc')
+  const projects: Project[]  = projectsData?.results || []
+  const active               = projects.filter(p => !['completed','cancelled'].includes(p.status))
+  const completed            = projects.filter(p => p.status === 'completed')
+  const pendingPayment       = projects.filter(p => p.client_price && !p.is_fully_paid && !['completed','cancelled'].includes(p.status))
+  const inQC                 = projects.filter(p => p.status === 'qc')
 
   if (isLoading) return (
     <div style={{ display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', minHeight:400, gap:16 }}>
@@ -98,7 +172,13 @@ export default function ClientDashboard() {
 
   return (
     <div style={{ fontFamily:"'DM Sans',sans-serif" }}>
-      <style>{`@import url('https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@400;500;600&display=swap'); @keyframes spin{to{transform:rotate(360deg)}} @keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}} .fade-up{animation:fadeUp .5s ease both}`}</style>
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@400;500;600&display=swap');
+        @keyframes spin{to{transform:rotate(360deg)}}
+        @keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+        @keyframes pulse{0%,100%{opacity:1}50%{opacity:.7}}
+        .fade-up{animation:fadeUp .5s ease both}
+      `}</style>
 
       {/* Header */}
       <div className="fade-up" style={{ display:'flex', alignItems:'flex-start', justifyContent:'space-between', flexWrap:'wrap', gap:12, marginBottom:28 }}>
@@ -108,7 +188,7 @@ export default function ClientDashboard() {
           </h1>
           <p style={{ color:'#94A3B8', fontSize:14, margin:'4px 0 0' }}>Here's what's happening with your simulation projects.</p>
         </div>
-        <Link to="/submit" style={{ display:'inline-flex', alignItems:'center', gap:8, background:'#0EA5E9', color:'#fff', fontFamily:'Syne,sans-serif', fontWeight:700, fontSize:14, padding:'11px 22px', borderRadius:12, textDecoration:'none', boxShadow:'0 4px 14px rgba(14,165,233,.3)' }}>
+        <Link to="/client/projects/new" style={{ display:'inline-flex', alignItems:'center', gap:8, background:'#0EA5E9', color:'#fff', fontFamily:'Syne,sans-serif', fontWeight:700, fontSize:14, padding:'11px 22px', borderRadius:12, textDecoration:'none', boxShadow:'0 4px 14px rgba(14,165,233,.3)' }}>
           + New Project
         </Link>
       </div>
@@ -149,11 +229,14 @@ export default function ClientDashboard() {
         )}
       </div>
 
+      {/* ✅ Expert Application Status — inaonekana tu kama mtu ana application */}
+      <ExpertApplicationCard />
+
       {/* Stats */}
       <div className="fade-up" style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:14, marginBottom:28 }}>
         {[
-          { label:'Total Projects', value:projects.length, color:'#0B1C3D', emoji:'📁' },
-          { label:'Active',         value:active.length,   color:'#0EA5E9', emoji:'⚡' },
+          { label:'Total Projects', value:projects.length,  color:'#0B1C3D', emoji:'📁' },
+          { label:'Active',         value:active.length,    color:'#0EA5E9', emoji:'⚡' },
           { label:'Completed',      value:completed.length, color:'#10B981', emoji:'✅' },
           { label:'Wallet',         value:`$${walletData?.wallet?.balance||'0.00'}`, color:'#7C3AED', emoji:'💰' },
         ].map(({ label, value, color, emoji }) => (
@@ -179,20 +262,18 @@ export default function ClientDashboard() {
             <div style={{ fontSize:56, marginBottom:16 }}>🚀</div>
             <p style={{ fontFamily:'Syne,sans-serif', fontSize:20, fontWeight:700, color:'#0F172A', margin:'0 0 8px' }}>Submit your first project</p>
             <p style={{ fontSize:14, color:'#94A3B8', margin:'0 0 24px', lineHeight:1.6 }}>No account needed — describe your simulation and we'll connect you with a verified expert immediately.</p>
-            <Link to="/submit" style={{ display:'inline-flex', alignItems:'center', gap:8, background:'#0EA5E9', color:'#fff', fontFamily:'Syne,sans-serif', fontWeight:700, fontSize:14, padding:'12px 24px', borderRadius:12, textDecoration:'none', boxShadow:'0 4px 14px rgba(14,165,233,.3)' }}>
+            <Link to="/client/projects/new" style={{ display:'inline-flex', alignItems:'center', gap:8, background:'#0EA5E9', color:'#fff', fontFamily:'Syne,sans-serif', fontWeight:700, fontSize:14, padding:'12px 24px', borderRadius:12, textDecoration:'none', boxShadow:'0 4px 14px rgba(14,165,233,.3)' }}>
               Submit a Project →
             </Link>
           </div>
         ) : (
           <div>
             {projects.slice(0,5).map((p, idx) => {
-              const urgent = !['completed','cancelled'].includes(p.status) && isPast(new Date(new Date(p.deadline).getTime() - 24*60*60*1000))
-              const latest = p.latest_progress
+              const urgent  = !['completed','cancelled'].includes(p.status) && isPast(new Date(new Date(p.deadline).getTime() - 24*60*60*1000))
+              const latest  = p.latest_progress
               const needsPay = p.client_price && !p.is_fully_paid && !['completed','cancelled'].includes(p.status)
               return (
-                <div
-                  key={p.id}
-                  onClick={() => navigate(`/client/projects/${p.id}`)}
+                <div key={p.id} onClick={() => navigate(`/client/projects/${p.id}`)}
                   style={{ padding:'20px 24px', borderBottom: idx < Math.min(projects.length,5)-1 ? '1px solid #F8FAFC' : 'none', cursor:'pointer', transition:'background .15s' }}
                   onMouseEnter={e => (e.currentTarget as HTMLDivElement).style.background='#F8FAFC'}
                   onMouseLeave={e => (e.currentTarget as HTMLDivElement).style.background='transparent'}
@@ -201,7 +282,7 @@ export default function ClientDashboard() {
                     <div style={{ flex:1, minWidth:0 }}>
                       <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:4, flexWrap:'wrap' }}>
                         <p style={{ fontFamily:'Syne,sans-serif', fontWeight:700, fontSize:15, color:'#0F172A', margin:0, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{p.title}</p>
-                        {urgent && <span style={{ fontSize:10, background:'#FFF1F2', color:'#E11D48', padding:'2px 7px', borderRadius:999, fontWeight:700, flexShrink:0 }}>URGENT</span>}
+                        {urgent   && <span style={{ fontSize:10, background:'#FFF1F2', color:'#E11D48', padding:'2px 7px', borderRadius:999, fontWeight:700, flexShrink:0 }}>URGENT</span>}
                         {needsPay && <span style={{ fontSize:10, background:'#FFF7ED', color:'#C2410C', padding:'2px 7px', borderRadius:999, fontWeight:700, flexShrink:0 }}>PAYMENT DUE</span>}
                       </div>
                       <div style={{ display:'flex', gap:8, flexWrap:'wrap' }}>
@@ -218,11 +299,7 @@ export default function ClientDashboard() {
                     </div>
                     <StatusPill status={p.status} />
                   </div>
-
-                  {/* Stage tracker */}
                   <StageTracker status={p.status} />
-
-                  {/* Progress bar */}
                   {latest && (
                     <div style={{ marginTop:10 }}>
                       <div style={{ display:'flex', justifyContent:'space-between', fontSize:11, color:'#94A3B8', marginBottom:5 }}>
