@@ -4,6 +4,12 @@ import { projectApi } from '@/api/client'
 import { Link, useNavigate } from 'react-router-dom'
 import { formatDistanceToNow } from 'date-fns'
 import type { Project } from '@/types'
+import { Search, Plus, Inbox, CreditCard, Download, Undo2 } from 'lucide-react'
+
+const formatTSH = (value: number | string | undefined | null) => {
+  const n = Number(value || 0)
+  return `TSH ${n.toLocaleString('en-US')}`
+}
 
 const STATUS_CFG: Record<string, { label: string; color: string; bg: string; dot: string }> = {
   received:    { label:'Received',      color:'#64748B', bg:'#F8FAFC', dot:'#94A3B8' },
@@ -31,7 +37,7 @@ export default function ClientProjects() {
   const [search, setSearch] = useState('')
   const navigate = useNavigate()
 
-  const { data, isLoading, refetch } = useQuery({
+  const { data, isLoading } = useQuery({
     queryKey: ['client-projects-list', statusFilter],
     queryFn: () => projectApi.list(statusFilter ? { status: statusFilter } : undefined).then(r => r.data),
     refetchInterval: 30000,
@@ -44,7 +50,19 @@ export default function ClientProjects() {
 
   return (
     <div style={{ fontFamily:"'DM Sans',sans-serif" }}>
-      <style>{`@import url('https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@400;500;600&display=swap'); @keyframes spin{to{transform:rotate(360deg)}} @keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}} .fu{animation:fadeUp .4s ease both}`}</style>
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@400;500;600&display=swap');
+        @keyframes spin{to{transform:rotate(360deg)}}
+        @keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+        .fu{animation:fadeUp .4s ease both}
+        .cp-new-btn { transition: transform 0.15s ease, opacity 0.15s ease, box-shadow 0.2s ease; }
+        .cp-new-btn:hover { transform: translateY(-2px); opacity: 0.95; box-shadow: 0 8px 18px rgba(14,165,233,.25); }
+        .cp-new-btn:active { transform: translateY(0); }
+        .cp-search-input { transition: border-color .15s ease, box-shadow .15s ease; }
+        .cp-search-input:focus { border-color: #0EA5E9; box-shadow: 0 0 0 3px rgba(14,165,233,.12); }
+        .cp-select { transition: border-color .15s ease; }
+        .cp-project-card { transition: box-shadow 0.2s ease, transform 0.2s ease; }
+      `}</style>
 
       {/* Header */}
       <div className="fu" style={{ display:'flex', alignItems:'center', justifyContent:'space-between', flexWrap:'wrap', gap:12, marginBottom:24 }}>
@@ -52,18 +70,24 @@ export default function ClientProjects() {
           <h1 style={{ fontFamily:'Syne,sans-serif', fontSize:24, fontWeight:800, color:'#0F172A', margin:0 }}>My Projects</h1>
           <p style={{ color:'#94A3B8', fontSize:13, margin:'4px 0 0' }}>{data?.count || 0} total projects</p>
         </div>
-        <Link to="/client/projects/new" style={{ display:'inline-flex', alignItems:'center', gap:7, background:'#0EA5E9', color:'#fff', fontFamily:'Syne,sans-serif', fontWeight:700, fontSize:13, padding:'10px 20px', borderRadius:12, textDecoration:'none' }}>
-          + New Project
+        <Link to="/client/projects/new" className="cp-new-btn" style={{ display:'inline-flex', alignItems:'center', gap:7, background:'#0EA5E9', color:'#fff', fontFamily:'Syne,sans-serif', fontWeight:700, fontSize:13, padding:'10px 20px', borderRadius:12, textDecoration:'none' }}>
+          <Plus size={15} strokeWidth={2.4} /> New Project
         </Link>
       </div>
 
       {/* Filters */}
       <div className="fu" style={{ display:'flex', gap:10, flexWrap:'wrap', marginBottom:20 }}>
         <div style={{ position:'relative', flex:1, minWidth:200 }}>
-          <svg style={{ position:'absolute', left:12, top:'50%', transform:'translateY(-50%)', color:'#94A3B8' }} width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" /></svg>
-          <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search projects..." style={{ width:'100%', padding:'10px 14px 10px 36px', border:'1.5px solid #E2E8F0', borderRadius:10, fontSize:13, outline:'none', background:'#fff', fontFamily:'DM Sans,sans-serif' }} />
+          <Search size={15} strokeWidth={2} style={{ position:'absolute', left:12, top:'50%', transform:'translateY(-50%)', color:'#94A3B8' }} />
+          <input
+            className="cp-search-input"
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            placeholder="Search projects..."
+            style={{ width:'100%', padding:'10px 14px 10px 36px', border:'1.5px solid #E2E8F0', borderRadius:10, fontSize:13, outline:'none', background:'#fff', fontFamily:'DM Sans,sans-serif', boxSizing:'border-box' }}
+          />
         </div>
-        <select value={statusFilter} onChange={e => setStatusFilter(e.target.value)} style={{ padding:'10px 14px', border:'1.5px solid #E2E8F0', borderRadius:10, fontSize:13, background:'#fff', cursor:'pointer', fontFamily:'DM Sans,sans-serif', outline:'none' }}>
+        <select className="cp-select" value={statusFilter} onChange={e => setStatusFilter(e.target.value)} style={{ padding:'10px 14px', border:'1.5px solid #E2E8F0', borderRadius:10, fontSize:13, background:'#fff', cursor:'pointer', fontFamily:'DM Sans,sans-serif', outline:'none' }}>
           {STATUSES.map(s => <option key={s} value={s}>{s ? STATUS_CFG[s]?.label : 'All Status'}</option>)}
         </select>
       </div>
@@ -75,12 +99,14 @@ export default function ClientProjects() {
           <p style={{ color:'#94A3B8', fontSize:13 }}>Loading projects...</p>
         </div>
       ) : projects.length === 0 ? (
-        <div style={{ background:'#fff', borderRadius:20, border:'1px solid #F1F5F9', padding:'64px 24px', textAlign:'center' }}>
-          <div style={{ fontSize:52, marginBottom:16 }}>📭</div>
+        <div className="fu" style={{ background:'#fff', borderRadius:20, border:'1px solid #F1F5F9', padding:'64px 24px', textAlign:'center' }}>
+          <div style={{ width:64, height:64, borderRadius:18, background:'#F1F5F9', display:'flex', alignItems:'center', justifyContent:'center', margin:'0 auto 16px', color:'#94A3B8' }}>
+            <Inbox size={30} strokeWidth={1.8} />
+          </div>
           <p style={{ fontFamily:'Syne,sans-serif', fontSize:18, fontWeight:700, color:'#0F172A', margin:'0 0 8px' }}>{search || statusFilter ? 'No matching projects' : 'No projects yet'}</p>
           <p style={{ fontSize:13, color:'#94A3B8', margin:'0 0 20px' }}>{search || statusFilter ? 'Try a different filter.' : 'Submit your first simulation project to get started.'}</p>
           {!search && !statusFilter && (
-            <Link to="/client/projects/new" style={{ display:'inline-flex', alignItems:'center', gap:7, background:'#0EA5E9', color:'#fff', fontFamily:'Syne,sans-serif', fontWeight:700, fontSize:13, padding:'11px 22px', borderRadius:12, textDecoration:'none' }}>Submit a Project →</Link>
+            <Link to="/client/projects/new" className="cp-new-btn" style={{ display:'inline-flex', alignItems:'center', gap:7, background:'#0EA5E9', color:'#fff', fontFamily:'Syne,sans-serif', fontWeight:700, fontSize:13, padding:'11px 22px', borderRadius:12, textDecoration:'none' }}>Submit a Project →</Link>
           )}
         </div>
       ) : (
@@ -90,8 +116,8 @@ export default function ClientProjects() {
             const needsPay = p.client_price && !p.is_fully_paid && !['completed','cancelled'].includes(p.status)
             const isNew = p.status === 'received' && !p.expert
             return (
-              <div key={p.id} className="fu" onClick={() => navigate(`/client/projects/${p.id}`)}
-                style={{ background:'#fff', borderRadius:18, border:'1px solid #F1F5F9', padding:'20px 24px', cursor:'pointer', transition:'all .2s', animationDelay:`${i*0.04}s` }}
+              <div key={p.id} className="fu cp-project-card" onClick={() => navigate(`/client/projects/${p.id}`)}
+                style={{ background:'#fff', borderRadius:18, border:'1px solid #F1F5F9', padding:'20px 24px', cursor:'pointer', animationDelay:`${i*0.04}s` }}
                 onMouseEnter={e => { (e.currentTarget as HTMLDivElement).style.boxShadow='0 8px 24px rgba(0,0,0,.06)'; (e.currentTarget as HTMLDivElement).style.transform='translateY(-2px)' }}
                 onMouseLeave={e => { (e.currentTarget as HTMLDivElement).style.boxShadow='none'; (e.currentTarget as HTMLDivElement).style.transform='translateY(0)' }}
               >
@@ -100,13 +126,17 @@ export default function ClientProjects() {
                     <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:6, flexWrap:'wrap' }}>
                       <span style={{ fontFamily:'Syne,sans-serif', fontWeight:700, fontSize:16, color:'#0F172A' }}>{p.title}</span>
                       {isNew && <span style={{ fontSize:10, background:'#F0FDF4', color:'#059669', padding:'2px 8px', borderRadius:999, fontWeight:700 }}>NEW</span>}
-                      {needsPay && <span style={{ fontSize:10, background:'#FFF7ED', color:'#C2410C', padding:'2px 8px', borderRadius:999, fontWeight:700 }}>💳 PAYMENT DUE</span>}
+                      {needsPay && (
+                        <span style={{ display:'inline-flex', alignItems:'center', gap:4, fontSize:10, background:'#FFF7ED', color:'#C2410C', padding:'2px 8px', borderRadius:999, fontWeight:700 }}>
+                          <CreditCard size={10} strokeWidth={2.6} /> PAYMENT DUE
+                        </span>
+                      )}
                     </div>
                     <div style={{ display:'flex', gap:12, flexWrap:'wrap', alignItems:'center' }}>
                       <span style={{ fontSize:12, background:'#EFF6FF', color:'#2563EB', padding:'3px 10px', borderRadius:999, fontWeight:700 }}>{p.software?.toUpperCase()}</span>
                       <span style={{ fontSize:12, color:'#94A3B8' }}>Deadline: {formatDistanceToNow(new Date(p.deadline), {addSuffix:true})}</span>
                       {p.client_price && (
-                        <span style={{ fontSize:12, color:'#059669', fontWeight:700 }}>Price: ${p.client_price}</span>
+                        <span style={{ fontSize:12, color:'#059669', fontWeight:700 }}>Price: {formatTSH(p.client_price)}</span>
                       )}
                       {p.expert_name && (
                         <span style={{ fontSize:12, color:'#64748B' }}>Expert: {p.expert_name}</span>
@@ -116,7 +146,9 @@ export default function ClientProjects() {
                   <div style={{ display:'flex', flexDirection:'column', alignItems:'flex-end', gap:8 }}>
                     <StatusPill status={p.status} />
                     {p.status === 'completed' && (
-                      <span style={{ fontSize:11, color:'#10B981', fontWeight:700 }}>⬇ Ready to download</span>
+                      <span style={{ display:'inline-flex', alignItems:'center', gap:4, fontSize:11, color:'#10B981', fontWeight:700 }}>
+                        <Download size={11} strokeWidth={2.6} /> Ready to download
+                      </span>
                     )}
                   </div>
                 </div>
@@ -136,8 +168,9 @@ export default function ClientProjects() {
 
                 {/* Rejection notice */}
                 {p.status === 'revision' && p.rejection_reason && (
-                  <div style={{ marginTop:10, padding:'10px 14px', background:'#FFF1F2', border:'1px solid #FECDD3', borderRadius:10, fontSize:12, color:'#E11D48' }}>
-                    ↩ <strong>Revision:</strong> {p.rejection_reason}
+                  <div style={{ display:'flex', alignItems:'flex-start', gap:6, marginTop:10, padding:'10px 14px', background:'#FFF1F2', border:'1px solid #FECDD3', borderRadius:10, fontSize:12, color:'#E11D48' }}>
+                    <Undo2 size={13} strokeWidth={2.4} style={{ flexShrink:0, marginTop:1 }} />
+                    <span><strong>Revision:</strong> {p.rejection_reason}</span>
                   </div>
                 )}
               </div>
