@@ -1,4 +1,15 @@
 import type { ProjectStatus } from '@/types'
+import {
+  Info,
+  CheckCircle2,
+  AlertTriangle,
+  XCircle,
+  Circle,
+  Check,
+  Star,
+  Crown,
+  Inbox,
+} from 'lucide-react'
 
 // ── Status Badge ───────────────────────────────────────────────────────────
 const STATUS_CONFIG: Record<ProjectStatus, { label: string; bg: string; color: string; dot: string }> = {
@@ -19,6 +30,7 @@ export function StatusBadge({ status }: { status: ProjectStatus }) {
       padding: '4px 10px', borderRadius: 999, fontSize: 11, fontWeight: 700,
       background: cfg.bg, color: cfg.color,
       border: `1px solid ${cfg.dot}20`,
+      transition: 'all .15s',
     }}>
       <span style={{ width: 5, height: 5, borderRadius: '50%', background: cfg.dot, flexShrink: 0 }} />
       {cfg.label}
@@ -50,7 +62,7 @@ export function StatCard({ label, value, icon, color = '#0B1C3D', trend }: StatC
           </div>
         )}
       </div>
-      <p style={{ fontSize: 28, fontWeight: 800, color, margin: 0, fontFamily: 'Syne, sans-serif', lineHeight: 1 }}>{value}</p>
+      <p style={{ fontSize: 26, fontWeight: 800, color, margin: 0, fontFamily: 'Syne, sans-serif', lineHeight: 1.1 }}>{value}</p>
       {trend && (
         <p style={{ fontSize: 11, color: trend.value >= 0 ? '#10B981' : '#EF4444', margin: '8px 0 0', fontWeight: 600 }}>
           {trend.value >= 0 ? '↑' : '↓'} {Math.abs(trend.value)}% {trend.label}
@@ -92,10 +104,13 @@ export function LoadingSpinner({ size = 'md', label }: { size?: 'sm' | 'md' | 'l
 }
 
 // ── Empty State ────────────────────────────────────────────────────────────
-export function EmptyState({ icon, title, body, action }: { icon?: string; title: string; body?: string; action?: React.ReactNode }) {
+export function EmptyState({ icon, title, body, action }: { icon?: React.ReactNode; title: string; body?: string; action?: React.ReactNode }) {
   return (
-    <div style={{ textAlign: 'center', padding: '64px 24px' }}>
-      <div style={{ fontSize: 48, marginBottom: 16 }}>{icon || '📭'}</div>
+    <div style={{ textAlign: 'center', padding: '64px 24px', animation: 'fadeIn .3s ease' }}>
+      <style>{`@keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }`}</style>
+      <div style={{ width: 56, height: 56, borderRadius: 16, background: '#F1F5F9', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px', color: '#94A3B8' }}>
+        {icon || <Inbox size={26} strokeWidth={1.8} />}
+      </div>
       <p style={{ fontFamily: 'Syne, sans-serif', fontSize: 18, fontWeight: 700, color: '#1E293B', margin: '0 0 8px' }}>{title}</p>
       {body && <p style={{ fontSize: 14, color: '#94A3B8', margin: '0 0 24px', maxWidth: 320, marginLeft: 'auto', marginRight: 'auto', lineHeight: 1.6 }}>{body}</p>}
       {action && <div>{action}</div>}
@@ -104,11 +119,11 @@ export function EmptyState({ icon, title, body, action }: { icon?: string; title
 }
 
 // ── Expert Level Badge ────────────────────────────────────────────────────
-const LEVEL_CONFIG: Record<string, { label: string; color: string; bg: string; icon: string }> = {
-  beginner: { label: 'Beginner',    color: '#64748B', bg: '#F8FAFC', icon: '○' },
-  verified: { label: 'Verified',    color: '#2563EB', bg: '#EFF6FF', icon: '✓' },
-  top:      { label: 'Top Expert',  color: '#D97706', bg: '#FFFBEB', icon: '⭐' },
-  elite:    { label: 'Elite Expert',color: '#7C3AED', bg: '#F5F3FF', icon: '👑' },
+const LEVEL_CONFIG: Record<string, { label: string; color: string; bg: string; Icon: React.ElementType }> = {
+  beginner: { label: 'Beginner',     color: '#64748B', bg: '#F8FAFC', Icon: Circle },
+  verified: { label: 'Verified',     color: '#2563EB', bg: '#EFF6FF', Icon: Check },
+  top:      { label: 'Top Expert',   color: '#D97706', bg: '#FFFBEB', Icon: Star },
+  elite:    { label: 'Elite Expert', color: '#7C3AED', bg: '#F5F3FF', Icon: Crown },
 }
 
 export function ExpertLevelBadge({ level }: { level: string }) {
@@ -119,7 +134,8 @@ export function ExpertLevelBadge({ level }: { level: string }) {
       padding: '4px 10px', borderRadius: 999, fontSize: 11, fontWeight: 700,
       background: cfg.bg, color: cfg.color, border: `1px solid ${cfg.color}20`,
     }}>
-      {cfg.icon} {cfg.label}
+      <cfg.Icon size={12} strokeWidth={2.4} />
+      {cfg.label}
     </span>
   )
 }
@@ -226,7 +242,7 @@ interface BtnProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   children: React.ReactNode
 }
 
-export function Btn({ variant = 'primary', size = 'md', children, style, ...rest }: BtnProps) {
+export function Btn({ variant = 'primary', size = 'md', children, style, className, ...rest }: BtnProps) {
   const variants = {
     primary: { background: '#0B1C3D', color: '#fff', border: 'none' },
     accent:  { background: '#0EA5E9', color: '#fff', border: 'none' },
@@ -240,7 +256,7 @@ export function Btn({ variant = 'primary', size = 'md', children, style, ...rest
     lg: { padding: '12px 24px', fontSize: 15 },
   }
   return (
-    <button style={{
+    <button className={className} style={{
       display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 7,
       borderRadius: 10, fontFamily: 'Syne, sans-serif', fontWeight: 700, cursor: 'pointer',
       transition: 'all .2s', ...variants[variant], ...sizes[size],
@@ -285,19 +301,20 @@ export function Td({ children, style }: { children?: React.ReactNode; style?: Re
 
 // ── Alert Box ──────────────────────────────────────────────────────────────
 type AlertType = 'info' | 'success' | 'warning' | 'danger'
-const ALERT: Record<AlertType, { bg: string; border: string; color: string; icon: string }> = {
-  info:    { bg: '#EFF6FF', border: '#BFDBFE', color: '#1D4ED8', icon: 'ℹ️' },
-  success: { bg: '#F0FDF4', border: '#BBF7D0', color: '#059669', icon: '✅' },
-  warning: { bg: '#FFFBEB', border: '#FDE68A', color: '#D97706', icon: '⚠️' },
-  danger:  { bg: '#FFF1F2', border: '#FECDD3', color: '#E11D48', icon: '🚫' },
+const ALERT: Record<AlertType, { bg: string; border: string; color: string; Icon: React.ElementType }> = {
+  info:    { bg: '#EFF6FF', border: '#BFDBFE', color: '#1D4ED8', Icon: Info },
+  success: { bg: '#F0FDF4', border: '#BBF7D0', color: '#059669', Icon: CheckCircle2 },
+  warning: { bg: '#FFFBEB', border: '#FDE68A', color: '#D97706', Icon: AlertTriangle },
+  danger:  { bg: '#FFF1F2', border: '#FECDD3', color: '#E11D48', Icon: XCircle },
 }
 
 export function Alert({ type = 'info', title, body, action }: { type?: AlertType; title: string; body?: string; action?: React.ReactNode }) {
   const cfg = ALERT[type]
   return (
-    <div style={{ background: cfg.bg, border: `1px solid ${cfg.border}`, borderRadius: 14, padding: '14px 18px', display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12 }}>
+    <div style={{ background: cfg.bg, border: `1px solid ${cfg.border}`, borderRadius: 14, padding: '14px 18px', display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12, animation: 'fadeIn .25s ease' }}>
+      <style>{`@keyframes fadeIn { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: translateY(0); } }`}</style>
       <div style={{ display: 'flex', gap: 10 }}>
-        <span style={{ fontSize: 16, flexShrink: 0, marginTop: 1 }}>{cfg.icon}</span>
+        <cfg.Icon size={17} strokeWidth={2} color={cfg.color} style={{ flexShrink: 0, marginTop: 1 }} />
         <div>
           <p style={{ fontSize: 13, fontWeight: 700, color: cfg.color, margin: 0, fontFamily: 'Syne, sans-serif' }}>{title}</p>
           {body && <p style={{ fontSize: 12, color: cfg.color + 'CC', margin: '3px 0 0', lineHeight: 1.5 }}>{body}</p>}
