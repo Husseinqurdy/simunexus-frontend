@@ -65,9 +65,9 @@ export default function ExpertProjectDetail() {
   })
 
   const submitForQCMutation = useMutation({
-    mutationFn: () => projectApi.update(Number(id), { status: 'qc' }),
+    mutationFn: () => projectApi.submit(Number(id)),
     onSuccess: () => { toast.success('Submitted for quality check!'); invalidate() },
-    onError: () => toast.error('Could not submit for QC.'),
+    onError: (e: any) => toast.error(e.response?.data?.error || 'Could not submit for QC.'),
   })
 
   if (isLoading) return <LoadingSpinner label="Loading project..." />
@@ -339,8 +339,6 @@ function ProgressUpdateForm({ projectId, onSuccess }: { projectId: number; onSuc
   const [note, setNote] = useState('')
 
   const addProgressMutation = useMutation({
-    // NOTE: verify this matches your actual projectApi method name/endpoint —
-    // e.g. POST /api/projects/:id/progress/ with { percentage, time_remaining, note }
     mutationFn: () => projectApi.addProgress(projectId, { percentage, time_remaining: timeRemaining, note }),
     onSuccess: () => {
       toast.success('Progress update posted!')
