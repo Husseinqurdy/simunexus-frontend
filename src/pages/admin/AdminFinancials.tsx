@@ -4,18 +4,35 @@ import { paymentApi } from '@/api/client'
 import { LoadingSpinner, EmptyState, Card, SectionTitle, Table, Tr, Td, Btn } from '@/components/shared'
 import { formatDistanceToNow, format } from 'date-fns'
 import toast from 'react-hot-toast'
+import {
+  BarChart3,
+  Wallet,
+  Ticket,
+  DollarSign,
+  Building2,
+  GraduationCap,
+  Settings2,
+  CheckCircle2,
+  Rocket,
+  Plus,
+} from 'lucide-react'
 
 type Tab = 'overview' | 'commissions' | 'coupons'
 
+const formatTSH = (value: number | string | undefined) => {
+  const n = Number(value || 0)
+  return `TSH ${n.toLocaleString('en-US')}`
+}
+
 function StatCard({ label, value, color, icon }: { label: string; value: string | number; color: string; icon: React.ReactNode }) {
   return (
-    <div style={{ background: '#fff', borderRadius: 16, border: '1px solid #F1F5F9', padding: '20px 22px', display: 'flex', alignItems: 'center', gap: 14 }}>
-      <div style={{ width: 44, height: 44, borderRadius: 12, background: color + '12', display: 'flex', alignItems: 'center', justifyContent: 'center', color, fontSize: 20, flexShrink: 0 }}>
+    <div className="fin-card-anim" style={{ background: '#fff', borderRadius: 16, border: '1px solid #F1F5F9', padding: '20px 22px', display: 'flex', alignItems: 'center', gap: 14 }}>
+      <div style={{ width: 44, height: 44, borderRadius: 12, background: color + '12', display: 'flex', alignItems: 'center', justifyContent: 'center', color, flexShrink: 0 }}>
         {icon}
       </div>
       <div>
         <p style={{ fontSize: 11, color: '#94A3B8', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', margin: '0 0 4px' }}>{label}</p>
-        <p style={{ fontSize: 22, fontWeight: 800, color: '#0F172A', margin: 0, fontFamily: 'Syne,sans-serif' }}>{value}</p>
+        <p style={{ fontSize: 20, fontWeight: 800, color: '#0F172A', margin: 0, fontFamily: 'Syne,sans-serif' }}>{value}</p>
       </div>
     </div>
   )
@@ -60,17 +77,64 @@ export default function AdminFinancials() {
     onError: () => toast.error('Failed to create coupon.'),
   })
 
-  const TABS: { value: Tab; label: string; icon: string }[] = [
-    { value: 'overview',     label: 'Overview',     icon: '📊' },
-    { value: 'commissions',  label: 'Commissions',  icon: '💰' },
-    { value: 'coupons',      label: 'Coupons',      icon: '🎟️' },
+  const TABS: { value: Tab; label: string; Icon: React.ElementType }[] = [
+    { value: 'overview',     label: 'Overview',     Icon: BarChart3 },
+    { value: 'commissions',  label: 'Commissions',  Icon: Wallet },
+    { value: 'coupons',      label: 'Coupons',      Icon: Ticket },
   ]
 
   const commissions = commissionsData?.results || []
   const coupons     = couponsData?.results     || []
 
   return (
-    <div style={{ fontFamily: "'DM Sans',sans-serif" }}>
+    <div style={{ fontFamily: "'DM Sans',sans-serif", animation: 'fadeIn 0.4s ease' }}>
+      <style>{`
+        @keyframes fadeIn {
+          from { opacity: 0; transform: translateY(6px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+        .fin-card-anim {
+          transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+        .fin-card-anim:hover {
+          transform: translateY(-3px);
+          box-shadow: 0 8px 20px rgba(15, 23, 42, 0.08);
+        }
+        .fin-tab-btn {
+          display: flex; align-items: center; gap: 6px;
+          transition: color 0.2s ease, background 0.2s ease, border-color 0.2s ease;
+        }
+        .fin-tab-btn:hover {
+          color: #0B1C3D;
+        }
+        .fin-split-card {
+          transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+        .fin-split-card:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 6px 16px rgba(15, 23, 42, 0.06);
+        }
+        .fin-row {
+          transition: background 0.15s ease;
+        }
+        .fin-btn {
+          transition: transform 0.15s ease, opacity 0.15s ease;
+        }
+        .fin-btn:hover {
+          transform: scale(1.03);
+          opacity: 0.9;
+        }
+        .fin-btn:active {
+          transform: scale(0.97);
+        }
+        .coupon-form-anim {
+          animation: slideDown 0.25s ease;
+        }
+        @keyframes slideDown {
+          from { opacity: 0; transform: translateY(-8px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+      `}</style>
 
       {/* Page header */}
       <div style={{ marginBottom: 24 }}>
@@ -83,16 +147,17 @@ export default function AdminFinancials() {
         {TABS.map(t => (
           <button
             key={t.value}
+            className="fin-tab-btn"
             onClick={() => setTab(t.value)}
             style={{
               padding: '10px 18px', borderRadius: '10px 10px 0 0', fontSize: 13, fontWeight: 700,
-              cursor: 'pointer', border: 'none', transition: 'all .2s', fontFamily: 'Syne,sans-serif',
+              cursor: 'pointer', border: 'none', fontFamily: 'Syne,sans-serif',
               background: tab === t.value ? '#0B1C3D' : 'transparent',
               color: tab === t.value ? '#fff' : '#94A3B8',
               borderBottom: tab === t.value ? '2px solid #0B1C3D' : '2px solid transparent',
             }}
           >
-            {t.icon} {t.label}
+            <t.Icon size={15} strokeWidth={2} /> {t.label}
           </button>
         ))}
       </div>
@@ -102,14 +167,14 @@ export default function AdminFinancials() {
         finLoading ? <LoadingSpinner label="Loading financials..." /> : (
           <>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16, marginBottom: 20 }}>
-              <StatCard label="Total Revenue"      value={`$${Number(financial?.total_revenue        || 0).toFixed(2)}`} color="#7C3AED" icon="💵" />
-              <StatCard label="Platform Profit"    value={`$${Number(financial?.total_platform_profit|| 0).toFixed(2)}`} color="#10B981" icon="🏢" />
-              <StatCard label="Paid to Experts"    value={`$${Number(financial?.total_expert_paid    || 0).toFixed(2)}`} color="#0EA5E9" icon="👨‍💻" />
+              <StatCard label="Total Revenue"   value={formatTSH(financial?.total_revenue)}         color="#7C3AED" icon={<DollarSign size={20} strokeWidth={1.8} />} />
+              <StatCard label="Platform Profit" value={formatTSH(financial?.total_platform_profit)}  color="#10B981" icon={<Building2 size={20} strokeWidth={1.8} />} />
+              <StatCard label="Paid to Experts" value={formatTSH(financial?.total_expert_paid)}      color="#0EA5E9" icon={<GraduationCap size={20} strokeWidth={1.8} />} />
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16, marginBottom: 24 }}>
-              <StatCard label="Developer Commission" value={`$${Number(financial?.total_developer_paid|| 0).toFixed(2)}`} color="#F59E0B" icon="⚙️" />
-              <StatCard label="Completed Payments"   value={financial?.total_payments      || 0}                         color="#64748B" icon="✅" />
-              <StatCard label="Projects Delivered"   value={financial?.completed_projects  || 0}                         color="#059669" icon="🚀" />
+              <StatCard label="Developer Commission" value={formatTSH(financial?.total_developer_paid)} color="#F59E0B" icon={<Settings2 size={20} strokeWidth={1.8} />} />
+              <StatCard label="Completed Payments"   value={financial?.total_payments      || 0}         color="#64748B" icon={<CheckCircle2 size={20} strokeWidth={1.8} />} />
+              <StatCard label="Projects Delivered"   value={financial?.completed_projects  || 0}         color="#059669" icon={<Rocket size={20} strokeWidth={1.8} />} />
             </div>
 
             {/* Commission split */}
@@ -117,13 +182,15 @@ export default function AdminFinancials() {
               <SectionTitle>Revenue Split</SectionTitle>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16 }}>
                 {[
-                  { label: 'Expert Share',     value: '60%', color: '#0EA5E9', icon: '👨‍💻', desc: 'Default expert commission' },
-                  { label: 'Platform Share',   value: '30%', color: '#7C3AED', icon: '🏢', desc: 'GSH platform cut'          },
-                  { label: 'Developer Share',  value: '10%', color: '#F59E0B', icon: '⚙️', desc: 'Developer commission'      },
+                  { label: 'Expert Share',    value: '60%', color: '#0EA5E9', Icon: GraduationCap, desc: 'Default expert commission' },
+                  { label: 'Platform Share',  value: '30%', color: '#7C3AED', Icon: Building2,     desc: 'GSH platform cut'          },
+                  { label: 'Developer Share', value: '10%', color: '#F59E0B', Icon: Settings2,     desc: 'Developer commission'      },
                 ].map(item => (
-                  <div key={item.label} style={{ padding: '16px 20px', borderRadius: 12, background: item.color + '08', border: `1px solid ${item.color}20`, textAlign: 'center' }}>
-                    <div style={{ fontSize: 28, marginBottom: 8 }}>{item.icon}</div>
-                    <p style={{ fontSize: 28, fontWeight: 800, color: item.color, margin: 0, fontFamily: 'Syne,sans-serif' }}>{item.value}</p>
+                  <div key={item.label} className="fin-split-card" style={{ padding: '16px 20px', borderRadius: 12, background: item.color + '08', border: `1px solid ${item.color}20`, textAlign: 'center' }}>
+                    <div style={{ width: 44, height: 44, borderRadius: 12, background: item.color + '15', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 10px' }}>
+                      <item.Icon size={20} color={item.color} strokeWidth={1.8} />
+                    </div>
+                    <p style={{ fontSize: 26, fontWeight: 800, color: item.color, margin: 0, fontFamily: 'Syne,sans-serif' }}>{item.value}</p>
                     <p style={{ fontSize: 12, fontWeight: 700, color: '#374151', margin: '4px 0 2px' }}>{item.label}</p>
                     <p style={{ fontSize: 11, color: '#94A3B8', margin: 0 }}>{item.desc}</p>
                   </div>
@@ -138,17 +205,17 @@ export default function AdminFinancials() {
       {tab === 'commissions' && (
         commLoading ? <LoadingSpinner label="Loading commissions..." /> :
         commissions.length === 0 ? (
-          <EmptyState icon="💰" title="No commissions yet" body="Commissions appear after projects are completed." />
+          <EmptyState title="No commissions yet" body="Commissions appear after projects are completed." />
         ) : (
           <div style={{ background: '#fff', borderRadius: 16, border: '1px solid #F1F5F9', overflow: 'hidden' }}>
             <Table headers={['Project', 'Total', 'Expert', 'Developer', 'Platform', 'Status', 'Date']}>
               {commissions.map((c: any) => (
                 <Tr key={c.id}>
                   <Td><span style={{ fontSize: 13, fontWeight: 700, color: '#0F172A' }}>#{c.project}</span></Td>
-                  <Td><span style={{ fontWeight: 700, color: '#7C3AED', fontFamily: 'Syne,sans-serif' }}>${Number(c.total_amount).toFixed(2)}</span></Td>
-                  <Td><span style={{ color: '#0EA5E9', fontWeight: 700 }}>${Number(c.expert_amount).toFixed(2)}</span></Td>
-                  <Td><span style={{ color: '#F59E0B', fontWeight: 700 }}>${Number(c.developer_amount).toFixed(2)}</span></Td>
-                  <Td><span style={{ color: '#10B981', fontWeight: 700 }}>${Number(c.platform_amount).toFixed(2)}</span></Td>
+                  <Td><span style={{ fontWeight: 700, color: '#7C3AED', fontFamily: 'Syne,sans-serif', fontSize: 13 }}>{formatTSH(c.total_amount)}</span></Td>
+                  <Td><span style={{ color: '#0EA5E9', fontWeight: 700, fontSize: 13 }}>{formatTSH(c.expert_amount)}</span></Td>
+                  <Td><span style={{ color: '#F59E0B', fontWeight: 700, fontSize: 13 }}>{formatTSH(c.developer_amount)}</span></Td>
+                  <Td><span style={{ color: '#10B981', fontWeight: 700, fontSize: 13 }}>{formatTSH(c.platform_amount)}</span></Td>
                   <Td>
                     <span style={{
                       padding: '3px 10px', borderRadius: 999, fontSize: 11, fontWeight: 700,
@@ -171,13 +238,13 @@ export default function AdminFinancials() {
       {tab === 'coupons' && (
         <>
           <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 16 }}>
-            <Btn variant="accent" onClick={() => setShowCouponForm(!showCouponForm)}>
-              {showCouponForm ? 'Cancel' : '+ New Coupon'}
+            <Btn variant="accent" className="fin-btn" onClick={() => setShowCouponForm(!showCouponForm)} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+              {showCouponForm ? 'Cancel' : <><Plus size={14} strokeWidth={2.4} /> New Coupon</>}
             </Btn>
           </div>
 
           {showCouponForm && (
-            <Card style={{ marginBottom: 20, border: '1.5px solid #BAE6FD', background: '#F0F9FF' }}>
+            <Card className="coupon-form-anim" style={{ marginBottom: 20, border: '1.5px solid #BAE6FD', background: '#F0F9FF' }}>
               <SectionTitle>Create Coupon</SectionTitle>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 12, marginBottom: 14 }}>
                 {[
@@ -192,12 +259,12 @@ export default function AdminFinancials() {
                       placeholder={f.placeholder}
                       value={(couponForm as any)[f.key]}
                       onChange={e => setCouponForm(p => ({ ...p, [f.key]: f.upper ? e.target.value.toUpperCase() : e.target.value }))}
-                      style={{ width: '100%', padding: '8px 10px', borderRadius: 8, border: '1.5px solid #E2E8F0', fontSize: 13, outline: 'none', fontFamily: 'inherit', boxSizing: 'border-box' }}
+                      style={{ width: '100%', padding: '8px 10px', borderRadius: 8, border: '1.5px solid #E2E8F0', fontSize: 13, outline: 'none', fontFamily: 'inherit', boxSizing: 'border-box', transition: 'border-color 0.15s ease' }}
                     />
                   </div>
                 ))}
               </div>
-              <Btn variant="accent" onClick={() => createCouponMutation.mutate()} disabled={!couponForm.code || !couponForm.discount_percent || createCouponMutation.isPending}>
+              <Btn variant="accent" className="fin-btn" onClick={() => createCouponMutation.mutate()} disabled={!couponForm.code || !couponForm.discount_percent || createCouponMutation.isPending}>
                 {createCouponMutation.isPending ? 'Creating…' : 'Create Coupon'}
               </Btn>
             </Card>
@@ -205,14 +272,14 @@ export default function AdminFinancials() {
 
           {couponLoading ? <LoadingSpinner label="Loading coupons..." /> :
             coupons.length === 0 ? (
-              <EmptyState icon="🎟️" title="No coupons yet" body="Create your first coupon to offer discounts." />
+              <EmptyState title="No coupons yet" body="Create your first coupon to offer discounts." />
             ) : (
               <div style={{ background: '#fff', borderRadius: 16, border: '1px solid #F1F5F9', overflow: 'hidden' }}>
                 <Table headers={['Code', 'Discount', 'Uses', 'Max Uses', 'Status', 'Expires']}>
                   {coupons.map((c: any) => (
                     <Tr key={c.id}>
                       <Td><span style={{ fontFamily: 'Syne,sans-serif', fontWeight: 800, fontSize: 13, color: '#0B1C3D', letterSpacing: '0.05em' }}>{c.code}</span></Td>
-                      <Td><span style={{ fontWeight: 800, color: '#7C3AED', fontFamily: 'Syne,sans-serif' }}>{c.discount_percent}%</span></Td>
+                      <Td><span style={{ fontWeight: 800, color: '#7C3AED', fontFamily: 'Syne,sans-serif', fontSize: 13 }}>{c.discount_percent}%</span></Td>
                       <Td><span style={{ fontSize: 13, color: '#374151' }}>{c.uses}</span></Td>
                       <Td><span style={{ fontSize: 13, color: '#374151' }}>{c.max_uses}</span></Td>
                       <Td>
