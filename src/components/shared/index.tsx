@@ -198,9 +198,9 @@ export function PageHeader({ title, subtitle, action }: { title: string; subtitl
 }
 
 // ── Card ───────────────────────────────────────────────────────────────────
-export function Card({ children, style }: { children: React.ReactNode; style?: React.CSSProperties }) {
+export function Card({ children, style, className }: { children: React.ReactNode; style?: React.CSSProperties; className?: string }) {
   return (
-    <div style={{
+    <div className={className} style={{
       background: '#fff', borderRadius: 16, padding: '22px 24px',
       border: '1px solid #F1F5F9', boxShadow: '0 1px 3px rgba(0,0,0,.04)',
       ...style,
@@ -269,9 +269,9 @@ export function Table({ headers, children }: { headers: string[]; children: Reac
   )
 }
 
-export function Tr({ children, onClick }: { children: React.ReactNode; onClick?: () => void }) {
+export function Tr({ children, onClick, className }: { children: React.ReactNode; onClick?: () => void; className?: string }) {
   return (
-    <tr onClick={onClick} style={{ borderBottom: '1px solid #F8FAFC', cursor: onClick ? 'pointer' : 'default', transition: 'background .15s' }}
+    <tr onClick={onClick} className={className} style={{ borderBottom: '1px solid #F8FAFC', cursor: onClick ? 'pointer' : 'default', transition: 'background .15s' }}
       onMouseEnter={e => { if (onClick) (e.currentTarget as HTMLTableRowElement).style.background = '#F8FAFC' }}
       onMouseLeave={e => { (e.currentTarget as HTMLTableRowElement).style.background = '' }}>
       {children}

@@ -9,6 +9,18 @@ import {
 import { format, formatDistanceToNow, isValid } from 'date-fns'
 import toast from 'react-hot-toast'
 import type { Project, User, ProjectProgress, ProjectFile } from '@/types'
+import {
+  Lock,
+  AlertTriangle,
+  MessageCircle,
+  CheckCircle2,
+  Zap,
+  Check,
+  Paperclip,
+  Undo2,
+  Upload,
+  ArrowLeft,
+} from 'lucide-react'
 
 // Safe date helpers — crash-proof
 function safeFormat(dateStr: string | null | undefined, fmt: string): string {
@@ -20,6 +32,11 @@ function safeDistance(dateStr: string | null | undefined): string {
   if (!dateStr) return '—'
   const d = new Date(dateStr)
   return isValid(d) ? formatDistanceToNow(d, { addSuffix: true }) : '—'
+}
+
+const formatTSH = (value: number | string | undefined | null) => {
+  const n = Number(value || 0)
+  return `TSH ${n.toLocaleString('en-US')}`
 }
 
 function InfoRow({ label, value }: { label: string; value: React.ReactNode }) {
@@ -70,7 +87,7 @@ export default function AdminProjectDetail() {
     mutationFn: (payload: { action: string; reason?: string }) =>
       projectApi.approve(Number(id), payload),
     onSuccess: (_: unknown, { action }: { action: string; reason?: string }) => {
-      toast.success(action === 'approve' ? '✅ Project approved & delivered to client!' : '↩ Revision requested.')
+      toast.success(action === 'approve' ? 'Project approved & delivered to client!' : 'Revision requested.')
       invalidate()
       setShowRevisionBox(false)
     },
@@ -101,7 +118,7 @@ export default function AdminProjectDetail() {
     <div style={{ textAlign: 'center', padding: 60, color: '#94A3B8' }}>
       <p style={{ fontSize: 16, fontWeight: 700 }}>Project not found.</p>
       <button onClick={() => navigate('/admin/projects')} style={{ marginTop: 12, padding: '8px 18px', borderRadius: 10, background: '#0B1C3D', color: '#fff', border: 'none', cursor: 'pointer', fontWeight: 700 }}>
-        ← Back to Projects
+        Back to Projects
       </button>
     </div>
   )
@@ -112,14 +129,53 @@ export default function AdminProjectDetail() {
   const expertUser = project.expert as User | null
 
   return (
-    <div>
+    <div style={{ animation: 'fadeIn 0.4s ease' }}>
+      <style>{`
+        @keyframes fadeIn {
+          from { opacity: 0; transform: translateY(6px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+        .detail-card-anim {
+          transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+        .detail-card-anim:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 8px 20px rgba(15, 23, 42, 0.07);
+        }
+        .detail-btn {
+          transition: transform 0.15s ease, opacity 0.15s ease, background 0.15s ease;
+        }
+        .detail-btn:hover {
+          transform: scale(1.04);
+          opacity: 0.9;
+        }
+        .detail-btn:active {
+          transform: scale(0.96);
+        }
+        .revision-box {
+          animation: slideDown 0.2s ease;
+        }
+        @keyframes slideDown {
+          from { opacity: 0; transform: translateY(-6px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+        .file-row {
+          transition: background 0.15s ease, transform 0.15s ease;
+        }
+        .file-row:hover {
+          background: #F1F5F9;
+          transform: translateX(2px);
+        }
+      `}</style>
+
       {/* Header */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 24 }}>
         <button
+          className="detail-btn"
           onClick={() => navigate('/admin/projects')}
-          style={{ background: '#F1F5F9', border: 'none', borderRadius: 10, padding: '8px 14px', cursor: 'pointer', fontSize: 13, color: '#64748B', fontWeight: 600 }}
+          style={{ display: 'flex', alignItems: 'center', gap: 6, background: '#F1F5F9', border: 'none', borderRadius: 10, padding: '8px 14px', cursor: 'pointer', fontSize: 13, color: '#64748B', fontWeight: 600 }}
         >
-          ← Back
+          <ArrowLeft size={14} strokeWidth={2.2} /> Back
         </button>
         <div style={{ flex: 1 }}>
           <h1 style={{ fontFamily: 'Syne,sans-serif', fontSize: 20, fontWeight: 800, color: '#0F172A', margin: 0 }}>
@@ -130,8 +186,8 @@ export default function AdminProjectDetail() {
             <SoftwareLabel software={project.software} />
             <DeliveryBadge type={project.delivery_type} />
             {project.is_nda && (
-              <span style={{ fontSize: 11, fontWeight: 700, color: '#7C3AED', background: '#F5F3FF', padding: '3px 10px', borderRadius: 999, border: '1px solid #DDD6FE' }}>
-                🔒 NDA
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 11, fontWeight: 700, color: '#7C3AED', background: '#F5F3FF', padding: '3px 10px', borderRadius: 999, border: '1px solid #DDD6FE' }}>
+                <Lock size={11} strokeWidth={2.4} /> NDA
               </span>
             )}
           </div>
@@ -141,7 +197,7 @@ export default function AdminProjectDetail() {
       {/* QC Banner */}
       {project.status === 'qc' && (
         <div style={{ background: '#FFFBEB', border: '1px solid #FDE68A', borderRadius: 12, padding: '12px 18px', marginBottom: 20, display: 'flex', gap: 10, alignItems: 'flex-start' }}>
-          <span style={{ fontSize: 18 }}>⚠️</span>
+          <AlertTriangle size={18} strokeWidth={2} color="#D97706" style={{ flexShrink: 0, marginTop: 1 }} />
           <div>
             <p style={{ fontSize: 13, fontWeight: 700, color: '#92400E', margin: 0 }}>Ready for Quality Check</p>
             <p style={{ fontSize: 12, color: '#B45309', margin: '3px 0 0' }}>Expert has submitted. Review and approve to deliver to client, or request revision.</p>
@@ -160,10 +216,11 @@ export default function AdminProjectDetail() {
               <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                 <span>{clientUser?.first_name} {clientUser?.last_name}</span>
                 <button
+                  className="detail-btn"
                   onClick={() => clientUser && openChatMutation.mutate(clientUser.id)}
-                  style={{ padding: '3px 10px', borderRadius: 8, background: '#EFF6FF', color: '#2563EB', border: 'none', cursor: 'pointer', fontSize: 11, fontWeight: 700 }}
+                  style={{ display: 'inline-flex', alignItems: 'center', gap: 4, padding: '3px 10px', borderRadius: 8, background: '#EFF6FF', color: '#2563EB', border: 'none', cursor: 'pointer', fontSize: 11, fontWeight: 700 }}
                 >
-                  💬 Chat
+                  <MessageCircle size={12} strokeWidth={2.2} /> Chat
                 </button>
               </div>
             } />
@@ -172,25 +229,36 @@ export default function AdminProjectDetail() {
                 ? <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                     <span>{expertUser.first_name} {expertUser.last_name}</span>
                     <button
+                      className="detail-btn"
                       onClick={() => openChatMutation.mutate(expertUser.id)}
-                      style={{ padding: '3px 10px', borderRadius: 8, background: '#F0FDF4', color: '#059669', border: 'none', cursor: 'pointer', fontSize: 11, fontWeight: 700 }}
+                      style={{ display: 'inline-flex', alignItems: 'center', gap: 4, padding: '3px 10px', borderRadius: 8, background: '#F0FDF4', color: '#059669', border: 'none', cursor: 'pointer', fontSize: 11, fontWeight: 700 }}
                     >
-                      💬 Chat
+                      <MessageCircle size={12} strokeWidth={2.2} /> Chat
                     </button>
                   </div>
-                : <span style={{ color: '#F59E0B', fontWeight: 700 }}>⚠ Not assigned</span>
+                : <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, color: '#F59E0B', fontWeight: 700 }}>
+                    <AlertTriangle size={13} strokeWidth={2.2} /> Not assigned
+                  </span>
             } />
             <InfoRow label="Deadline" value={safeFormat(project.deadline, 'dd MMM yyyy, HH:mm')} />
             <InfoRow label="Submitted" value={safeDistance(project.created_at)} />
             <InfoRow label="Payment" value={
               project.is_fully_paid
-                ? <span style={{ color: '#059669', fontWeight: 700 }}>✅ Fully Paid</span>
+                ? <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, color: '#059669', fontWeight: 700 }}>
+                    <CheckCircle2 size={14} strokeWidth={2.2} /> Fully Paid
+                  </span>
                 : project.advance_paid && project.advance_paid !== '0.00' && project.advance_paid !== '0'
-                ? <span style={{ color: '#D97706', fontWeight: 700 }}>⚡ Advance: ${project.advance_paid}</span>
+                ? <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, color: '#D97706', fontWeight: 700 }}>
+                    <Zap size={14} strokeWidth={2.2} /> Advance: {formatTSH(project.advance_paid)}
+                  </span>
                 : <span style={{ color: '#94A3B8' }}>Not paid</span>
             } />
             {project.include_explanation && (
-              <InfoRow label="Explanation" value={<span style={{ color: '#7C3AED', fontWeight: 700 }}>Included ✓</span>} />
+              <InfoRow label="Explanation" value={
+                <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, color: '#7C3AED', fontWeight: 700 }}>
+                  Included <Check size={13} strokeWidth={2.4} />
+                </span>
+              } />
             )}
             <div style={{ marginTop: 14 }}>
               <p style={{ fontSize: 12, color: '#94A3B8', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 8 }}>Description</p>
@@ -214,7 +282,7 @@ export default function AdminProjectDetail() {
               )}
               <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                 {project.progress_updates.map((u: ProjectProgress) => (
-                  <div key={u.id} style={{ padding: '10px 14px', background: '#F8FAFC', borderRadius: 10, border: '1px solid #F1F5F9' }}>
+                  <div key={u.id} className="file-row" style={{ padding: '10px 14px', background: '#F8FAFC', borderRadius: 10, border: '1px solid #F1F5F9' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
                       <span style={{ fontSize: 13, fontWeight: 700, color: '#0F172A' }}>{u.percentage}% — {u.time_remaining} remaining</span>
                       <span style={{ fontSize: 11, color: '#94A3B8' }}>{safeDistance(u.created_at)}</span>
@@ -232,9 +300,11 @@ export default function AdminProjectDetail() {
               <SectionTitle>Project Files</SectionTitle>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                 {project.files.map((f: ProjectFile) => (
-                  <div key={f.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 14px', background: '#F8FAFC', borderRadius: 10, border: '1px solid #F1F5F9' }}>
+                  <div key={f.id} className="file-row" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 14px', background: '#F8FAFC', borderRadius: 10, border: '1px solid #F1F5F9' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                      <span style={{ fontSize: 20 }}>📎</span>
+                      <div style={{ width: 34, height: 34, borderRadius: 8, background: '#EFF6FF', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                        <Paperclip size={16} strokeWidth={2} color="#2563EB" />
+                      </div>
                       <div>
                         <p style={{ fontSize: 13, fontWeight: 600, margin: 0, color: '#0F172A' }}>{f.original_name}</p>
                         <p style={{ fontSize: 11, color: '#94A3B8', margin: '2px 0 0' }}>
@@ -242,7 +312,7 @@ export default function AdminProjectDetail() {
                         </p>
                       </div>
                     </div>
-                    <a href={f.file} target="_blank" rel="noreferrer"
+                    <a href={f.file} target="_blank" rel="noreferrer" className="detail-btn"
                       style={{ padding: '5px 12px', borderRadius: 8, background: '#EFF6FF', color: '#2563EB', fontSize: 12, fontWeight: 700, textDecoration: 'none' }}>
                       Download
                     </a>
@@ -274,7 +344,7 @@ export default function AdminProjectDetail() {
               onChange={e => setAdminNotes(e.target.value)}
               placeholder="Internal notes about this project..."
               rows={4}
-              style={{ width: '100%', padding: '10px 12px', borderRadius: 10, border: '1.5px solid #E2E8F0', fontSize: 13, fontFamily: 'inherit', resize: 'vertical', outline: 'none', boxSizing: 'border-box', color: '#374151' }}
+              style={{ width: '100%', padding: '10px 12px', borderRadius: 10, border: '1.5px solid #E2E8F0', fontSize: 13, fontFamily: 'inherit', resize: 'vertical', outline: 'none', boxSizing: 'border-box', color: '#374151', transition: 'border-color 0.15s ease' }}
             />
             <div style={{ marginTop: 10, textAlign: 'right' }}>
               <Btn size="sm" onClick={() => saveNotesMutation.mutate()} disabled={saveNotesMutation.isPending}>
@@ -289,23 +359,23 @@ export default function AdminProjectDetail() {
 
           {/* Set Price */}
           {!project.client_price && (
-            <Card>
+            <Card className="detail-card-anim">
               <SectionTitle>Set Client Price</SectionTitle>
               <p style={{ fontSize: 12, color: '#94A3B8', margin: '0 0 12px', lineHeight: 1.5 }}>
                 Set the price for this project. Client will be notified.
               </p>
               <div style={{ display: 'flex', gap: 8 }}>
                 <div style={{ position: 'relative', flex: 1 }}>
-                  <span style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', color: '#94A3B8', fontWeight: 700 }}>$</span>
+                  <span style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', color: '#94A3B8', fontWeight: 700, fontSize: 12 }}>TSH</span>
                   <input
                     type="number"
-                    placeholder="0.00"
+                    placeholder="0"
                     value={priceInput}
                     onChange={e => setPriceInput(e.target.value)}
-                    style={{ width: '100%', padding: '9px 12px 9px 26px', borderRadius: 10, border: '1.5px solid #E2E8F0', fontSize: 14, fontWeight: 700, outline: 'none', boxSizing: 'border-box', fontFamily: 'Syne,sans-serif' }}
+                    style={{ width: '100%', padding: '9px 12px 9px 42px', borderRadius: 10, border: '1.5px solid #E2E8F0', fontSize: 14, fontWeight: 700, outline: 'none', boxSizing: 'border-box', fontFamily: 'Syne,sans-serif' }}
                   />
                 </div>
-                <Btn variant="accent" size="sm" onClick={() => setPriceMutation.mutate()} disabled={!priceInput || setPriceMutation.isPending}>
+                <Btn variant="accent" size="sm" className="detail-btn" onClick={() => setPriceMutation.mutate()} disabled={!priceInput || setPriceMutation.isPending}>
                   Set
                 </Btn>
               </div>
@@ -315,13 +385,13 @@ export default function AdminProjectDetail() {
           {project.client_price && (
             <Card style={{ border: '1.5px solid #BBF7D0', background: '#F0FDF4' }}>
               <p style={{ fontSize: 12, color: '#64748B', margin: '0 0 4px', textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: 600 }}>Client Price</p>
-              <p style={{ fontSize: 28, fontWeight: 800, color: '#059669', margin: 0, fontFamily: 'Syne,sans-serif' }}>${project.client_price}</p>
-              <p style={{ fontSize: 12, color: '#94A3B8', margin: '6px 0 0' }}>
+              <p style={{ fontSize: 24, fontWeight: 800, color: '#059669', margin: 0, fontFamily: 'Syne,sans-serif' }}>{formatTSH(project.client_price)}</p>
+              <p style={{ fontSize: 12, color: '#94A3B8', margin: '6px 0 0', display: 'flex', alignItems: 'center', gap: 4 }}>
                 {project.is_fully_paid
-                  ? '✅ Fully paid'
+                  ? <><CheckCircle2 size={13} strokeWidth={2.2} color="#059669" /> Fully paid</>
                   : project.advance_paid && project.advance_paid !== '0.00'
-                  ? `⚡ Advance: $${project.advance_paid}`
-                  : '⏳ Awaiting payment'}
+                  ? <><Zap size={13} strokeWidth={2.2} color="#D97706" /> Advance: {formatTSH(project.advance_paid)}</>
+                  : 'Awaiting payment'}
               </p>
             </Card>
           )}
@@ -345,6 +415,7 @@ export default function AdminProjectDetail() {
               <Btn
                 variant="accent"
                 size="sm"
+                className="detail-btn"
                 style={{ width: '100%' }}
                 onClick={() => assignExpertId && assignMutation.mutate(Number(assignExpertId))}
                 disabled={!assignExpertId || assignMutation.isPending}
@@ -364,18 +435,19 @@ export default function AdminProjectDetail() {
               <Btn
                 variant="primary"
                 size="md"
-                style={{ width: '100%', marginBottom: 8, background: '#059669' }}
+                className="detail-btn"
+                style={{ width: '100%', marginBottom: 8, background: '#059669', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}
                 onClick={() => approveMutation.mutate({ action: 'approve' })}
                 disabled={approveMutation.isPending}
               >
-                ✅ Approve & Deliver to Client
+                <CheckCircle2 size={15} strokeWidth={2.2} /> Approve & Deliver to Client
               </Btn>
               {!showRevisionBox ? (
-                <Btn variant="outline" size="md" style={{ width: '100%' }} onClick={() => setShowRevisionBox(true)}>
-                  ↩ Request Revision
+                <Btn variant="outline" size="md" className="detail-btn" style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }} onClick={() => setShowRevisionBox(true)}>
+                  <Undo2 size={15} strokeWidth={2.2} /> Request Revision
                 </Btn>
               ) : (
-                <div>
+                <div className="revision-box">
                   <textarea
                     value={revisionReason}
                     onChange={e => setRevisionReason(e.target.value)}
@@ -387,13 +459,14 @@ export default function AdminProjectDetail() {
                     <Btn
                       variant="danger"
                       size="sm"
+                      className="detail-btn"
                       style={{ flex: 1 }}
                       onClick={() => approveMutation.mutate({ action: 'reject', reason: revisionReason })}
                       disabled={!revisionReason || approveMutation.isPending}
                     >
                       Send Revision
                     </Btn>
-                    <Btn variant="ghost" size="sm" onClick={() => setShowRevisionBox(false)}>Cancel</Btn>
+                    <Btn variant="ghost" size="sm" className="detail-btn" onClick={() => setShowRevisionBox(false)}>Cancel</Btn>
                   </div>
                 </div>
               )}
@@ -455,11 +528,12 @@ function UploadFileBox({ projectId, onSuccess }: { projectId: number; onSuccess:
       <Btn
         variant="accent"
         size="sm"
-        style={{ width: '100%' }}
+        className="detail-btn"
+        style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}
         onClick={() => uploadMutation.mutate()}
         disabled={!selectedFile || uploadMutation.isPending}
       >
-        {uploadMutation.isPending ? 'Uploading…' : '⬆ Upload'}
+        <Upload size={14} strokeWidth={2.2} /> {uploadMutation.isPending ? 'Uploading…' : 'Upload'}
       </Btn>
     </div>
   )
