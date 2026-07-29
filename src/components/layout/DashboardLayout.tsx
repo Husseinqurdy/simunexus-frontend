@@ -4,21 +4,50 @@ import { authApi } from '@/api/client'
 import { useState, useEffect } from 'react'
 import NotificationBell from '@/components/shared/NotificationBell'
 
-// ── GSH Logo ───────────────────────────────────────────────────────────────
+// ── GSH Logo (real brand icon, smooth fade + scale-in on load) ─────────────
 function GSHLogo({ size = 32 }: { size?: number }) {
+  const [loaded, setLoaded] = useState(false)
   return (
-    <svg width={size} height={size} viewBox="0 0 40 40" fill="none">
-      <rect width="40" height="40" rx="10" fill="url(#dlg)" />
-      <path d="M8 20C8 13.37 13.37 8 20 8C23.5 8 26.67 9.43 29 11.76" stroke="white" strokeWidth="2.5" strokeLinecap="round" />
-      <path d="M20 20H26V26C26 27.1 25.1 28 24 28H20V20Z" fill="white" fillOpacity="0.9" />
-      <path d="M14 20H20V28H16C14.9 28 14 27.1 14 26V20Z" fill="white" fillOpacity="0.6" />
-      <circle cx="29" cy="12" r="3" fill="#38BDF8" /><circle cx="29" cy="12" r="1.5" fill="white" />
-      <defs>
-        <linearGradient id="dlg" x1="0" y1="0" x2="40" y2="40" gradientUnits="userSpaceOnUse">
-          <stop stopColor="#0B1C3D" /><stop offset="1" stopColor="#1A3A7A" />
-        </linearGradient>
-      </defs>
-    </svg>
+    <img
+      src="/gsh-icon.png"
+      alt="Global Simulation Hub"
+      onLoad={() => setLoaded(true)}
+      style={{
+        height: size,
+        width: 'auto',
+        maxWidth: 'none',
+        maxHeight: 'none',
+        display: 'block',
+        flexShrink: 0,
+        opacity: loaded ? 1 : 0,
+        transform: loaded ? 'scale(1)' : 'scale(0.9)',
+        transition: 'opacity .5s cubic-bezier(.22,.61,.36,1), transform .5s cubic-bezier(.22,.61,.36,1)',
+      }}
+    />
+  )
+}
+
+// ── Topbar brand marquee — logo + moving "Global Simulation Hub" text ─────
+function TopbarBrand() {
+  const text = 'GLOBAL SIMULATION HUB'
+  const items = Array.from({ length: 6 })
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0 }}>
+      <GSHLogo size={26} />
+      <div className="topbar-marquee-mask" style={{ width: 190, overflow: 'hidden', position: 'relative' }}>
+        <div className="topbar-marquee-track" style={{ display: 'flex', width: 'max-content' }}>
+          {items.map((_, i) => (
+            <span key={i} style={{ display: 'inline-flex', alignItems: 'center', gap: 8, whiteSpace: 'nowrap', paddingRight: 22 }}>
+              <span style={{
+                fontFamily: 'Syne,sans-serif', fontWeight: 700, fontSize: 11.5, letterSpacing: '.08em',
+                background: 'linear-gradient(90deg,#0EA5E9,#7C3AED)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
+              }}>{text}</span>
+              <span style={{ width: 4, height: 4, borderRadius: '50%', background: '#CBD5E1', flexShrink: 0 }} />
+            </span>
+          ))}
+        </div>
+      </div>
+    </div>
   )
 }
 
@@ -165,7 +194,13 @@ export default function DashboardLayout() {
 
   return (
     <div style={{ display: 'flex', minHeight: '100vh', background: '#F8FAFC', fontFamily: "'DM Sans', sans-serif" }}>
-      <style>{`@import url('https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=DM+Sans:wght@300;400;500;600&display=swap');`}</style>
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=DM+Sans:wght@300;400;500;600&display=swap');
+        @keyframes topbarMarquee { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+        .topbar-marquee-track { animation: topbarMarquee 14s linear infinite; }
+        .topbar-marquee-mask { -webkit-mask-image: linear-gradient(90deg, transparent, #000 10%, #000 85%, transparent); mask-image: linear-gradient(90deg, transparent, #000 10%, #000 85%, transparent); }
+        @media (max-width: 640px) { .topbar-marquee-mask { display: none !important; } }
+      `}</style>
 
       {/* Desktop sidebar */}
       <div style={{ width: collapsed ? 70 : 230, flexShrink: 0, transition: 'width .25s ease', display: 'none', position: 'sticky', top: 0, height: '100vh' }} className="lg-sidebar">
@@ -185,22 +220,24 @@ export default function DashboardLayout() {
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
         {/* Top bar */}
         <header style={{ background: '#fff', borderBottom: '1px solid #F1F5F9', padding: '0 24px', height: 60, display: 'flex', alignItems: 'center', justifyContent: 'space-between', position: 'sticky', top: 0, zIndex: 40 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 16, minWidth: 0 }}>
             {/* Mobile hamburger */}
-            <button onClick={() => setSidebarOpen(true)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#64748B', padding: 4, display: 'flex', alignItems: 'center' }} className="mobile-menu-btn">
+            <button onClick={() => setSidebarOpen(true)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#64748B', padding: 4, display: 'flex', alignItems: 'center', flexShrink: 0 }} className="mobile-menu-btn">
               {icons.menu}
             </button>
             <style>{`.mobile-menu-btn { display: none !important; } @media(max-width:768px){.mobile-menu-btn{display:flex !important;}}`}</style>
 
+            {/* Logo + moving brand text */}
+            <TopbarBrand />
+
             {/* Breadcrumb */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-              <span style={{ fontSize: 11, color: '#CBD5E1', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.08em' }}>GSH</span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0 }}>
               <svg width="12" height="12" fill="none" viewBox="0 0 24 24" stroke="#CBD5E1" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" /></svg>
-              <span style={{ fontSize: 13, color: '#475569', fontWeight: 500, textTransform: 'capitalize' }}>{role} Portal</span>
+              <span style={{ fontSize: 13, color: '#475569', fontWeight: 500, textTransform: 'capitalize', whiteSpace: 'nowrap' }}>{role} Portal</span>
             </div>
           </div>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexShrink: 0 }}>
             {/* Online indicator */}
             <div style={{ display: 'flex', alignItems: 'center', gap: 6, background: '#F0FDF4', border: '1px solid #BBF7D0', borderRadius: 999, padding: '4px 12px' }}>
               <span style={{ width: 6, height: 6, background: '#10B981', borderRadius: '50%', display: 'inline-block' }} />
