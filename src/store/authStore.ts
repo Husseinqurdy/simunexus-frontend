@@ -1,6 +1,7 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import type { User } from '@/types'
+import { queryClient } from '@/lib/queryClient'
 
 interface AuthState {
   user: User | null
@@ -29,6 +30,10 @@ export const useAuthStore = create<AuthState>()(
         localStorage.removeItem('access_token')
         localStorage.removeItem('refresh_token')
         set({ user: null, accessToken: null, refreshToken: null, isAuthenticated: false })
+        // Wipe every cached query (wallet, projects, my-application, etc.)
+        // so the next person who logs in on this tab starts with a clean
+        // slate instead of briefly seeing the previous user's cached data.
+        queryClient.clear()
       },
     }),
     { name: 'gsh-auth', partialize: (s) => ({ user: s.user, accessToken: s.accessToken, refreshToken: s.refreshToken, isAuthenticated: s.isAuthenticated }) }
