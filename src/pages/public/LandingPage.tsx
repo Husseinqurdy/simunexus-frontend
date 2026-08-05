@@ -186,6 +186,7 @@ function Reveal({ children, delay = 0 }: { children: React.ReactNode; delay?: nu
 
 export default function LandingPage() {
   const [navScrolled, setNavScrolled] = useState(false)
+  const [mobileNavOpen, setMobileNavOpen] = useState(false)
   const statsRef = useInView()
   const c1 = useCounter(1200, 2000, statsRef.inView)
   const c2 = useCounter(98, 2000, statsRef.inView)
@@ -196,6 +197,12 @@ export default function LandingPage() {
     const onScroll = () => setNavScrolled(window.scrollY > 40)
     window.addEventListener('scroll', onScroll)
     return () => window.removeEventListener('scroll', onScroll)
+  }, [])
+
+  useEffect(() => {
+    const onResize = () => { if (window.innerWidth > 640) setMobileNavOpen(false) }
+    window.addEventListener('resize', onResize)
+    return () => window.removeEventListener('resize', onResize)
   }, [])
 
   return (
@@ -235,14 +242,21 @@ export default function LandingPage() {
         .btncta:hover { background-position:100% 50%; transform:translateY(-2px); box-shadow:0 12px 30px rgba(249,115,22,.3); color:#fff; }
         .btngl { display:inline-flex; align-items:center; gap:8px; background:transparent; color:rgba(255,255,255,.88); font-family:'DM Sans',sans-serif; font-weight:500; font-size:14.5px; padding:13px 23px; border-radius:12px; border:1px solid rgba(255,255,255,.2); cursor:pointer; transition:background .25s cubic-bezier(.22,.61,.36,1), border-color .25s cubic-bezier(.22,.61,.36,1), color .25s cubic-bezier(.22,.61,.36,1); text-decoration:none; }
         .btngl:hover { background:rgba(255,255,255,.08); border-color:rgba(56,189,248,.5); color:#fff; }
-        .navglass { backdrop-filter:blur(16px); -webkit-backdrop-filter:blur(16px); background:rgba(11,28,61,.9); border-bottom:1px solid rgba(255,255,255,.08); }
-        .navsolid { background:#0B1C3D; }
+        .navglass { backdrop-filter:blur(16px); -webkit-backdrop-filter:blur(16px); background:rgba(255,255,255,.92); border-bottom:1px solid rgba(15,23,42,.08); box-shadow:0 6px 24px rgba(15,23,42,.08); }
+        .navsolid { background:#FFFFFF; border-bottom:1px solid rgba(15,23,42,.05); }
+        .navbtn-outline { display:inline-flex; align-items:center; justify-content:center; gap:8px; background:#fff; color:#0B1C3D; font-family:'DM Sans',sans-serif; font-weight:500; border:1px solid rgba(14,165,233,.3); border-radius:12px; cursor:pointer; text-decoration:none; transition:background .2s cubic-bezier(.22,.61,.36,1), border-color .2s cubic-bezier(.22,.61,.36,1); }
+        .navbtn-outline:hover { background:rgba(14,165,233,.08); border-color:rgba(14,165,233,.55); }
+        .nav-desktop-actions { display:flex; align-items:center; gap:6px; }
+        .nav-toggle { display:none; align-items:center; justify-content:center; width:38px; height:38px; border-radius:10px; border:1px solid #E2E8F0; background:#fff; color:#0B1C3D; cursor:pointer; flex-shrink:0; transition:background .2s, border-color .2s; }
+        .nav-toggle:hover { background:#F1F5F9; border-color:#CBD5E1; }
+        .nav-mobile-panel { background:#fff; border-top:1px solid rgba(15,23,42,.06); box-shadow:0 14px 28px rgba(15,23,42,.09); animation:slideDown .22s cubic-bezier(.22,.61,.36,1) both; }
+        @media (min-width: 641px) { .nav-mobile-panel { display:none !important; } }
         .lcard { background:#fff; border-radius:20px; padding:24px 20px; border:1px solid #F1F5F9; text-align:center; transition:all .35s cubic-bezier(.22,.61,.36,1); }
         .lcard:hover { box-shadow:0 14px 40px rgba(11,28,61,.10); transform:translateY(-4px); }
         .blob { position:absolute; border-radius:50%; filter:blur(80px); pointer-events:none; }
         .iconwrap { width:44px; height:44px; border-radius:12px; display:flex; align-items:center; justify-content:center; margin-bottom:16px; }
-        .navlink { color:rgba(255,255,255,.72); font-size:13.5px; font-weight:500; padding:8px 14px; border-radius:8px; text-decoration:none; transition:color .2s, background .2s; }
-        .navlink:hover { color:#fff; background:rgba(255,255,255,.06); }
+        .navlink { color:#475569; font-size:13.5px; font-weight:500; padding:8px 14px; border-radius:8px; text-decoration:none; transition:color .2s, background .2s; }
+        .navlink:hover { color:#0B1C3D; background:rgba(11,28,61,.06); }
         .mobiletoggle { display:none; }
         * { box-sizing:border-box; }
 
@@ -256,41 +270,73 @@ export default function LandingPage() {
         /* ---- Responsive scale: small tablets / large phones ---- */
         @media (max-width: 640px) {
           .grid-3 { grid-template-columns:1fr !important; }
-          .navlink.nav-extra { display:none; }
           .nav-subtitle { display:none; }
+          .nav-desktop-actions { display:none !important; }
+          .nav-toggle { display:flex !important; }
         }
 
         /* ---- Responsive scale: phones ---- */
         @media (max-width: 480px) {
           .grid-4 { grid-template-columns:1fr 1fr !important; gap:12px !important; }
-          .btncta, .btngl { font-size:13.5px !important; padding:12px 20px !important; }
+          .btncta, .btngl, .navbtn-outline { font-size:13.5px !important; padding:12px 20px !important; }
         }
 
         @media (prefers-reduced-motion: reduce) {
-          .au, .au1, .au2, .au3, .au4, .mq, .pr, .drift { animation: none !important; }
-          .fcard, .scard, .stcard, .tcard, .lcard, .btncta, .btngl { transition: none !important; }
+          .au, .au1, .au2, .au3, .au4, .mq, .pr, .drift, .nav-mobile-panel { animation: none !important; }
+          .fcard, .scard, .stcard, .tcard, .lcard, .btncta, .btngl, .navbtn-outline, .nav-toggle { transition: none !important; }
         }
       `}</style>
       <div className="lp">
         {/* NAV */}
-        <nav className={`${navScrolled ? 'navglass' : 'navsolid'}`} style={{ position: 'fixed', top: 0, left: 0, right: 0, zIndex: 50, transition: 'background .3s, backdrop-filter .3s' }}>
+        <nav className={`${navScrolled ? 'navglass' : 'navsolid'}`} style={{ position: 'fixed', top: 0, left: 0, right: 0, zIndex: 50, transition: 'background .3s, backdrop-filter .3s, box-shadow .3s' }}>
           <div style={{ maxWidth: 1200, margin: '0 auto', padding: '14px clamp(16px,4vw,24px)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <Link to="/" style={{ display: 'flex', alignItems: 'center', gap: 12, textDecoration: 'none', minWidth: 0 }}>
+            <Link to="/" style={{ display: 'flex', alignItems: 'center', gap: 12, textDecoration: 'none', minWidth: 0 }} onClick={() => setMobileNavOpen(false)}>
               <GSHLogo size={40} />
               <div style={{ minWidth: 0 }}>
-                <div className="dp" style={{ color: '#fff', fontWeight: 700, fontSize: 15, lineHeight: 1.2, letterSpacing: '.01em', whiteSpace: 'nowrap' }}>Global Simulation Hub</div>
-                <div className="nav-subtitle" style={{ color: '#FDBA74', fontSize: 9.5, fontWeight: 600, letterSpacing: '.16em', textTransform: 'uppercase', marginTop: 2, whiteSpace: 'nowrap' }}>Engineering · Simulation · Delivery</div>
+                <div className="dp" style={{ color: '#0B1C3D', fontWeight: 700, fontSize: 15, lineHeight: 1.2, letterSpacing: '.01em', whiteSpace: 'nowrap' }}>Global Simulation Hub</div>
+                <div className="nav-subtitle" style={{ color: '#C2410C', fontSize: 9.5, fontWeight: 600, letterSpacing: '.16em', textTransform: 'uppercase', marginTop: 2, whiteSpace: 'nowrap' }}>Engineering · Simulation · Delivery</div>
               </div>
             </Link>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-              <Link to="/apply-expert" className="navlink nav-extra">Become Expert</Link>
-              <Link to="/login" className="btngl" style={{ fontSize: 13, padding: '9px 16px' }}>Login</Link>
+
+            {/* Desktop actions — hidden below 640px in favor of the hamburger menu */}
+            <div className="nav-desktop-actions">
+              <Link to="/apply-expert" className="navlink">Become Expert</Link>
+              <Link to="/login" className="navbtn-outline" style={{ fontSize: 13, padding: '9px 16px' }}>Login</Link>
               <Link to="/submit" className="btncta" style={{ fontSize: 13, padding: '10px 18px' }}>
                 Submit Project
                 <Icon name="arrow-right" size={14} />
               </Link>
             </div>
+
+            {/* Hamburger toggle — shown only on small screens */}
+            <button
+              type="button"
+              className="nav-toggle"
+              aria-label={mobileNavOpen ? 'Close menu' : 'Open menu'}
+              aria-expanded={mobileNavOpen}
+              onClick={() => setMobileNavOpen((v) => !v)}
+            >
+              <Icon name={mobileNavOpen ? 'x' : 'menu'} size={19} color="#0B1C3D" />
+            </button>
           </div>
+
+          {/* Mobile dropdown — Become Expert, Login, Submit Project stacked full-width */}
+          {mobileNavOpen && (
+            <div className="nav-mobile-panel">
+              <div style={{ maxWidth: 1200, margin: '0 auto', padding: '6px clamp(16px,4vw,24px) 18px', display: 'flex', flexDirection: 'column', gap: 8 }}>
+                <Link to="/apply-expert" className="navlink" style={{ padding: '13px 14px', fontSize: 14.5 }} onClick={() => setMobileNavOpen(false)}>
+                  Become Expert
+                </Link>
+                <Link to="/login" className="navbtn-outline" style={{ width: '100%', fontSize: 14.5, padding: '13px 16px' }} onClick={() => setMobileNavOpen(false)}>
+                  Login
+                </Link>
+                <Link to="/submit" className="btncta" style={{ width: '100%', fontSize: 14.5, padding: '14px 16px' }} onClick={() => setMobileNavOpen(false)}>
+                  Submit Project
+                  <Icon name="arrow-right" size={15} />
+                </Link>
+              </div>
+            </div>
+          )}
         </nav>
 
         {/* HERO */}
