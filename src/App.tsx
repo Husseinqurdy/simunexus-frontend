@@ -24,6 +24,7 @@ import ClientProfile from '@/pages/client/ClientProfile'
 import ClientChat from '@/pages/client/ClientChat'
 import ClientWallet from '@/pages/client/ClientWallet'
 import ClientSubmitProject from '@/pages/client/ClientSubmitProject'
+import TopUpComplete from '@/pages/client/TopUpComplete'
 
 // Expert
 import ExpertDashboard from '@/pages/expert/ExpertDashboard'
@@ -142,6 +143,7 @@ export default function App() {
           <Route path="projects/:id" element={<ClientProjectDetail />} />
           <Route path="chat" element={<ClientChat />} />
           <Route path="wallet" element={<ClientWallet />} />
+          <Route path="wallet/topup-complete" element={<TopUpComplete />} />   {/* MPYA */}
           <Route path="profile" element={<ClientProfile />} />
         </Route>
 

@@ -1,5 +1,5 @@
-import { useEffect, useRef, useState } from 'react'
-import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { useState } from 'react'
+import { useQuery } from '@tanstack/react-query'
 import { paymentApi } from '@/api/client'
 import { formatDistanceToNow, format } from 'date-fns'
 import toast from 'react-hot-toast'
@@ -25,22 +25,11 @@ function Icon({ name, size = 18, color = 'currentColor' }: { name: IconName; siz
 
 /* --------------------------------- helpers --------------------------------- */
 
-const PROVIDERS: { value: string; label: string }[] = [
-  { value: 'Mpesa', label: 'M-Pesa' },
-  { value: 'Tigo', label: 'Mixx by Yas (Tigo Pesa)' },
-  { value: 'Airtel', label: 'Airtel Money' },
-  { value: 'Halopesa', label: 'HaloPesa' },
-  { value: 'Azampesa', label: 'AzamPesa' },
-]
-
 const fmtTZS = (n: number) => `TSh ${Math.round(n).toLocaleString('en-US')}`
 
 /* ---------------------------------- page ------------------------------------ */
 
-type TopUpState = 'idle' | 'submitting' | 'pending' | 'success' | 'failed' | 'timeout'
-
 export default function ClientWallet() {
-  const queryClient = useQueryClient()
   const { data, isLoading } = useQuery({
     queryKey: ['wallet'],
     queryFn: () => paymentApi.wallet().then(r => r.data),
@@ -55,18 +44,7 @@ export default function ClientWallet() {
   // Top-up form state
   const [amount, setAmount] = useState('')
   const [phone, setPhone] = useState('')
-  const [provider, setProvider] = useState('Mpesa')
-  const [topUpState, setTopUpState] = useState<TopUpState>('idle')
-  const [statusMessage, setStatusMessage] = useState('')
-  const pollRef = useRef<ReturnType<typeof setInterval> | null>(null)
-  const attemptsRef = useRef(0)
-
-  const stopPolling = () => {
-    if (pollRef.current) clearInterval(pollRef.current)
-    pollRef.current = null
-  }
-
-  useEffect(() => stopPolling, [])
+  const [submitting, setSubmitting] = useState(false)
 
   const startTopUp = async () => {
     const amt = parseFloat(amount)
@@ -74,51 +52,21 @@ export default function ClientWallet() {
       toast.error('Enter a valid top-up amount.')
       return
     }
-    if (phone.replace(/\D/g, '').length < 9) {
-      toast.error('Enter a valid phone number.')
-      return
-    }
 
-    setTopUpState('submitting')
+    setSubmitting(true)
     try {
-      const { data: res } = await paymentApi.initiateTopUp(amt, phone, provider)
-      setStatusMessage(res.message || 'Check your phone and confirm with your PIN.')
-      setTopUpState('pending')
-      attemptsRef.current = 0
-
-      pollRef.current = setInterval(async () => {
-        attemptsRef.current += 1
-        try {
-          const { data: statusRes } = await paymentApi.topUpStatus(res.reference)
-          if (statusRes.status === 'success') {
-            stopPolling()
-            setTopUpState('success')
-            toast.success('Payment successful! Your wallet has been credited.')
-            queryClient.invalidateQueries({ queryKey: ['wallet'] })
-          } else if (statusRes.status === 'failed') {
-            stopPolling()
-            setTopUpState('failed')
-            toast.error('Payment failed. Please try again.')
-          } else if (attemptsRef.current >= 40) {
-            // ~2 minutes at 3s intervals
-            stopPolling()
-            setTopUpState('timeout')
-          }
-        } catch {
-          // transient network hiccup while polling — keep trying until attempts run out
-        }
-      }, 3000)
+      // PesaPal doesn't push a USSD prompt itself — it hands back a
+      // redirect_url where the customer picks their own provider
+      // (M-Pesa, Tigo Pesa, Airtel, Halopesa, or card) on PesaPal's
+      // hosted checkout page. We store the reference so the return page
+      // (/wallet/topup-complete) knows which checkout to poll.
+      const { data: res } = await paymentApi.initiateTopUp(amt, phone || undefined)
+      sessionStorage.setItem('pending_topup_reference', res.reference)
+      window.location.href = res.redirect_url
     } catch (err: any) {
-      setTopUpState('idle')
+      setSubmitting(false)
       toast.error(err?.response?.data?.error || 'Could not start the payment. Please try again.')
     }
-  }
-
-  const resetTopUp = () => {
-    stopPolling()
-    setTopUpState('idle')
-    setAmount('')
-    setPhone('')
   }
 
   if (isLoading) return (
@@ -171,69 +119,32 @@ export default function ClientWallet() {
         </div>
       </div>
 
-      {/* Mobile money top-up */}
+      {/* Top-up */}
       <div className="fu" style={{ background: '#fff', borderRadius: 20, border: '1px solid #F1F5F9', padding: '22px 24px', marginBottom: 16 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 18 }}>
           <div style={{ width: 36, height: 36, borderRadius: 10, background: '#F0F9FF', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
             <Icon name="phone" size={18} color="#0EA5E9" />
           </div>
           <div>
-            <h2 style={{ fontFamily: 'Syne,sans-serif', fontSize: 15.5, fontWeight: 700, color: '#0F172A', margin: 0 }}>Top Up via Mobile Money</h2>
-            <p style={{ fontSize: 12, color: '#94A3B8', margin: '2px 0 0' }}>Instant — confirm on your phone with your PIN.</p>
+            <h2 style={{ fontFamily: 'Syne,sans-serif', fontSize: 15.5, fontWeight: 700, color: '#0F172A', margin: 0 }}>Top Up Your Wallet</h2>
+            <p style={{ fontSize: 12, color: '#94A3B8', margin: '2px 0 0' }}>You'll choose M-Pesa, Tigo Pesa, Airtel Money, HaloPesa, or card on the next page.</p>
           </div>
         </div>
 
-        {topUpState === 'pending' || topUpState === 'submitting' ? (
-          <div style={{ textAlign: 'center', padding: '20px 12px' }}>
-            <div style={{ width: 40, height: 40, borderRadius: '50%', border: '3px solid #E2E8F0', borderTop: '3px solid #0EA5E9', margin: '0 auto 16px', animation: 'spin .8s linear infinite' }} />
-            <p style={{ fontFamily: 'Syne,sans-serif', fontWeight: 700, fontSize: 14.5, color: '#0F172A', margin: '0 0 6px' }}>
-              {topUpState === 'submitting' ? 'Sending request...' : 'Check your phone'}
-            </p>
-            <p style={{ fontSize: 13, color: '#64748B', margin: 0 }}>{statusMessage || 'Enter your PIN to confirm payment.'}</p>
+        <div style={{ display: 'grid', gap: 14 }}>
+          <div>
+            <label className="tulabel">Amount (TZS)</label>
+            <input className="tuinput" type="number" min="1" placeholder="5000" value={amount} onChange={e => setAmount(e.target.value)} />
           </div>
-        ) : topUpState === 'success' ? (
-          <div style={{ textAlign: 'center', padding: '20px 12px' }}>
-            <div style={{ width: 44, height: 44, borderRadius: '50%', background: '#F0FDF4', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 14px' }}>
-              <Icon name="check" size={22} color="#10B981" />
-            </div>
-            <p style={{ fontFamily: 'Syne,sans-serif', fontWeight: 700, fontSize: 14.5, color: '#0F172A', margin: '0 0 14px' }}>Payment successful!</p>
-            <button className="tubtn" style={{ maxWidth: 200, margin: '0 auto' }} onClick={resetTopUp}>Top Up Again</button>
+          <div>
+            <label className="tulabel">Phone Number (optional)</label>
+            <input className="tuinput" type="tel" placeholder="0712345678" value={phone} onChange={e => setPhone(e.target.value)} />
           </div>
-        ) : topUpState === 'failed' || topUpState === 'timeout' ? (
-          <div style={{ textAlign: 'center', padding: '20px 12px' }}>
-            <div style={{ width: 44, height: 44, borderRadius: '50%', background: '#FEF2F2', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 14px' }}>
-              <Icon name="alert" size={20} color="#EF4444" />
-            </div>
-            <p style={{ fontFamily: 'Syne,sans-serif', fontWeight: 700, fontSize: 14.5, color: '#0F172A', margin: '0 0 4px' }}>
-              {topUpState === 'timeout' ? 'Still awaiting confirmation' : 'Payment failed'}
-            </p>
-            <p style={{ fontSize: 12.5, color: '#94A3B8', margin: '0 0 14px' }}>
-              {topUpState === 'timeout' ? 'Once you confirm on your phone, your wallet will update shortly.' : 'Please try again or use a different number.'}
-            </p>
-            <button className="tubtn" style={{ maxWidth: 200, margin: '0 auto' }} onClick={resetTopUp}>Try Again</button>
-          </div>
-        ) : (
-          <div style={{ display: 'grid', gap: 14 }}>
-            <div>
-              <label className="tulabel">Amount (TZS)</label>
-              <input className="tuinput" type="number" min="1" placeholder="5000" value={amount} onChange={e => setAmount(e.target.value)} />
-            </div>
-            <div>
-              <label className="tulabel">Phone Number</label>
-              <input className="tuinput" type="tel" placeholder="0712345678" value={phone} onChange={e => setPhone(e.target.value)} />
-            </div>
-            <div>
-              <label className="tulabel">Network</label>
-              <select className="tuinput" value={provider} onChange={e => setProvider(e.target.value)}>
-                {PROVIDERS.map(p => <option key={p.value} value={p.value}>{p.label}</option>)}
-              </select>
-            </div>
-            <button className="tubtn" onClick={startTopUp}>
-              <Icon name="phone" size={15} color="#fff" />
-              Send Payment Request
-            </button>
-          </div>
-        )}
+          <button className="tubtn" onClick={startTopUp} disabled={submitting}>
+            <Icon name="phone" size={15} color="#fff" />
+            {submitting ? 'Redirecting...' : 'Continue to Payment'}
+          </button>
+        </div>
       </div>
 
       {/* Manual top-up info (bank transfer, etc.) */}

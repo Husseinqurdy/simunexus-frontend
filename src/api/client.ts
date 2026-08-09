@@ -79,9 +79,12 @@ export const paymentApi = {
   coupons:            () => api.get('/payments/admin/coupons/'),
   createCoupon:       (data: object) => api.post('/payments/admin/coupons/', data),
   commissions:        () => api.get('/payments/admin/commissions/'),
-  // AzamPay mobile money wallet top-up
-  initiateTopUp:      (amount: number, phoneNumber: string, provider: string) =>
-    api.post('/payments/wallet/topup/', { amount, phone_number: phoneNumber, provider }),
+  // PesaPal wallet top-up — customer picks their provider (M-Pesa, Tigo
+  // Pesa, Airtel, HaloPesa, card) on PesaPal's own hosted page, so we
+  // no longer send `provider` upfront like we did with AzamPay.
+  // Returns { redirect_url, reference, payment_id, status }.
+  initiateTopUp:      (amount: number, phoneNumber?: string) =>
+    api.post('/payments/wallet/topup/', { amount, phone_number: phoneNumber }),
   topUpStatus:        (reference: string) => api.get(`/payments/wallet/topup/${reference}/status/`),
 }
 
