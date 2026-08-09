@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -9,12 +10,35 @@ import toast from 'react-hot-toast'
 import type { Role } from '@/types'
 import { authStyles, GSHLogo, AuthCard } from './_shared'
 
+/* --------------------------------- icons ---------------------------------- */
+/* Hand-built line icons — no emoji anywhere on this page */
+
+type IconName = 'mail' | 'lock' | 'eye' | 'eye-off' | 'arrow-right' | 'link' | 'graduation-cap'
+
+function Icon({ name, size = 15, color = 'currentColor', strokeWidth = 1.8 }:
+  { name: IconName; size?: number; color?: string; strokeWidth?: number }) {
+  const common = { width: size, height: size, viewBox: '0 0 24 24', fill: 'none' as const, stroke: color, strokeWidth, strokeLinecap: 'round' as const, strokeLinejoin: 'round' as const }
+  switch (name) {
+    case 'mail': return <svg {...common}><path d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75" /></svg>
+    case 'lock': return <svg {...common}><path d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" /></svg>
+    case 'eye': return <svg {...common}><path d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z" /><path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+    case 'eye-off': return <svg {...common}><path d="M3.98 8.223A10.477 10.477 0 001.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.45 10.45 0 0112 4.5c4.756 0 8.773 3.162 10.065 7.498a10.523 10.523 0 01-4.293 5.774M6.228 6.228L3 3m3.228 3.228l3.65 3.65m7.894 7.894L21 21m-3.228-3.228l-3.65-3.65m0 0a3 3 0 10-4.243-4.243m4.242 4.242L9.88 9.88" /></svg>
+    case 'arrow-right': return <svg {...common} strokeWidth={strokeWidth || 2.5}><path d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" /></svg>
+    case 'link': return <svg {...common}><path d="M13.19 8.688a4.5 4.5 0 011.242 7.244l-4.5 4.5a4.5 4.5 0 01-6.364-6.364l1.757-1.757m13.35-.622l1.757-1.757a4.5 4.5 0 00-6.364-6.364l-4.5 4.5a4.5 4.5 0 001.242 7.244" /></svg>
+    case 'graduation-cap': return <svg {...common}><path d="M12 3 2 8l10 5 10-5-10-5Z" /><path d="M6 10.5V16c0 1.5 2.7 3 6 3s6-1.5 6-3v-5.5" /><path d="M22 8v6" /></svg>
+  }
+}
+
 const schema = z.object({
   first_name: z.string().min(1, 'First name required'),
   last_name: z.string().min(1, 'Last name required'),
   email: z.string().email('Invalid email address'),
   password: z.string().min(8, 'Minimum 8 characters'),
+  confirmPassword: z.string().min(1, 'Please confirm your password'),
   referral_code: z.string().optional(),
+}).refine((data) => data.password === data.confirmPassword, {
+  message: 'Passwords do not match',
+  path: ['confirmPassword'],
 })
 type F = z.infer<typeof schema>
 
@@ -27,6 +51,8 @@ export default function RegisterPage() {
   const [searchParams] = useSearchParams()
   const fromExpert = searchParams.get('from') === 'expert'
   const { setAuth } = useAuthStore()
+  const [showPw, setShowPw] = useState(false)
+  const [showConfirmPw, setShowConfirmPw] = useState(false)
 
   const { register, handleSubmit, watch, formState: { errors } } = useForm<F>({
     resolver: zodResolver(schema),
@@ -38,11 +64,18 @@ export default function RegisterPage() {
   const strengthLabels = ['', 'Weak', 'Fair', 'Good', 'Strong']
 
   const mutation = useMutation({
-    mutationFn: (d: F) => authApi.register(d),
+    // confirmPassword is a client-side check only — it isn't sent to the API
+    mutationFn: (d: F) => authApi.register({
+      first_name: d.first_name,
+      last_name: d.last_name,
+      email: d.email,
+      password: d.password,
+      referral_code: d.referral_code,
+    }),
     onSuccess: (res) => {
       const { access, refresh, user } = res.data
       setAuth(user, access, refresh)
-      toast.success('Account created! Welcome to GSH 🎉')
+      toast.success('Account created! Welcome to GSH.')
 
       // If came from apply-expert page → go directly to expert application form
       if (fromExpert) {
@@ -60,36 +93,43 @@ export default function RegisterPage() {
   return (
     <AuthCard>
       <style>{authStyles}</style>
+      <style>{`
+        .rp-toggle-pw { transition: color .2s; }
+        .rp-toggle-pw:hover { color: #94A3B8; }
+        .rp-link { transition: color .2s, opacity .2s; }
+      `}</style>
 
       <div className="au" style={{
         background: 'rgba(255,255,255,.03)', border: '1px solid rgba(255,255,255,.08)',
-        borderRadius: 24, padding: '36px 36px', backdropFilter: 'blur(12px)',
+        borderRadius: 24, padding: 'clamp(26px,6vw,36px)', backdropFilter: 'blur(12px)',
       }}>
         {/* Logo */}
-        <div className="au" style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 28 }}>
+        <div className="au" style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 26 }}>
           <GSHLogo size={36} />
-          <div>
+          <div style={{ minWidth: 0 }}>
             <div className="dp" style={{ color: '#fff', fontWeight: 700, fontSize: 14, lineHeight: 1.2 }}>Global Simulation Hub</div>
-            <div style={{ color: '#38BDF8', fontSize: 9, fontWeight: 600, letterSpacing: '0.18em', textTransform: 'uppercase' }}>Engineering · Simulation · Delivery</div>
+            <div style={{ color: '#38BDF8', fontSize: 9.5, fontWeight: 600, letterSpacing: '0.16em', textTransform: 'uppercase' }}>Engineering · Simulation · Delivery</div>
           </div>
         </div>
 
         {/* Show different header if coming from expert apply */}
         {fromExpert ? (
           <>
-            <div style={{ background: 'rgba(16,185,129,.08)', border: '1px solid rgba(16,185,129,.2)', borderRadius: 12, padding: '10px 14px', marginBottom: 20, display: 'flex', alignItems: 'center', gap: 8 }}>
-              <span style={{ fontSize: 16 }}>🎓</span>
+            <div style={{ background: 'rgba(16,185,129,.08)', border: '1px solid rgba(16,185,129,.2)', borderRadius: 12, padding: '10px 14px', marginBottom: 20, display: 'flex', alignItems: 'center', gap: 10 }}>
+              <span style={{ width: 26, height: 26, borderRadius: 8, background: 'rgba(16,185,129,.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                <Icon name="graduation-cap" size={14} color="#6EE7B7" />
+              </span>
               <p style={{ fontSize: 12, color: '#6EE7B7', margin: 0, lineHeight: 1.5 }}>
                 <strong>Expert Application</strong> — Create your account, then you'll be taken to the application form.
               </p>
             </div>
-            <h1 className="dp au1" style={{ color: '#fff', fontSize: 26, fontWeight: 800, marginBottom: 4 }}>Create Expert Account</h1>
-            <p className="au1" style={{ color: '#64748B', fontSize: 13, marginBottom: 28 }}>Step 1 of 2 — Basic info. Next: skills & test.</p>
+            <h1 className="dp au1" style={{ color: '#fff', fontSize: 'clamp(22px,5.5vw,26px)', fontWeight: 800, marginBottom: 4, lineHeight: 1.15 }}>Create Expert Account</h1>
+            <p className="au1" style={{ color: '#8291AC', fontSize: 13, marginBottom: 26 }}>Step 1 of 2 — Basic info. Next: skills &amp; test.</p>
           </>
         ) : (
           <>
-            <h1 className="dp au1" style={{ color: '#fff', fontSize: 26, fontWeight: 800, marginBottom: 4 }}>Create your account</h1>
-            <p className="au1" style={{ color: '#64748B', fontSize: 13, marginBottom: 28 }}>Join GSH — submit projects, track progress, get results.</p>
+            <h1 className="dp au1" style={{ color: '#fff', fontSize: 'clamp(22px,5.5vw,26px)', fontWeight: 800, marginBottom: 4, lineHeight: 1.15 }}>Create your account</h1>
+            <p className="au1" style={{ color: '#8291AC', fontSize: 13, marginBottom: 26 }}>Join GSH — submit projects, track progress, get results.</p>
           </>
         )}
 
@@ -112,10 +152,10 @@ export default function RegisterPage() {
           <div className="afield au2" style={{ marginBottom: 14 }}>
             <label>Email Address</label>
             <div style={{ position: 'relative' }}>
-              <span style={{ position: 'absolute', left: 13, top: '50%', transform: 'translateY(-50%)', color: '#64748B' }}>
-                <svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.8"><path strokeLinecap="round" strokeLinejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75" /></svg>
+              <span style={{ position: 'absolute', left: 13, top: '50%', transform: 'translateY(-50%)', color: '#64748B', display: 'flex' }}>
+                <Icon name="mail" size={15} />
               </span>
-              <input {...register('email')} type="email" placeholder="you@example.com" style={{ paddingLeft: 38 }} />
+              <input {...register('email')} type="email" placeholder="you@example.com" autoComplete="email" style={{ paddingLeft: 38 }} />
             </div>
             {errors.email && <p className="err">{errors.email.message}</p>}
           </div>
@@ -124,10 +164,26 @@ export default function RegisterPage() {
           <div className="afield au2" style={{ marginBottom: 6 }}>
             <label>Password</label>
             <div style={{ position: 'relative' }}>
-              <span style={{ position: 'absolute', left: 13, top: '50%', transform: 'translateY(-50%)', color: '#64748B' }}>
-                <svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.8"><path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" /></svg>
+              <span style={{ position: 'absolute', left: 13, top: '50%', transform: 'translateY(-50%)', color: '#64748B', display: 'flex' }}>
+                <Icon name="lock" size={15} />
               </span>
-              <input {...register('password')} type="password" placeholder="Min. 8 characters" style={{ paddingLeft: 38 }} />
+              <input
+                {...register('password')}
+                type={showPw ? 'text' : 'password'}
+                placeholder="Min. 8 characters"
+                autoComplete="new-password"
+                style={{ paddingLeft: 38, paddingRight: 42 }}
+              />
+              <button
+                type="button"
+                onClick={() => setShowPw(!showPw)}
+                className="rp-toggle-pw"
+                aria-label={showPw ? 'Hide password' : 'Show password'}
+                aria-pressed={showPw}
+                style={{ position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: '#64748B', padding: 2, display: 'flex' }}
+              >
+                <Icon name={showPw ? 'eye-off' : 'eye'} size={15} />
+              </button>
             </div>
             {errors.password && <p className="err">{errors.password.message}</p>}
           </div>
@@ -144,13 +200,41 @@ export default function RegisterPage() {
             </div>
           )}
 
+          {/* Confirm Password */}
+          <div className="afield au2" style={{ marginBottom: 24 }}>
+            <label>Confirm Password</label>
+            <div style={{ position: 'relative' }}>
+              <span style={{ position: 'absolute', left: 13, top: '50%', transform: 'translateY(-50%)', color: '#64748B', display: 'flex' }}>
+                <Icon name="lock" size={15} />
+              </span>
+              <input
+                {...register('confirmPassword')}
+                type={showConfirmPw ? 'text' : 'password'}
+                placeholder="Re-enter your password"
+                autoComplete="new-password"
+                style={{ paddingLeft: 38, paddingRight: 42 }}
+              />
+              <button
+                type="button"
+                onClick={() => setShowConfirmPw(!showConfirmPw)}
+                className="rp-toggle-pw"
+                aria-label={showConfirmPw ? 'Hide confirm password' : 'Show confirm password'}
+                aria-pressed={showConfirmPw}
+                style={{ position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: '#64748B', padding: 2, display: 'flex' }}
+              >
+                <Icon name={showConfirmPw ? 'eye-off' : 'eye'} size={15} />
+              </button>
+            </div>
+            {errors.confirmPassword && <p className="err">{errors.confirmPassword.message}</p>}
+          </div>
+
           {/* Referral — hide if coming from expert flow */}
           {!fromExpert && (
             <div className="afield au2" style={{ marginBottom: 24 }}>
               <label>Referral Code <span style={{ color: '#334155', textTransform: 'none', fontWeight: 400, letterSpacing: 0 }}>(optional)</span></label>
               <div style={{ position: 'relative' }}>
-                <span style={{ position: 'absolute', left: 13, top: '50%', transform: 'translateY(-50%)', color: '#64748B' }}>
-                  <svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.8"><path strokeLinecap="round" strokeLinejoin="round" d="M13.19 8.688a4.5 4.5 0 011.242 7.244l-4.5 4.5a4.5 4.5 0 01-6.364-6.364l1.757-1.757m13.35-.622l1.757-1.757a4.5 4.5 0 00-6.364-6.364l-4.5 4.5a4.5 4.5 0 001.242 7.244" /></svg>
+                <span style={{ position: 'absolute', left: 13, top: '50%', transform: 'translateY(-50%)', color: '#64748B', display: 'flex' }}>
+                  <Icon name="link" size={15} />
                 </span>
                 <input {...register('referral_code')} placeholder="Enter referral code" style={{ paddingLeft: 38 }} />
               </div>
@@ -163,8 +247,8 @@ export default function RegisterPage() {
             {mutation.isPending
               ? <><span style={{ width: 15, height: 15, border: '2px solid rgba(255,255,255,.3)', borderTop: '2px solid #fff', borderRadius: '50%', display: 'inline-block', animation: 'spin .7s linear infinite' }} />Creating account...</>
               : fromExpert
-                ? <>Continue to Application →</>
-                : <>Create Account <svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5"><path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" /></svg></>
+                ? <>Continue to Application <Icon name="arrow-right" size={15} /></>
+                : <>Create Account <Icon name="arrow-right" size={15} /></>
             }
           </button>
         </form>
@@ -174,12 +258,12 @@ export default function RegisterPage() {
         <Link to={fromExpert ? '/login?from=expert' : '/login'} className="abtn-outline au4">Sign In</Link>
       </div>
 
-      <div className="au4" style={{ textAlign: 'center', marginTop: 20, fontSize: 12, color: '#334155' }}>
-        <Link to="/" style={{ color: '#334155', textDecoration: 'none' }}>← Back to home</Link>
+      <div className="au4" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, marginTop: 20, fontSize: 12, color: '#334155', flexWrap: 'wrap' }}>
+        <Link to="/" className="rp-link" style={{ color: '#334155', textDecoration: 'none' }}>Back to home</Link>
         {!fromExpert && (
           <>
-            <span style={{ margin: '0 10px' }}>·</span>
-            <Link to="/submit" style={{ color: '#334155', textDecoration: 'none' }}>Submit without account</Link>
+            <span>·</span>
+            <Link to="/submit" className="rp-link" style={{ color: '#334155', textDecoration: 'none' }}>Submit without account</Link>
           </>
         )}
       </div>
