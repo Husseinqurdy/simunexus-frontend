@@ -54,6 +54,12 @@ export const authApi = {
   systemSummary:       () => api.get('/auth/admin/summary/'),
   registerExpert: (data: object) => api.post('/auth/register-expert/', data),
 
+  // User management (admin only)
+  adminUpdateUser:     (id: number, data: Record<string, any>) => api.patch(`/auth/admin/users/${id}/`, data),
+  adminDeleteUser:     (id: number) => api.delete(`/auth/admin/users/${id}/delete/`),
+  adminSetPassword:    (id: number, data: { new_password: string; confirm_password: string }) =>
+    api.post(`/auth/admin/users/${id}/set-password/`, data),
+
   // Commission management (admin only)
   adminExpertCommissions:     () => api.get('/auth/admin/experts/commissions/'),
   adminSetExpertCommission:   (id: number, commission_rate: number) =>
