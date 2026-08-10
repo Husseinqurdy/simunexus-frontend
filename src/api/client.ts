@@ -53,6 +53,14 @@ export const authApi = {
   adminCreateExpert:   (data: object) => api.post('/auth/admin/create-expert/', data),
   systemSummary:       () => api.get('/auth/admin/summary/'),
   registerExpert: (data: object) => api.post('/auth/register-expert/', data),
+
+  // Commission management (admin only)
+  adminExpertCommissions:     () => api.get('/auth/admin/experts/commissions/'),
+  adminSetExpertCommission:   (id: number, commission_rate: number) =>
+    api.patch(`/auth/admin/experts/${id}/commission/`, { commission_rate }),
+  adminDeveloperCommission:    () => api.get('/auth/admin/developer/commission/'),
+  adminSetDeveloperCommission: (commission_rate: number) =>
+    api.patch('/auth/admin/developer/commission/', { commission_rate }),
 }
 
 export const projectApi = {

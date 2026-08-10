@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { paymentApi } from '@/api/client'
-import { LoadingSpinner, EmptyState, Card, SectionTitle, Table, Tr, Td, Btn } from '@/components/shared'
+import { paymentApi, authApi } from '@/api/client'
+import { LoadingSpinner, EmptyState, Card, SectionTitle, Table, Tr, Td, Btn, ExpertLevelBadge } from '@/components/shared'
 import { formatDistanceToNow, format } from 'date-fns'
 import toast from 'react-hot-toast'
 import {
@@ -15,9 +15,10 @@ import {
   CheckCircle2,
   Rocket,
   Plus,
+  Percent,
 } from 'lucide-react'
 
-type Tab = 'overview' | 'commissions' | 'coupons'
+type Tab = 'overview' | 'commissions' | 'coupons' | 'settings'
 
 const formatTSH = (value: number | string | undefined) => {
   const n = Number(value || 0)
@@ -44,6 +45,12 @@ export default function AdminFinancials() {
   const [couponForm, setCouponForm] = useState({ code: '', discount_percent: '', max_uses: '1' })
   const [showCouponForm, setShowCouponForm] = useState(false)
 
+  // Commission settings state
+  const [editingDevRate, setEditingDevRate] = useState(false)
+  const [devRateInput, setDevRateInput] = useState('')
+  const [editingExpertId, setEditingExpertId] = useState<number | null>(null)
+  const [expertRateInput, setExpertRateInput] = useState('')
+
   const { data: financial, isLoading: finLoading } = useQuery({
     queryKey: ['financial-dashboard'],
     queryFn: () => paymentApi.financialDashboard().then(r => r.data),
@@ -59,6 +66,18 @@ export default function AdminFinancials() {
     queryKey: ['admin-coupons'],
     queryFn: () => paymentApi.coupons().then(r => r.data),
     enabled: tab === 'coupons',
+  })
+
+  const { data: devCommission, isLoading: devLoading } = useQuery({
+    queryKey: ['dev-commission'],
+    queryFn: () => authApi.adminDeveloperCommission().then(r => r.data),
+    enabled: tab === 'settings',
+  })
+
+  const { data: expertCommissionsData, isLoading: expLoading } = useQuery({
+    queryKey: ['expert-commissions'],
+    queryFn: () => authApi.adminExpertCommissions().then(r => r.data),
+    enabled: tab === 'settings',
   })
 
   const createCouponMutation = useMutation({
@@ -77,14 +96,36 @@ export default function AdminFinancials() {
     onError: () => toast.error('Failed to create coupon.'),
   })
 
+  const setDevCommissionMutation = useMutation({
+    mutationFn: (rate: number) => authApi.adminSetDeveloperCommission(rate),
+    onSuccess: () => {
+      toast.success('✅ Developer commission updated!')
+      qc.invalidateQueries({ queryKey: ['dev-commission'] })
+      setEditingDevRate(false)
+    },
+    onError: (e: any) => toast.error(e.response?.data?.commission_rate?.[0] || 'Failed to update.'),
+  })
+
+  const setExpertCommissionMutation = useMutation({
+    mutationFn: ({ id, rate }: { id: number; rate: number }) => authApi.adminSetExpertCommission(id, rate),
+    onSuccess: () => {
+      toast.success('✅ Expert commission updated!')
+      qc.invalidateQueries({ queryKey: ['expert-commissions'] })
+      setEditingExpertId(null)
+    },
+    onError: (e: any) => toast.error(e.response?.data?.commission_rate?.[0] || 'Failed to update.'),
+  })
+
   const TABS: { value: Tab; label: string; Icon: React.ElementType }[] = [
-    { value: 'overview',     label: 'Overview',     Icon: BarChart3 },
-    { value: 'commissions',  label: 'Commissions',  Icon: Wallet },
-    { value: 'coupons',      label: 'Coupons',      Icon: Ticket },
+    { value: 'overview',     label: 'Overview',            Icon: BarChart3 },
+    { value: 'commissions',  label: 'Commissions',         Icon: Wallet },
+    { value: 'coupons',      label: 'Coupons',              Icon: Ticket },
+    { value: 'settings',     label: 'Commission Settings', Icon: Percent },
   ]
 
   const commissions = commissionsData?.results || []
   const coupons     = couponsData?.results     || []
+  const experts      = expertCommissionsData?.results || expertCommissionsData || []
 
   return (
     <div style={{ fontFamily: "'DM Sans',sans-serif", animation: 'fadeIn 0.4s ease' }}>
@@ -134,6 +175,14 @@ export default function AdminFinancials() {
           from { opacity: 0; transform: translateY(-8px); }
           to { opacity: 1; transform: translateY(0); }
         }
+        .commission-input {
+          padding: 8px 10px; border-radius: 8px; border: 1.5px solid #E2E8F0;
+          font-size: 13px; outline: none; font-family: inherit; color: #0F172A;
+          box-sizing: border-box; transition: border-color 0.15s ease;
+        }
+        .commission-input:focus {
+          border-color: #0EA5E9;
+        }
       `}</style>
 
       {/* Page header */}
@@ -143,7 +192,7 @@ export default function AdminFinancials() {
       </div>
 
       {/* Tabs */}
-      <div style={{ display: 'flex', gap: 4, marginBottom: 24, borderBottom: '1px solid #F1F5F9' }}>
+      <div style={{ display: 'flex', gap: 4, marginBottom: 24, borderBottom: '1px solid #F1F5F9', flexWrap: 'wrap' }}>
         {TABS.map(t => (
           <button
             key={t.value}
@@ -177,13 +226,17 @@ export default function AdminFinancials() {
               <StatCard label="Projects Delivered"   value={financial?.completed_projects  || 0}         color="#059669" icon={<Rocket size={20} strokeWidth={1.8} />} />
             </div>
 
-            {/* Commission split */}
+            {/* Commission split (illustrative — real rates are per-expert, see Commission Settings tab) */}
             <Card>
-              <SectionTitle>Revenue Split</SectionTitle>
+              <SectionTitle>Default Commission Structure</SectionTitle>
+              <p style={{ fontSize: 12, color: '#94A3B8', margin: '0 0 16px' }}>
+                These are default/starting rates. Each expert can have a different rate — manage them under
+                the <strong>Commission Settings</strong> tab.
+              </p>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16 }}>
                 {[
-                  { label: 'Expert Share',    value: '60%', color: '#0EA5E9', Icon: GraduationCap, desc: 'Default expert commission' },
-                  { label: 'Platform Share',  value: '30%', color: '#7C3AED', Icon: Building2,     desc: 'GSH platform cut'          },
+                  { label: 'Expert Default',  value: '60%', color: '#0EA5E9', Icon: GraduationCap, desc: 'Starting expert commission' },
+                  { label: 'Platform Share',  value: '30%', color: '#7C3AED', Icon: Building2,     desc: 'Remainder after expert + dev' },
                   { label: 'Developer Share', value: '10%', color: '#F59E0B', Icon: Settings2,     desc: 'Developer commission'      },
                 ].map(item => (
                   <div key={item.label} className="fin-split-card" style={{ padding: '16px 20px', borderRadius: 12, background: item.color + '08', border: `1px solid ${item.color}20`, textAlign: 'center' }}>
@@ -201,7 +254,7 @@ export default function AdminFinancials() {
         )
       )}
 
-      {/* ── COMMISSIONS ── */}
+      {/* ── COMMISSIONS (history) ── */}
       {tab === 'commissions' && (
         commLoading ? <LoadingSpinner label="Loading commissions..." /> :
         commissions.length === 0 ? (
@@ -303,6 +356,144 @@ export default function AdminFinancials() {
               </div>
             )
           }
+        </>
+      )}
+
+      {/* ── COMMISSION SETTINGS ── */}
+      {tab === 'settings' && (
+        <>
+          {/* Developer commission */}
+          <Card style={{ marginBottom: 20 }}>
+            <SectionTitle>Developer Commission</SectionTitle>
+            <p style={{ fontSize: 12, color: '#94A3B8', margin: '0 0 16px' }}>
+              Applies to the single developer account. Only admins can change this rate.
+            </p>
+            {devLoading ? <LoadingSpinner label="Loading..." /> : !devCommission ? (
+              <EmptyState title="No developer account found" />
+            ) : (
+              <div style={{ display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap' }}>
+                <div style={{ width: 44, height: 44, borderRadius: 12, background: '#FFFBEB', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#F59E0B', flexShrink: 0 }}>
+                  <Settings2 size={20} strokeWidth={1.8} />
+                </div>
+                <div>
+                  <p style={{ fontSize: 13, fontWeight: 700, color: '#0F172A', margin: 0 }}>{devCommission.developer_name}</p>
+                  <p style={{ fontSize: 11, color: '#94A3B8', margin: '2px 0 0' }}>{devCommission.developer_email}</p>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginLeft: 'auto' }}>
+                  {editingDevRate ? (
+                    <>
+                      <input
+                        type="number" step="0.01" min="0" max="100"
+                        className="commission-input"
+                        style={{ width: 90 }}
+                        value={devRateInput}
+                        onChange={e => setDevRateInput(e.target.value)}
+                        autoFocus
+                      />
+                      <span style={{ fontSize: 13, color: '#64748B' }}>%</span>
+                      <Btn
+                        variant="accent" className="fin-btn"
+                        onClick={() => setDevCommissionMutation.mutate(Number(devRateInput))}
+                        disabled={setDevCommissionMutation.isPending || devRateInput === ''}
+                      >
+                        {setDevCommissionMutation.isPending ? 'Saving…' : 'Save'}
+                      </Btn>
+                      <button
+                        onClick={() => setEditingDevRate(false)}
+                        style={{ background: 'none', border: 'none', color: '#94A3B8', cursor: 'pointer', fontSize: 13, padding: '6px 4px' }}
+                      >
+                        Cancel
+                      </button>
+                    </>
+                  ) : (
+                    <>
+                      <span style={{ fontSize: 22, fontWeight: 800, color: '#F59E0B', fontFamily: 'Syne,sans-serif' }}>
+                        {Number(devCommission.commission_rate).toFixed(2)}%
+                      </span>
+                      <button
+                        onClick={() => { setDevRateInput(String(devCommission.commission_rate)); setEditingDevRate(true) }}
+                        style={{ padding: '6px 14px', borderRadius: 8, border: '1px solid #E2E8F0', background: '#fff', cursor: 'pointer', fontSize: 12, fontWeight: 700, color: '#374151' }}
+                      >
+                        Edit
+                      </button>
+                    </>
+                  )}
+                </div>
+              </div>
+            )}
+          </Card>
+
+          {/* Per-expert commission */}
+          <Card>
+            <SectionTitle>Expert Commission Rates</SectionTitle>
+            <p style={{ fontSize: 12, color: '#94A3B8', margin: '0 0 16px' }}>
+              Set each expert's commission individually. Changing one expert's rate does not affect other experts.
+            </p>
+            {expLoading ? <LoadingSpinner label="Loading experts..." /> :
+              experts.length === 0 ? <EmptyState title="No experts yet" /> : (
+                <div style={{ borderRadius: 12, border: '1px solid #F1F5F9', overflow: 'hidden' }}>
+                  <Table headers={['Expert', 'Level', 'Total Earned', 'Commission Rate', '']}>
+                    {experts.map((e: any) => (
+                      <Tr key={e.user}>
+                        <Td>
+                          <p style={{ fontSize: 13, fontWeight: 700, margin: 0, color: '#0F172A' }}>{e.full_name}</p>
+                          <p style={{ fontSize: 11, color: '#94A3B8', margin: '2px 0 0' }}>{e.email}</p>
+                        </Td>
+                        <Td><ExpertLevelBadge level={e.level} /></Td>
+                        <Td><span style={{ fontSize: 13, color: '#059669', fontWeight: 700 }}>{formatTSH(e.total_earned)}</span></Td>
+                        <Td>
+                          {editingExpertId === e.user ? (
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                              <input
+                                type="number" step="0.01" min="0" max="100"
+                                className="commission-input"
+                                style={{ width: 80 }}
+                                value={expertRateInput}
+                                onChange={ev => setExpertRateInput(ev.target.value)}
+                                autoFocus
+                              />
+                              <span style={{ fontSize: 12, color: '#64748B' }}>%</span>
+                            </div>
+                          ) : (
+                            <span style={{ fontSize: 15, fontWeight: 800, color: '#0EA5E9', fontFamily: 'Syne,sans-serif' }}>
+                              {Number(e.commission_rate).toFixed(2)}%
+                            </span>
+                          )}
+                        </Td>
+                        <Td>
+                          <div style={{ display: 'flex', gap: 6 }}>
+                            {editingExpertId === e.user ? (
+                              <>
+                                <button
+                                  onClick={() => setExpertCommissionMutation.mutate({ id: e.user, rate: Number(expertRateInput) })}
+                                  disabled={setExpertCommissionMutation.isPending || expertRateInput === ''}
+                                  style={{ padding: '5px 12px', borderRadius: 8, border: 'none', cursor: 'pointer', fontSize: 12, fontWeight: 700, background: '#F0FDF4', color: '#059669' }}
+                                >
+                                  {setExpertCommissionMutation.isPending ? '…' : 'Save'}
+                                </button>
+                                <button
+                                  onClick={() => setEditingExpertId(null)}
+                                  style={{ padding: '5px 12px', borderRadius: 8, border: 'none', cursor: 'pointer', fontSize: 12, fontWeight: 700, background: '#F1F5F9', color: '#64748B' }}
+                                >
+                                  Cancel
+                                </button>
+                              </>
+                            ) : (
+                              <button
+                                onClick={() => { setExpertRateInput(String(e.commission_rate)); setEditingExpertId(e.user) }}
+                                style={{ padding: '5px 12px', borderRadius: 8, border: '1px solid #E2E8F0', cursor: 'pointer', fontSize: 12, fontWeight: 700, background: '#fff', color: '#374151' }}
+                              >
+                                Edit
+                              </button>
+                            )}
+                          </div>
+                        </Td>
+                      </Tr>
+                    ))}
+                  </Table>
+                </div>
+              )}
+          </Card>
         </>
       )}
     </div>
