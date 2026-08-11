@@ -10,6 +10,9 @@ const api = axios.create({
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem('access_token')
   if (token) config.headers.Authorization = `Bearer ${token}`
+  if (config.data instanceof FormData) {
+    delete config.headers['Content-Type']
+  }
   return config
 })
 
@@ -42,10 +45,7 @@ export const authApi = {
   register:            (data: object) => api.post('/auth/register/', data),
   logout:              (refresh: string) => api.post('/auth/logout/', { refresh }),
   me:                  () => api.get('/auth/me/'),
-  updateMe: (data: object | FormData) =>
-    api.patch('/auth/me/', data, data instanceof FormData
-      ? { headers: { 'Content-Type': undefined } }
-      : undefined),
+  updateMe: (data: object | FormData) => api.patch('/auth/me/', data),
   setPassword:         (data: object) => api.post('/auth/set-password/', data),
   changePassword:      (data: object) => api.post('/auth/change-password/', data),
   autoAccount:         (data: object) => api.post('/auth/auto-account/', data),
