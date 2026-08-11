@@ -42,8 +42,10 @@ export const authApi = {
   register:            (data: object) => api.post('/auth/register/', data),
   logout:              (refresh: string) => api.post('/auth/logout/', { refresh }),
   me:                  () => api.get('/auth/me/'),
-  updateMe:  (data: object | FormData) =>
-    api.patch('/auth/me/', data, data instanceof FormData ? { headers: { 'Content-Type': 'multipart/form-data' } } : undefined),
+  updateMe: (data: object | FormData) =>
+    api.patch('/auth/me/', data, data instanceof FormData
+      ? { headers: { 'Content-Type': undefined } }
+      : undefined),
   setPassword:         (data: object) => api.post('/auth/set-password/', data),
   changePassword:      (data: object) => api.post('/auth/change-password/', data),
   autoAccount:         (data: object) => api.post('/auth/auto-account/', data),
