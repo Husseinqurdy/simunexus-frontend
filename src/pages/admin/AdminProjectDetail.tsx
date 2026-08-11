@@ -71,10 +71,9 @@ export default function AdminProjectDetail() {
   }, [project?.id])
 
   const { data: expertsData } = useQuery({
-    queryKey: ['experts-list'],
-    queryFn: () => authApi.adminUsers({ role: 'expert' }).then(r => r.data),
-  })
-
+  queryKey: ['experts-list', 'available'],
+  queryFn: () => authApi.adminUsers({ role: 'expert', is_available: true }).then(r => r.data),
+})
   const invalidate = () => qc.invalidateQueries({ queryKey: ['admin-project', id] })
 
   const setPriceMutation = useMutation({
