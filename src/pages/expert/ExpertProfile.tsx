@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { authApi } from '@/api/client'
+import { useAuthStore } from '@/store/authStore'
 import toast from 'react-hot-toast'
 import type { User } from '@/types'
 import {
@@ -52,11 +53,15 @@ export default function ExpertProfile() {
     }
   }, [me])
 
+  // `/auth/me/` (PATCH) inarudisha User object KAMILI (UserDetailSerializer),
+  // kwa hiyo tunaweza kuituma moja kwa moja kwenye authStore — hii ndiyo
+  // inayosababisha sidebar/topbar zisasishwe papo hapo bila kuhitaji logout.
   const basicMutation = useMutation({
     mutationFn: (data: BasicForm) => authApi.updateMe(data),
-    onSuccess: () => {
+    onSuccess: (res) => {
       toast.success('Profile details updated.')
       qc.invalidateQueries({ queryKey: ['me'] })
+      useAuthStore.getState().updateUser(res.data as User)
     },
     onError: (e: any) => toast.error(e.response?.data?.detail || 'Failed to update profile.'),
   })
@@ -67,18 +72,29 @@ export default function ExpertProfile() {
       fd.append('avatar', file)
       return authApi.updateMe(fd)
     },
-    onSuccess: () => {
+    onSuccess: (res) => {
       toast.success('Photo updated.')
       qc.invalidateQueries({ queryKey: ['me'] })
+      useAuthStore.getState().updateUser(res.data as User)
     },
     onError: () => toast.error('Failed to upload photo.'),
   })
 
+  // `/auth/profile/expert/` inarudisha ExpertProfile fields TU (sio User
+  // mzima), kwa hiyo tunachanganya (merge) na user wa sasa kutoka store
+  // kabla ya kuihifadhi — vinginevyo tungefuta first_name/email/n.k.
   const expertMutation = useMutation({
     mutationFn: (data: ExpertForm) => authApi.updateExpertProfile(data),
-    onSuccess: () => {
+    onSuccess: (res) => {
       toast.success('Expert profile updated.')
       qc.invalidateQueries({ queryKey: ['me'] })
+      const current = useAuthStore.getState().user
+      if (current) {
+        useAuthStore.getState().updateUser({
+          ...current,
+          expert_profile: res.data,
+        } as User)
+      }
     },
     onError: (e: any) => toast.error(e.response?.data?.detail || 'Failed to update expert profile.'),
   })
@@ -88,6 +104,13 @@ export default function ExpertProfile() {
   const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file) return
+
+    const MAX_SIZE_MB = 5
+    if (file.size > MAX_SIZE_MB * 1024 * 1024) {
+      toast.error(`Picha ni kubwa mno. Kiwango cha juu ni ${MAX_SIZE_MB}MB.`)
+      return
+    }
+
     setAvatarPreview(URL.createObjectURL(file))
     avatarMutation.mutate(file)
   }
@@ -110,7 +133,7 @@ export default function ExpertProfile() {
   const ep = (me as any)?.expert_profile
   const levelCfg = LEVEL_CFG[ep?.level] || LEVEL_CFG.beginner
   const initials = (me?.first_name?.[0] || me?.email?.[0] || '?').toUpperCase()
-  const avatarSrc = avatarPreview ?? me?.avatar ?? undefined 
+  const avatarSrc = avatarPreview ?? me?.avatar ?? undefined
 
   const inp: React.CSSProperties = {
     width: '100%', padding: '10px 13px', borderRadius: 10,
@@ -180,9 +203,9 @@ export default function ExpertProfile() {
               fontFamily: 'Syne,sans-serif', fontWeight: 800, fontSize: 32,
             }}>
               {avatarSrc
-                  ? <img src={avatarSrc} alt="Avatar" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                  : initials
-                }
+                ? <img src={avatarSrc} alt="Avatar" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                : initials
+              }
             </div>
             <button
               className="ep-avatar-btn"

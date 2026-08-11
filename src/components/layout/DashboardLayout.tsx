@@ -119,6 +119,13 @@ export default function DashboardLayout() {
   const roleColor = ROLE_COLOR[role]
   const roleBg = ROLE_BG[role]
 
+  // Avatar — tumia picha ya user kama ipo, vinginevyo herufi ya kwanza.
+  // `?? undefined` inazuia null isipite kwenye <img src>, ambayo
+  // inakubali string | undefined pekee (tazama fix ya awali kwenye
+  // ExpertProfile.tsx kwa maelezo zaidi).
+  const avatarSrc = (user as any)?.avatar ?? undefined
+  const initials = (user?.first_name?.[0] || user?.email?.[0] || '?').toUpperCase()
+
   const handleLogout = async () => {
     try { if (refreshToken) await authApi.logout(refreshToken) } catch {}
     logout()
@@ -171,8 +178,11 @@ export default function DashboardLayout() {
       <div style={{ borderTop: '1px solid rgba(255,255,255,.06)', padding: '14px 10px' }}>
         {!collapsed && (
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', marginBottom: 4, background: 'rgba(255,255,255,.03)', borderRadius: 10 }}>
-            <div style={{ width: 32, height: 32, borderRadius: '50%', background: roleBg, border: `1.5px solid ${roleColor}30`, display: 'flex', alignItems: 'center', justifyContent: 'center', color: roleColor, fontWeight: 700, fontSize: 13, fontFamily: 'Syne,sans-serif', flexShrink: 0 }}>
-              {(user?.first_name?.[0] || user?.email?.[0] || '?').toUpperCase()}
+            <div style={{ width: 32, height: 32, borderRadius: '50%', background: roleBg, border: `1.5px solid ${roleColor}30`, display: 'flex', alignItems: 'center', justifyContent: 'center', color: roleColor, fontWeight: 700, fontSize: 13, fontFamily: 'Syne,sans-serif', flexShrink: 0, overflow: 'hidden' }}>
+              {avatarSrc
+                ? <img src={avatarSrc} alt="Avatar" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                : initials
+              }
             </div>
             <div style={{ flex: 1, minWidth: 0 }}>
               <p style={{ color: '#fff', fontSize: 13, fontWeight: 600, margin: 0, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', fontFamily: 'Syne,sans-serif' }}>
@@ -247,8 +257,11 @@ export default function DashboardLayout() {
             <NotificationBell />
 
             {/* Avatar */}
-            <div style={{ width: 34, height: 34, borderRadius: '50%', background: roleBg, border: `2px solid ${roleColor}30`, display: 'flex', alignItems: 'center', justifyContent: 'center', color: roleColor, fontWeight: 700, fontSize: 13, fontFamily: 'Syne,sans-serif', cursor: 'default' }}>
-              {(user?.first_name?.[0] || user?.email?.[0] || '?').toUpperCase()}
+            <div style={{ width: 34, height: 34, borderRadius: '50%', background: roleBg, border: `2px solid ${roleColor}30`, display: 'flex', alignItems: 'center', justifyContent: 'center', color: roleColor, fontWeight: 700, fontSize: 13, fontFamily: 'Syne,sans-serif', cursor: 'default', overflow: 'hidden' }}>
+              {avatarSrc
+                ? <img src={avatarSrc} alt="Avatar" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                : initials
+              }
             </div>
           </div>
         </header>
