@@ -103,9 +103,11 @@ export const paymentApi = {
 }
 
 export const chatApi = {
-  rooms:      () => api.get('/chat/rooms/'),
-  messages:   (roomId: number) => api.get(`/chat/rooms/${roomId}/messages/`),
-  createRoom: (data: object) => api.post('/chat/rooms/create/', data),
+  rooms:       () => api.get('/chat/rooms/'),
+  messages:    (roomId: number) => api.get(`/chat/rooms/${roomId}/messages/`),
+  createRoom:  (data: object) => api.post('/chat/rooms/create/', data),
+  sendMessage: (roomId: number, content: string) =>
+    api.post(`/chat/rooms/${roomId}/messages/`, { content }),
 }
 
 export const notifApi = {
