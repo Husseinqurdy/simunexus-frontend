@@ -71,6 +71,10 @@ export const authApi = {
   adminDeveloperCommission:    () => api.get('/auth/admin/developer/commission/'),
   adminSetDeveloperCommission: (commission_rate: number) =>
     api.patch('/auth/admin/developer/commission/', { commission_rate }),
+
+  // Dev system tools (admin only)
+  testEmail:           (data: { email: string }) => api.post('/auth/admin/test-email/', data),
+  resendPasswordLink:  (data: { email: string }) => api.post('/auth/admin/resend-password-link/', data),
 }
 
 export const projectApi = {
