@@ -30,38 +30,61 @@ function useInView(threshold = 0.18) {
   return { ref, inView }
 }
 
-/* Types a set of lines out one character at a time, in order, on mount.
-   Returns the currently-visible slice of each line plus the index of the
-   line the caret should sit on (stays on the last line once finished). */
-function useTypewriter(lines: string[], speed = 42, lineDelay = 260, startDelay = 400) {
-  const [output, setOutput] = useState<string[]>(() => lines.map(() => ''))
+/* Types the given lines out one character at a time, holds, deletes them,
+   pauses, then types them again — a continuous typewriter loop. Falls back
+   to showing the full text immediately when the user prefers reduced motion. */
+function useTypewriter(lines: string[], typeSpeed = 42, deleteSpeed = 24, lineDelay = 260, holdDelay = 1800, restartDelay = 500) {
+  const [pos, setPos] = useState(0)
   useEffect(() => {
     const reduced = typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches
-    if (reduced) { setOutput(lines); return }
-    let li = 0
-    let ci = 0
+    const total = lines.reduce((sum, l) => sum + l.length, 0)
+    if (reduced) { setPos(total); return }
+
+    const lineEndPositions: number[] = []
+    let running = 0
+    for (const l of lines) { running += l.length; lineEndPositions.push(running) }
+
+    let p = 0
+    let deleting = false
     let timer: ReturnType<typeof setTimeout>
-    const startTimer = setTimeout(function tick() {
-      setOutput((prev) => {
-        const next = [...prev]
-        next[li] = lines[li].slice(0, ci + 1)
-        return next
-      })
-      ci++
-      if (ci >= lines[li].length) {
-        li++
-        ci = 0
-        if (li >= lines.length) return
-        timer = setTimeout(tick, lineDelay)
+
+    function schedule(delay: number) { timer = setTimeout(step, delay) }
+
+    function step() {
+      if (!deleting) {
+        p++
+        setPos(p)
+        if (p >= total) { deleting = true; schedule(holdDelay); return }
+        schedule(lineEndPositions.includes(p) ? lineDelay : typeSpeed)
       } else {
-        timer = setTimeout(tick, speed)
+        p--
+        setPos(p)
+        if (p <= 0) { deleting = false; schedule(restartDelay); return }
+        schedule(deleteSpeed)
       }
-    }, startDelay)
-    return () => { clearTimeout(startTimer); clearTimeout(timer) }
+    }
+
+    schedule(600)
+    return () => clearTimeout(timer)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
-  const activeIndex = output.findIndex((t, i) => t.length < lines[i].length)
-  return { output, activeIndex: activeIndex === -1 ? lines.length - 1 : activeIndex }
+
+  const output: string[] = []
+  const activeIndex = (() => {
+    let prevCum = 0
+    let idx = lines.length - 1
+    let found = false
+    for (let i = 0; i < lines.length; i++) {
+      const end = prevCum + lines[i].length
+      const shown = Math.max(0, Math.min(lines[i].length, pos - prevCum))
+      output.push(lines[i].slice(0, shown))
+      if (!found && pos <= end) { idx = i; found = true }
+      prevCum = end
+    }
+    return idx
+  })()
+
+  return { output, activeIndex }
 }
 
 /* --------------------------------- icons ---------------------------------- */
