@@ -38,7 +38,7 @@ type IconName =
   | 'lock' | 'credit-card' | 'book-open' | 'clock' | 'check' | 'star'
   | 'quote' | 'arrow-right' | 'menu' | 'x'
 
-function Icon({ name, size = 24, color = 'currentColor', strokeWidth = 1.8 }:
+function Icon({ name, size = 22, color = 'currentColor', strokeWidth = 1.8 }:
   { name: IconName; size?: number; color?: string; strokeWidth?: number }) {
   const common = { width: size, height: size, viewBox: '0 0 24 24', fill: 'none' as const, stroke: color, strokeWidth, strokeLinecap: 'round' as const, strokeLinejoin: 'round' as const }
   switch (name) {
@@ -61,7 +61,7 @@ function Icon({ name, size = 24, color = 'currentColor', strokeWidth = 1.8 }:
   }
 }
 
-function StarRow({ count, size = 13, color = '#F59E0B' }: { count: number; size?: number; color?: string }) {
+function StarRow({ count, size = 12, color = '#F59E0B' }: { count: number; size?: number; color?: string }) {
   return (
     <div style={{ display: 'flex', gap: 2 }}>
       {Array.from({ length: count }).map((_, i) => <Icon key={i} name="star" size={size} color={color} />)}
@@ -93,7 +93,7 @@ function Avatar({ photo, initials, size, gradient }: { photo?: string; initials:
   )
 }
 
-function GSHLogo({ size = 44 }: { size?: number }) {
+function GSHLogo({ size = 40 }: { size?: number }) {
   return (
     <img
       src="/gsh-icon.png"
@@ -110,21 +110,12 @@ function GSHLogo({ size = 44 }: { size?: number }) {
   )
 }
 
-/* Gradient wave divider used to blend sections together instead of a hard cut.
-   Blue -> orange, echoing the circuit-blue / Simulink-orange of the brand mark. */
-function WaveDivider({ from, to, flip = false }: { from: string; to: string; flip?: boolean }) {
-  const gradId = `wave-${from}-${to}`.replace(/[^a-zA-Z0-9-]/g, '')
+/* Soft wave divider blending two light-blue tones together instead of a hard cut. */
+function WaveDivider({ from, to }: { from: string; to: string }) {
   return (
-    <div style={{ background: from, lineHeight: 0, transform: flip ? 'scaleX(-1)' : undefined }}>
-      <svg viewBox="0 0 1440 90" width="100%" height="60" preserveAspectRatio="none">
-        <defs>
-          <linearGradient id={gradId} x1="0" y1="0" x2="1" y2="0">
-            <stop offset="0%" stopColor="#0EA5E9" />
-            <stop offset="100%" stopColor="#F97316" />
-          </linearGradient>
-        </defs>
-        <path d="M0,32 C240,80 480,0 720,28 C960,56 1200,84 1440,24 L1440,90 L0,90 Z" fill={to} />
-        <path d="M0,20 C240,64 480,-8 720,18 C960,46 1200,70 1440,12" fill="none" stroke={`url(#${gradId})`} strokeWidth="2.5" opacity="0.55" />
+    <div style={{ background: from, lineHeight: 0 }}>
+      <svg viewBox="0 0 1440 70" width="100%" height="46" preserveAspectRatio="none">
+        <path d="M0,26 C240,58 480,4 720,22 C960,40 1200,60 1440,18 L1440,70 L0,70 Z" fill={to} />
       </svg>
     </div>
   )
@@ -142,21 +133,21 @@ const steps = [
 ]
 
 const features: { icon: IconName; title: string; body: string; tint: string }[] = [
-  { icon: 'zap', title: 'Express Delivery', body: 'Results in 6-12h with our express tier. Urgent (24h) and Standard also available.', tint: '#38BDF8' },
-  { icon: 'shield', title: 'Verified Experts', body: 'Every expert passes a 2-hour live simulation test. Only top 15% accepted.', tint: '#FB923C' },
-  { icon: 'check-circle', title: 'Quality Control', body: 'Admin reviews every submission before delivery. No shortcuts, no compromises.', tint: '#38BDF8' },
-  { icon: 'cpu', title: 'Smart Matching', body: 'AI matches your project to the highest-rated available expert by skill.', tint: '#FB923C' },
-  { icon: 'globe', title: 'Global Platform', body: 'Multi-currency, multi-timezone. Submit anywhere, get results worldwide.', tint: '#38BDF8' },
-  { icon: 'bar-chart', title: 'Full Transparency', body: 'Track every stage: Received → Assigned → QC → Completed.', tint: '#FB923C' },
-  { icon: 'lock', title: 'NDA Support', body: 'Enable confidential mode. Expert must sign NDA before accessing files.', tint: '#38BDF8' },
-  { icon: 'credit-card', title: 'Flexible Payments', body: 'Pay 50% advance, 50% on delivery. Wallet system for repeat clients.', tint: '#FB923C' },
-  { icon: 'book-open', title: 'Educational Mode', body: 'Optionally receive a PDF or video explanation of your simulation.', tint: '#38BDF8' },
+  { icon: 'zap', title: 'Express Delivery', body: 'Results in 6-12h with our express tier. Urgent (24h) and Standard also available.', tint: '#0EA5E9' },
+  { icon: 'shield', title: 'Verified Experts', body: 'Every expert passes a 2-hour live simulation test. Only top 15% accepted.', tint: '#F97316' },
+  { icon: 'check-circle', title: 'Quality Control', body: 'Admin reviews every submission before delivery. No shortcuts, no compromises.', tint: '#0EA5E9' },
+  { icon: 'cpu', title: 'Smart Matching', body: 'AI matches your project to the highest-rated available expert by skill.', tint: '#F97316' },
+  { icon: 'globe', title: 'Global Platform', body: 'Multi-currency, multi-timezone. Submit anywhere, get results worldwide.', tint: '#0EA5E9' },
+  { icon: 'bar-chart', title: 'Full Transparency', body: 'Track every stage: Received → Assigned → QC → Completed.', tint: '#F97316' },
+  { icon: 'lock', title: 'NDA Support', body: 'Enable confidential mode. Expert must sign NDA before accessing files.', tint: '#0EA5E9' },
+  { icon: 'credit-card', title: 'Flexible Payments', body: 'Pay 50% advance, 50% on delivery. Wallet system for repeat clients.', tint: '#F97316' },
+  { icon: 'book-open', title: 'Educational Mode', body: 'Optionally receive a PDF or video explanation of your simulation.', tint: '#0EA5E9' },
 ]
 
 const levels = [
   { label: 'Beginner', color: '#64748B', projects: '1-10 projects', stars: 1 },
   { label: 'Verified', color: '#0EA5E9', projects: '11-30 projects', stars: 2 },
-  { label: 'Top Expert', color: '#F59E0B', projects: '31-60 projects', stars: 3 },
+  { label: 'Top Expert', color: '#2563EB', projects: '31-60 projects', stars: 3 },
   { label: 'Elite Expert', color: '#F97316', projects: '60+ projects', stars: 4 },
 ]
 
@@ -176,8 +167,8 @@ function Reveal({ children, delay = 0 }: { children: React.ReactNode; delay?: nu
   return (
     <div ref={ref} style={{
       opacity: inView ? 1 : 0,
-      transform: inView ? 'translateY(0)' : 'translateY(26px)',
-      transition: `opacity .7s cubic-bezier(.22,.61,.36,1) ${delay}ms, transform .7s cubic-bezier(.22,.61,.36,1) ${delay}ms`,
+      transform: inView ? 'translateY(0)' : 'translateY(18px)',
+      transition: `opacity .6s cubic-bezier(.22,.61,.36,1) ${delay}ms, transform .6s cubic-bezier(.22,.61,.36,1) ${delay}ms`,
     }}>
       {children}
     </div>
@@ -188,10 +179,10 @@ export default function LandingPage() {
   const [navScrolled, setNavScrolled] = useState(false)
   const [mobileNavOpen, setMobileNavOpen] = useState(false)
   const statsRef = useInView()
-  const c1 = useCounter(1200, 2000, statsRef.inView)
-  const c2 = useCounter(98, 2000, statsRef.inView)
-  const c3 = useCounter(47, 2000, statsRef.inView)
-  const c4 = useCounter(6, 2000, statsRef.inView)
+  const c1 = useCounter(1200, 1800, statsRef.inView)
+  const c2 = useCounter(98, 1800, statsRef.inView)
+  const c3 = useCounter(47, 1800, statsRef.inView)
+  const c4 = useCounter(6, 1800, statsRef.inView)
 
   useEffect(() => {
     const onScroll = () => setNavScrolled(window.scrollY > 40)
@@ -210,54 +201,53 @@ export default function LandingPage() {
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500;600;700&display=swap');
         html { scroll-behavior: smooth; }
-        .lp { font-family: 'DM Sans', sans-serif; }
+        .lp { font-family: 'DM Sans', sans-serif; background:#EAF4FF; }
         .dp { font-family: 'Syne', sans-serif; }
-        @keyframes fadeUp { from { opacity:0; transform:translateY(28px); } to { opacity:1; transform:translateY(0); } }
-        @keyframes floatY { 0%,100% { transform:translateY(0); } 50% { transform:translateY(-14px); } }
-        @keyframes pulseRing { 0% { box-shadow:0 0 0 0 rgba(56,189,248,.6); } 100% { box-shadow:0 0 0 10px rgba(56,189,248,0); } }
+        @keyframes fadeUp { from { opacity:0; transform:translateY(20px); } to { opacity:1; transform:translateY(0); } }
+        @keyframes floatY { 0%,100% { transform:translateY(0); } 50% { transform:translateY(-10px); } }
+        @keyframes pulseRing { 0% { box-shadow:0 0 0 0 rgba(14,165,233,.45); } 100% { box-shadow:0 0 0 9px rgba(14,165,233,0); } }
         @keyframes marquee { from { transform:translateX(0); } to { transform:translateX(-50%); } }
-        @keyframes drift { 0%,100% { transform:translate(0,0) scale(1); } 50% { transform:translate(20px,-16px) scale(1.05); } }
+        @keyframes drift { 0%,100% { transform:translate(0,0) scale(1); } 50% { transform:translate(16px,-12px) scale(1.04); } }
         @keyframes slideDown { from { opacity:0; transform:translateY(-8px); } to { opacity:1; transform:translateY(0); } }
-        .au { animation: fadeUp .7s cubic-bezier(.22,.61,.36,1) both; }
-        .au1 { animation: fadeUp .7s .12s cubic-bezier(.22,.61,.36,1) both; }
-        .au2 { animation: fadeUp .7s .24s cubic-bezier(.22,.61,.36,1) both; }
-        .au3 { animation: fadeUp .7s .36s cubic-bezier(.22,.61,.36,1) both; }
-        .au4 { animation: fadeUp .7s .48s cubic-bezier(.22,.61,.36,1) both; }
-        .mq { animation: marquee 30s linear infinite; }
+        .au { animation: fadeUp .6s cubic-bezier(.22,.61,.36,1) both; }
+        .au1 { animation: fadeUp .6s .1s cubic-bezier(.22,.61,.36,1) both; }
+        .au2 { animation: fadeUp .6s .2s cubic-bezier(.22,.61,.36,1) both; }
+        .au3 { animation: fadeUp .6s .3s cubic-bezier(.22,.61,.36,1) both; }
+        .au4 { animation: fadeUp .6s .4s cubic-bezier(.22,.61,.36,1) both; }
+        .mq { animation: marquee 28s linear infinite; }
         .mq:hover { animation-play-state:paused; }
         .pr { animation: pulseRing 2s ease-out infinite; }
-        .drift { animation: drift 9s ease-in-out infinite; }
-        .hgrid { background-image:linear-gradient(rgba(14,165,233,.06) 1px,transparent 1px),linear-gradient(90deg,rgba(14,165,233,.06) 1px,transparent 1px); background-size:52px 52px; }
-        .fcard { background:rgba(255,255,255,.03); border:1px solid rgba(255,255,255,.08); border-radius:18px; padding:28px 24px; transition:background .35s cubic-bezier(.22,.61,.36,1), border-color .35s cubic-bezier(.22,.61,.36,1), transform .35s cubic-bezier(.22,.61,.36,1); }
-        .fcard:hover { background:linear-gradient(160deg, rgba(14,165,233,.10), rgba(249,115,22,.10)); border-color:rgba(148,190,255,.35); transform:translateY(-5px); }
-        .scard { background:#fff; border:1px solid #E2E8F0; border-radius:20px; padding:28px; transition:box-shadow .35s cubic-bezier(.22,.61,.36,1), transform .35s cubic-bezier(.22,.61,.36,1), border-color .35s cubic-bezier(.22,.61,.36,1); }
-        .scard:hover { box-shadow:0 18px 50px rgba(11,28,61,.10); transform:translateY(-5px); border-color:#BAE6FD; }
-        .stcard { background:#fff; border-radius:20px; padding:30px 22px; text-align:center; border:1px solid #F1F5F9; transition:all .35s cubic-bezier(.22,.61,.36,1); }
-        .stcard:hover { transform:translateY(-5px); box-shadow:0 18px 44px rgba(11,28,61,.09); }
-        .tcard { background:#fff; border-radius:20px; padding:26px; border:1px solid #EEF2FF; transition:box-shadow .35s cubic-bezier(.22,.61,.36,1), transform .35s cubic-bezier(.22,.61,.36,1), border-color .35s cubic-bezier(.22,.61,.36,1); position:relative; overflow:hidden; }
-        .tcard:hover { transform:translateY(-5px); box-shadow:0 20px 48px rgba(11,28,61,.12); border-color:#FED7AA; }
-        .tcard::before { content:""; position:absolute; top:0; left:0; right:0; height:3px; background:linear-gradient(90deg,#0EA5E9,#F97316); opacity:.0; transition:opacity .35s; }
+        .drift { animation: drift 8s ease-in-out infinite; }
+        .hgrid { background-image:linear-gradient(rgba(14,165,233,.09) 1px,transparent 1px),linear-gradient(90deg,rgba(14,165,233,.09) 1px,transparent 1px); background-size:48px 48px; }
+        .fcard { background:#fff; border:1px solid #DCEEFF; border-radius:16px; padding:24px 22px; transition:box-shadow .3s cubic-bezier(.22,.61,.36,1), border-color .3s cubic-bezier(.22,.61,.36,1), transform .3s cubic-bezier(.22,.61,.36,1); }
+        .fcard:hover { box-shadow:0 14px 34px rgba(14,116,233,.12); border-color:#BAE0FD; transform:translateY(-4px); }
+        .scard { background:#fff; border:1px solid #DCEEFF; border-radius:18px; padding:26px; transition:box-shadow .3s cubic-bezier(.22,.61,.36,1), transform .3s cubic-bezier(.22,.61,.36,1), border-color .3s cubic-bezier(.22,.61,.36,1); }
+        .scard:hover { box-shadow:0 16px 38px rgba(14,116,233,.12); transform:translateY(-4px); border-color:#BAE0FD; }
+        .stcard { background:#fff; border-radius:18px; padding:26px 20px; text-align:center; border:1px solid #DCEEFF; transition:all .3s cubic-bezier(.22,.61,.36,1); }
+        .stcard:hover { transform:translateY(-4px); box-shadow:0 16px 36px rgba(14,116,233,.1); }
+        .tcard { background:#fff; border-radius:18px; padding:24px; border:1px solid #E4F0FE; transition:box-shadow .3s cubic-bezier(.22,.61,.36,1), transform .3s cubic-bezier(.22,.61,.36,1), border-color .3s cubic-bezier(.22,.61,.36,1); position:relative; overflow:hidden; }
+        .tcard:hover { transform:translateY(-4px); box-shadow:0 18px 40px rgba(14,116,233,.14); border-color:#FED7AA; }
+        .tcard::before { content:""; position:absolute; top:0; left:0; right:0; height:3px; background:linear-gradient(90deg,#0EA5E9,#F97316); opacity:.0; transition:opacity .3s; }
         .tcard:hover::before { opacity:1; }
-        .btncta { display:inline-flex; align-items:center; gap:8px; background:linear-gradient(120deg,#0EA5E9,#F97316); color:#fff; font-family:'Syne',sans-serif; font-weight:700; font-size:15px; padding:14px 28px; border-radius:12px; border:none; cursor:pointer; transition:background-position .4s cubic-bezier(.22,.61,.36,1), transform .25s cubic-bezier(.22,.61,.36,1), box-shadow .25s cubic-bezier(.22,.61,.36,1); text-decoration:none; background-size:170% 170%; background-position:0% 50%; }
-        .btncta:hover { background-position:100% 50%; transform:translateY(-2px); box-shadow:0 12px 30px rgba(249,115,22,.3); color:#fff; }
-        .btngl { display:inline-flex; align-items:center; gap:8px; background:transparent; color:rgba(255,255,255,.88); font-family:'DM Sans',sans-serif; font-weight:500; font-size:14.5px; padding:13px 23px; border-radius:12px; border:1px solid rgba(255,255,255,.2); cursor:pointer; transition:background .25s cubic-bezier(.22,.61,.36,1), border-color .25s cubic-bezier(.22,.61,.36,1), color .25s cubic-bezier(.22,.61,.36,1); text-decoration:none; }
-        .btngl:hover { background:rgba(255,255,255,.08); border-color:rgba(56,189,248,.5); color:#fff; }
-        .navglass { backdrop-filter:blur(16px); -webkit-backdrop-filter:blur(16px); background:rgba(255,255,255,.92); border-bottom:1px solid rgba(15,23,42,.08); box-shadow:0 6px 24px rgba(15,23,42,.08); }
-        .navsolid { background:#FFFFFF; border-bottom:1px solid rgba(15,23,42,.05); }
-        .navbtn-outline { display:inline-flex; align-items:center; justify-content:center; gap:8px; background:#fff; color:#0B1C3D; font-family:'DM Sans',sans-serif; font-weight:500; border:1px solid rgba(14,165,233,.3); border-radius:12px; cursor:pointer; text-decoration:none; transition:background .2s cubic-bezier(.22,.61,.36,1), border-color .2s cubic-bezier(.22,.61,.36,1); }
+        .btncta { display:inline-flex; align-items:center; gap:8px; background:linear-gradient(120deg,#0EA5E9,#2563EB); color:#fff; font-family:'Syne',sans-serif; font-weight:700; font-size:14px; padding:13px 26px; border-radius:11px; border:none; cursor:pointer; transition:background-position .35s cubic-bezier(.22,.61,.36,1), transform .22s cubic-bezier(.22,.61,.36,1), box-shadow .22s cubic-bezier(.22,.61,.36,1); text-decoration:none; background-size:170% 170%; background-position:0% 50%; }
+        .btncta:hover { background-position:100% 50%; transform:translateY(-2px); box-shadow:0 10px 26px rgba(14,165,233,.28); color:#fff; }
+        .btngl { display:inline-flex; align-items:center; gap:8px; background:#fff; color:#0B1C3D; font-family:'DM Sans',sans-serif; font-weight:500; font-size:13.5px; padding:12px 21px; border-radius:11px; border:1px solid #BFDDFB; cursor:pointer; transition:background .22s cubic-bezier(.22,.61,.36,1), border-color .22s cubic-bezier(.22,.61,.36,1); text-decoration:none; }
+        .btngl:hover { background:#F0F8FF; border-color:#0EA5E9; }
+        .navglass { backdrop-filter:blur(14px); -webkit-backdrop-filter:blur(14px); background:rgba(255,255,255,.9); border-bottom:1px solid rgba(11,28,61,.06); box-shadow:0 6px 20px rgba(14,116,233,.08); }
+        .navsolid { background:#F5FAFF; border-bottom:1px solid rgba(11,28,61,.04); }
+        .navbtn-outline { display:inline-flex; align-items:center; justify-content:center; gap:8px; background:#fff; color:#0B1C3D; font-family:'DM Sans',sans-serif; font-weight:500; border:1px solid rgba(14,165,233,.3); border-radius:11px; cursor:pointer; text-decoration:none; transition:background .2s cubic-bezier(.22,.61,.36,1), border-color .2s cubic-bezier(.22,.61,.36,1); }
         .navbtn-outline:hover { background:rgba(14,165,233,.08); border-color:rgba(14,165,233,.55); }
         .nav-desktop-actions { display:flex; align-items:center; gap:6px; }
-        .nav-toggle { display:none; align-items:center; justify-content:center; width:38px; height:38px; border-radius:10px; border:1px solid #E2E8F0; background:#fff; color:#0B1C3D; cursor:pointer; flex-shrink:0; transition:background .2s, border-color .2s; }
-        .nav-toggle:hover { background:#F1F5F9; border-color:#CBD5E1; }
-        .nav-mobile-panel { background:#fff; border-top:1px solid rgba(15,23,42,.06); box-shadow:0 14px 28px rgba(15,23,42,.09); animation:slideDown .22s cubic-bezier(.22,.61,.36,1) both; }
+        .nav-toggle { display:none; align-items:center; justify-content:center; width:38px; height:38px; border-radius:10px; border:1px solid #DCEEFF; background:#fff; color:#0B1C3D; cursor:pointer; flex-shrink:0; transition:background .2s, border-color .2s; }
+        .nav-toggle:hover { background:#F0F8FF; border-color:#BAE0FD; }
+        .nav-mobile-panel { background:#fff; border-top:1px solid rgba(11,28,61,.05); box-shadow:0 12px 26px rgba(14,116,233,.1); animation:slideDown .2s cubic-bezier(.22,.61,.36,1) both; }
         @media (min-width: 641px) { .nav-mobile-panel { display:none !important; } }
-        .lcard { background:#fff; border-radius:20px; padding:24px 20px; border:1px solid #F1F5F9; text-align:center; transition:all .35s cubic-bezier(.22,.61,.36,1); }
-        .lcard:hover { box-shadow:0 14px 40px rgba(11,28,61,.10); transform:translateY(-4px); }
-        .blob { position:absolute; border-radius:50%; filter:blur(80px); pointer-events:none; }
-        .iconwrap { width:44px; height:44px; border-radius:12px; display:flex; align-items:center; justify-content:center; margin-bottom:16px; }
-        .navlink { color:#475569; font-size:13.5px; font-weight:500; padding:8px 14px; border-radius:8px; text-decoration:none; transition:color .2s, background .2s; }
-        .navlink:hover { color:#0B1C3D; background:rgba(11,28,61,.06); }
-        .mobiletoggle { display:none; }
+        .lcard { background:#fff; border-radius:18px; padding:22px 18px; border:1px solid #DCEEFF; text-align:center; transition:all .3s cubic-bezier(.22,.61,.36,1); }
+        .lcard:hover { box-shadow:0 14px 34px rgba(14,116,233,.1); transform:translateY(-3px); }
+        .blob { position:absolute; border-radius:50%; filter:blur(74px); pointer-events:none; }
+        .iconwrap { width:42px; height:42px; border-radius:11px; display:flex; align-items:center; justify-content:center; margin-bottom:14px; }
+        .navlink { color:#3B506E; font-size:13px; font-weight:500; padding:8px 14px; border-radius:8px; text-decoration:none; transition:color .2s, background .2s; }
+        .navlink:hover { color:#0B1C3D; background:rgba(14,165,233,.08); }
         * { box-sizing:border-box; }
 
         /* ---- Responsive scale: tablets ---- */
@@ -278,7 +268,7 @@ export default function LandingPage() {
         /* ---- Responsive scale: phones ---- */
         @media (max-width: 480px) {
           .grid-4 { grid-template-columns:1fr 1fr !important; gap:12px !important; }
-          .btncta, .btngl, .navbtn-outline { font-size:13.5px !important; padding:12px 20px !important; }
+          .btncta, .btngl, .navbtn-outline { font-size:13px !important; padding:11px 18px !important; }
         }
 
         @media (prefers-reduced-motion: reduce) {
@@ -289,22 +279,22 @@ export default function LandingPage() {
       <div className="lp">
         {/* NAV */}
         <nav className={`${navScrolled ? 'navglass' : 'navsolid'}`} style={{ position: 'fixed', top: 0, left: 0, right: 0, zIndex: 50, transition: 'background .3s, backdrop-filter .3s, box-shadow .3s' }}>
-          <div style={{ maxWidth: 1200, margin: '0 auto', padding: '14px clamp(16px,4vw,24px)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <div style={{ maxWidth: 1200, margin: '0 auto', padding: '13px clamp(16px,4vw,24px)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <Link to="/" style={{ display: 'flex', alignItems: 'center', gap: 12, textDecoration: 'none', minWidth: 0 }} onClick={() => setMobileNavOpen(false)}>
-              <GSHLogo size={40} />
+              <GSHLogo size={36} />
               <div style={{ minWidth: 0 }}>
-                <div className="dp" style={{ color: '#0B1C3D', fontWeight: 700, fontSize: 15, lineHeight: 1.2, letterSpacing: '.01em', whiteSpace: 'nowrap' }}>Global Simulation Hub</div>
-                <div className="nav-subtitle" style={{ color: '#C2410C', fontSize: 9.5, fontWeight: 600, letterSpacing: '.16em', textTransform: 'uppercase', marginTop: 2, whiteSpace: 'nowrap' }}>Engineering · Simulation · Delivery</div>
+                <div className="dp" style={{ color: '#0B1C3D', fontWeight: 700, fontSize: 14, lineHeight: 1.2, letterSpacing: '.01em', whiteSpace: 'nowrap' }}>Global Simulation Hub</div>
+                <div className="nav-subtitle" style={{ color: '#0EA5E9', fontSize: 9, fontWeight: 600, letterSpacing: '.14em', textTransform: 'uppercase', marginTop: 2, whiteSpace: 'nowrap' }}>Engineering · Simulation · Delivery</div>
               </div>
             </Link>
 
             {/* Desktop actions — hidden below 640px in favor of the hamburger menu */}
             <div className="nav-desktop-actions">
               <Link to="/apply-expert" className="navlink">Become Expert</Link>
-              <Link to="/login" className="navbtn-outline" style={{ fontSize: 13, padding: '9px 16px' }}>Login</Link>
-              <Link to="/submit" className="btncta" style={{ fontSize: 13, padding: '10px 18px' }}>
+              <Link to="/login" className="navbtn-outline" style={{ fontSize: 12.5, padding: '9px 16px' }}>Login</Link>
+              <Link to="/submit" className="btncta" style={{ fontSize: 12.5, padding: '10px 17px' }}>
                 Submit Project
-                <Icon name="arrow-right" size={14} />
+                <Icon name="arrow-right" size={13} />
               </Link>
             </div>
 
@@ -316,7 +306,7 @@ export default function LandingPage() {
               aria-expanded={mobileNavOpen}
               onClick={() => setMobileNavOpen((v) => !v)}
             >
-              <Icon name={mobileNavOpen ? 'x' : 'menu'} size={19} color="#0B1C3D" />
+              <Icon name={mobileNavOpen ? 'x' : 'menu'} size={18} color="#0B1C3D" />
             </button>
           </div>
 
@@ -324,96 +314,96 @@ export default function LandingPage() {
           {mobileNavOpen && (
             <div className="nav-mobile-panel">
               <div style={{ maxWidth: 1200, margin: '0 auto', padding: '6px clamp(16px,4vw,24px) 18px', display: 'flex', flexDirection: 'column', gap: 8 }}>
-                <Link to="/apply-expert" className="navlink" style={{ padding: '13px 14px', fontSize: 14.5 }} onClick={() => setMobileNavOpen(false)}>
+                <Link to="/apply-expert" className="navlink" style={{ padding: '13px 14px', fontSize: 14 }} onClick={() => setMobileNavOpen(false)}>
                   Become Expert
                 </Link>
-                <Link to="/login" className="navbtn-outline" style={{ width: '100%', fontSize: 14.5, padding: '13px 16px' }} onClick={() => setMobileNavOpen(false)}>
+                <Link to="/login" className="navbtn-outline" style={{ width: '100%', fontSize: 14, padding: '13px 16px' }} onClick={() => setMobileNavOpen(false)}>
                   Login
                 </Link>
-                <Link to="/submit" className="btncta" style={{ width: '100%', fontSize: 14.5, padding: '14px 16px' }} onClick={() => setMobileNavOpen(false)}>
+                <Link to="/submit" className="btncta" style={{ width: '100%', fontSize: 14, padding: '13px 16px' }} onClick={() => setMobileNavOpen(false)}>
                   Submit Project
-                  <Icon name="arrow-right" size={15} />
+                  <Icon name="arrow-right" size={14} />
                 </Link>
               </div>
             </div>
           )}
         </nav>
 
-        {/* HERO */}
-        <section style={{ minHeight: '100vh', background: '#0B1C3D', position: 'relative', display: 'flex', alignItems: 'center', paddingTop: 'clamp(84px,14vw,96px)', paddingBottom: 'clamp(48px,8vw,64px)', overflow: 'hidden' }} className="hgrid">
-          <div className="blob drift" style={{ width: 520, height: 520, background: 'rgba(14,165,233,.10)', top: '16%', left: '8%' }} />
-          <div className="blob drift" style={{ width: 460, height: 460, background: 'rgba(249,115,22,.12)', bottom: '10%', right: '6%', animationDelay: '3s' }} />
-          <div style={{ maxWidth: 1200, margin: '0 auto', padding: '0 clamp(16px,4vw,24px)', width: '100%', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'clamp(32px,6vw,64px)', alignItems: 'center' }} className="grid-2">
+        {/* HERO — light blue, the color that carries the whole page */}
+        <section style={{ minHeight: '92vh', background: 'linear-gradient(180deg,#F5FAFF 0%,#E4F1FE 100%)', position: 'relative', display: 'flex', alignItems: 'center', paddingTop: 'clamp(80px,13vw,92px)', paddingBottom: 'clamp(44px,7vw,56px)', overflow: 'hidden' }} className="hgrid">
+          <div className="blob drift" style={{ width: 440, height: 440, background: 'rgba(14,165,233,.14)', top: '14%', left: '6%' }} />
+          <div className="blob drift" style={{ width: 380, height: 380, background: 'rgba(249,115,22,.10)', bottom: '8%', right: '4%', animationDelay: '3s' }} />
+          <div style={{ maxWidth: 1200, margin: '0 auto', padding: '0 clamp(16px,4vw,24px)', width: '100%', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'clamp(28px,6vw,56px)', alignItems: 'center', position: 'relative' }} className="grid-2">
             <div>
-              <div className="au" style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: 'rgba(14,165,233,.1)', border: '1px solid rgba(14,165,233,.2)', borderRadius: 999, padding: '6px 16px', marginBottom: 26 }}>
-                <span className="pr" style={{ width: 8, height: 8, borderRadius: '50%', background: '#38BDF8', display: 'inline-block', flexShrink: 0 }} />
-                <span style={{ color: '#7DD3FC', fontSize: 11.5, fontWeight: 600, letterSpacing: '.05em' }}>Engineering Simulation Marketplace</span>
+              <div className="au" style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: '#fff', border: '1px solid #BFE0FB', borderRadius: 999, padding: '6px 15px', marginBottom: 22 }}>
+                <span className="pr" style={{ width: 7, height: 7, borderRadius: '50%', background: '#0EA5E9', display: 'inline-block', flexShrink: 0 }} />
+                <span style={{ color: '#0369A1', fontSize: 11, fontWeight: 600, letterSpacing: '.04em' }}>Engineering Simulation Marketplace</span>
               </div>
-              <h1 className="dp au1" style={{ fontSize: 'clamp(32px, 4.2vw, 54px)', fontWeight: 800, lineHeight: 1.1, color: '#fff', margin: '0 0 20px' }}>
+              <h1 className="dp au1" style={{ fontSize: 'clamp(30px, 3.6vw, 44px)', fontWeight: 800, lineHeight: 1.14, color: '#0B1C3D', margin: '0 0 18px' }}>
                 Simulation<br />
-                <span style={{ background: 'linear-gradient(120deg,#38BDF8,#FB923C)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>Delivered Fast</span><br />
+                <span style={{ background: 'linear-gradient(120deg,#0EA5E9,#F97316)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>Delivered Fast</span><br />
                 Globally.
               </h1>
-              <p className="au2" style={{ color: '#A3AFC4', fontSize: 16.5, lineHeight: 1.7, maxWidth: 440, margin: '0 0 32px' }}>
+              <p className="au2" style={{ color: '#4C6076', fontSize: 15.5, lineHeight: 1.7, maxWidth: 430, margin: '0 0 28px' }}>
                 Connect with verified engineers for MATLAB, Proteus, ANSYS & more. Submit your project in 60 seconds — no account needed.
               </p>
-              <div className="au3" style={{ display: 'flex', gap: 14, flexWrap: 'wrap', marginBottom: 36 }}>
-                <Link to="/submit" className="btncta" style={{ fontSize: 15, padding: '15px 30px' }}>
+              <div className="au3" style={{ display: 'flex', gap: 12, flexWrap: 'wrap', marginBottom: 30 }}>
+                <Link to="/submit" className="btncta" style={{ fontSize: 14, padding: '14px 27px' }}>
                   Submit a Project
-                  <Icon name="arrow-right" size={16} />
+                  <Icon name="arrow-right" size={15} />
                 </Link>
-                <Link to="/apply-expert" className="btngl" style={{ fontSize: 15, padding: '15px 26px' }}>Join as Expert</Link>
+                <Link to="/apply-expert" className="btngl" style={{ fontSize: 14, padding: '14px 24px' }}>Join as Expert</Link>
               </div>
-              <div className="au4" style={{ display: 'flex', gap: 22, flexWrap: 'wrap' }}>
+              <div className="au4" style={{ display: 'flex', gap: 20, flexWrap: 'wrap' }}>
                 {['No account needed', 'Secure delivery', 'Expert-verified'].map((t) => (
                   <div key={t} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                    <Icon name="check" size={14} color="#38BDF8" strokeWidth={3} />
-                    <span style={{ color: '#7C8CA6', fontSize: 13 }}>{t}</span>
+                    <Icon name="check" size={13} color="#0EA5E9" strokeWidth={3} />
+                    <span style={{ color: '#64748B', fontSize: 12.5 }}>{t}</span>
                   </div>
                 ))}
               </div>
             </div>
             {/* Floating card */}
-            <div className="au" style={{ position: 'relative', padding: '20px 0' }}>
-              <div style={{ background: 'rgba(255,255,255,.04)', backdropFilter: 'blur(12px)', border: '1px solid rgba(255,255,255,.1)', borderRadius: 24, padding: 'clamp(20px,3vw,28px)', boxShadow: '0 32px 80px rgba(0,0,0,.4)', animation: 'floatY 6s ease-in-out infinite' }}>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20, gap: 10, flexWrap: 'wrap' }}>
+            <div className="au" style={{ position: 'relative', padding: '18px 0' }}>
+              <div style={{ background: '#fff', border: '1px solid #DCEEFF', borderRadius: 22, padding: 'clamp(20px,3vw,26px)', boxShadow: '0 26px 60px rgba(14,116,233,.16)', animation: 'floatY 6s ease-in-out infinite' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 18, gap: 10, flexWrap: 'wrap' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 12, minWidth: 0 }}>
-                    <div style={{ width: 40, height: 40, background: 'linear-gradient(135deg,#0EA5E9,#F97316)', borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontWeight: 800, fontSize: 14, fontFamily: 'Syne,sans-serif', flexShrink: 0 }}>M</div>
+                    <div style={{ width: 38, height: 38, background: 'linear-gradient(135deg,#0EA5E9,#2563EB)', borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontWeight: 800, fontSize: 13, fontFamily: 'Syne,sans-serif', flexShrink: 0 }}>M</div>
                     <div style={{ minWidth: 0 }}>
-                      <p style={{ color: '#fff', fontSize: 14, fontWeight: 600, margin: 0, lineHeight: 1.3 }}>DC Motor Speed Control</p>
-                      <p style={{ color: '#7C8CA6', fontSize: 11.5, margin: 0 }}>MATLAB/Simulink · R2024a</p>
+                      <p style={{ color: '#0B1C3D', fontSize: 13.5, fontWeight: 600, margin: 0, lineHeight: 1.3 }}>DC Motor Speed Control</p>
+                      <p style={{ color: '#8092A8', fontSize: 11, margin: 0 }}>MATLAB/Simulink · R2024a</p>
                     </div>
                   </div>
-                  <span style={{ padding: '5px 12px', background: 'rgba(251,191,36,.08)', color: '#FCD34D', fontSize: 11, borderRadius: 999, border: '1px solid rgba(251,191,36,.15)', fontWeight: 600, whiteSpace: 'nowrap' }}>In Progress</span>
+                  <span style={{ padding: '5px 12px', background: '#FFF7E6', color: '#B45309', fontSize: 10.5, borderRadius: 999, border: '1px solid #FDE7BC', fontWeight: 600, whiteSpace: 'nowrap' }}>In Progress</span>
                 </div>
-                <div style={{ marginBottom: 20 }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', color: '#7C8CA6', fontSize: 12.5, marginBottom: 8 }}>
-                    <span>Expert progress</span><span style={{ color: '#38BDF8', fontWeight: 600 }}>73%</span>
+                <div style={{ marginBottom: 18 }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', color: '#8092A8', fontSize: 12, marginBottom: 8 }}>
+                    <span>Expert progress</span><span style={{ color: '#0EA5E9', fontWeight: 600 }}>73%</span>
                   </div>
-                  <div style={{ height: 8, background: 'rgba(255,255,255,.08)', borderRadius: 99, overflow: 'hidden' }}>
-                    <div style={{ height: '100%', width: '73%', background: 'linear-gradient(90deg,#0EA5E9,#FB923C)', borderRadius: 99, transition: 'width 1.2s ease' }} />
+                  <div style={{ height: 7, background: '#EAF4FF', borderRadius: 99, overflow: 'hidden' }}>
+                    <div style={{ height: '100%', width: '73%', background: 'linear-gradient(90deg,#0EA5E9,#F97316)', borderRadius: 99, transition: 'width 1.2s ease' }} />
                   </div>
                 </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 16px', background: 'rgba(255,255,255,.04)', borderRadius: 14, border: '1px solid rgba(255,255,255,.06)', marginBottom: 16 }}>
-                  <div style={{ width: 36, height: 36, borderRadius: '50%', background: 'linear-gradient(135deg,#F97316,#0EA5E9)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontWeight: 700, fontSize: 12.5, flexShrink: 0 }}>AK</div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 15px', background: '#F5FAFF', borderRadius: 13, border: '1px solid #E4F0FE', marginBottom: 14 }}>
+                  <div style={{ width: 34, height: 34, borderRadius: '50%', background: 'linear-gradient(135deg,#F97316,#0EA5E9)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontWeight: 700, fontSize: 12, flexShrink: 0 }}>AK</div>
                   <div style={{ flex: 1, minWidth: 0 }}>
-                    <p style={{ color: '#fff', fontSize: 13.5, fontWeight: 600, margin: 0 }}>Ahmed K.</p>
+                    <p style={{ color: '#0B1C3D', fontSize: 13, fontWeight: 600, margin: 0 }}>Ahmed K.</p>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                      <StarRow count={5} size={11} />
-                      <span style={{ color: '#7C8CA6', fontSize: 11, marginLeft: 2 }}>4.9 · Elite</span>
+                      <StarRow count={5} size={10} />
+                      <span style={{ color: '#8092A8', fontSize: 10.5, marginLeft: 2 }}>4.9 · Elite</span>
                     </div>
                   </div>
-                  <div style={{ width: 8, height: 8, background: '#4ADE80', borderRadius: '50%', flexShrink: 0 }} />
+                  <div style={{ width: 8, height: 8, background: '#22C55E', borderRadius: '50%', flexShrink: 0 }} />
                 </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, color: '#7C8CA6', flexWrap: 'wrap', gap: 8 }}>
-                  <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}><Icon name="clock" size={13} color="#7C8CA6" />Est. 4h remaining</span>
-                  <span style={{ color: '#38BDF8', fontWeight: 600 }}>Urgent delivery</span>
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11.5, color: '#8092A8', flexWrap: 'wrap', gap: 8 }}>
+                  <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}><Icon name="clock" size={12} color="#8092A8" />Est. 4h remaining</span>
+                  <span style={{ color: '#0EA5E9', fontWeight: 600 }}>Urgent delivery</span>
                 </div>
               </div>
-              <div style={{ position: 'absolute', top: -8, right: -8, background: '#10B981', color: '#fff', fontSize: 11, fontWeight: 700, padding: '6px 14px 6px 12px', borderRadius: 999, boxShadow: '0 4px 16px rgba(16,185,129,.4)', animation: 'floatY 4s .5s ease-in-out infinite', display: 'flex', alignItems: 'center', gap: 5 }}>
-                <Icon name="check" size={12} color="#fff" strokeWidth={3.2} />QC Passed
+              <div style={{ position: 'absolute', top: -8, right: -8, background: '#16A34A', color: '#fff', fontSize: 10.5, fontWeight: 700, padding: '6px 13px 6px 11px', borderRadius: 999, boxShadow: '0 6px 16px rgba(22,163,74,.3)', animation: 'floatY 4s .5s ease-in-out infinite', display: 'flex', alignItems: 'center', gap: 5 }}>
+                <Icon name="check" size={11} color="#fff" strokeWidth={3.2} />QC Passed
               </div>
-              <div style={{ position: 'absolute', bottom: -8, left: -8, background: '#fff', color: '#0B1C3D', fontSize: 11, fontWeight: 700, padding: '6px 14px', borderRadius: 999, boxShadow: '0 4px 20px rgba(11,28,61,.18)', display: 'flex', alignItems: 'center', gap: 6, animation: 'floatY 5s 1s ease-in-out infinite' }}>
+              <div style={{ position: 'absolute', bottom: -8, left: -8, background: '#fff', color: '#0B1C3D', fontSize: 10.5, fontWeight: 700, padding: '6px 13px', borderRadius: 999, border: '1px solid #DCEEFF', boxShadow: '0 8px 22px rgba(14,116,233,.14)', display: 'flex', alignItems: 'center', gap: 6, animation: 'floatY 5s 1s ease-in-out infinite' }}>
                 <span style={{ width: 7, height: 7, background: 'linear-gradient(135deg,#0EA5E9,#F97316)', borderRadius: '50%' }} />1,200+ Projects Delivered
               </div>
             </div>
@@ -421,23 +411,20 @@ export default function LandingPage() {
         </section>
 
         {/* MARQUEE */}
-        <div style={{ background: '#060D1F', padding: '14px 0', overflow: 'hidden', borderTop: '1px solid rgba(255,255,255,.04)', borderBottom: '1px solid rgba(255,255,255,.04)' }}>
+        <div style={{ background: '#DCEEFF', padding: '13px 0', overflow: 'hidden', borderTop: '1px solid #CCE4FA', borderBottom: '1px solid #CCE4FA' }}>
           <div className="mq" style={{ display: 'flex', width: 'max-content' }}>
             {[...tools, ...tools].map((t, i) => (
-              <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 20, padding: '0 28px' }}>
-                <span style={{ color: '#3A4A6B', fontSize: 12, fontWeight: 600, letterSpacing: '.06em', textTransform: 'uppercase', whiteSpace: 'nowrap' }}>{t}</span>
-                <span style={{ width: 4, height: 4, background: '#1E3A5F', borderRadius: '50%' }} />
+              <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 18, padding: '0 26px' }}>
+                <span style={{ color: '#5B84AC', fontSize: 11.5, fontWeight: 600, letterSpacing: '.05em', textTransform: 'uppercase', whiteSpace: 'nowrap' }}>{t}</span>
+                <span style={{ width: 4, height: 4, background: '#9FC7E8', borderRadius: '50%' }} />
               </div>
             ))}
           </div>
         </div>
 
-        {/* transition: navy -> light */}
-        <WaveDivider from="#0B1C3D" to="#F8FAFC" />
-
         {/* STATS */}
-        <section ref={statsRef.ref} style={{ padding: 'clamp(48px,8vw,70px) clamp(16px,4vw,24px) clamp(56px,9vw,80px)', background: '#F8FAFC' }}>
-          <div style={{ maxWidth: 900, margin: '0 auto', display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 16 }} className="grid-4">
+        <section ref={statsRef.ref} style={{ padding: 'clamp(44px,7vw,60px) clamp(16px,4vw,24px) clamp(50px,8vw,68px)', background: '#EAF4FF' }}>
+          <div style={{ maxWidth: 900, margin: '0 auto', display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 14 }} className="grid-4">
             {[
               { value: c1, suffix: '+', label: 'Projects Delivered' },
               { value: c2, suffix: '%', label: 'Client Satisfaction' },
@@ -445,59 +432,56 @@ export default function LandingPage() {
               { value: c4, suffix: 'h', label: 'Min Delivery Time' },
             ].map(({ value, suffix, label }) => (
               <div key={label} className="stcard">
-                <p className="dp" style={{ fontSize: 'clamp(28px,5vw,38px)', fontWeight: 800, color: '#0B1C3D', margin: '0 0 6px', lineHeight: 1 }}>{value}{suffix}</p>
-                <p style={{ color: '#94A3B8', fontSize: 13, margin: 0 }}>{label}</p>
+                <p className="dp" style={{ fontSize: 'clamp(24px,4vw,30px)', fontWeight: 800, color: '#0B1C3D', margin: '0 0 6px', lineHeight: 1 }}>{value}{suffix}</p>
+                <p style={{ color: '#8092A8', fontSize: 12.5, margin: 0 }}>{label}</p>
               </div>
             ))}
           </div>
         </section>
 
         {/* HOW IT WORKS */}
-        <section style={{ padding: 'clamp(56px,10vw,96px) clamp(16px,4vw,24px)', background: '#fff' }}>
+        <section style={{ padding: 'clamp(48px,8vw,80px) clamp(16px,4vw,24px)', background: '#F5FAFF' }}>
           <div style={{ maxWidth: 1100, margin: '0 auto' }}>
             <Reveal>
-              <div style={{ textAlign: 'center', marginBottom: 48 }}>
-                <span style={{ color: '#EA580C', fontSize: 11.5, fontWeight: 700, letterSpacing: '.16em', textTransform: 'uppercase', display: 'block', marginBottom: 12 }}>How It Works</span>
-                <h2 className="dp" style={{ fontSize: 'clamp(26px,3.2vw,36px)', fontWeight: 800, color: '#0B1C3D', margin: 0 }}>Four steps to results</h2>
+              <div style={{ textAlign: 'center', marginBottom: 42 }}>
+                <span style={{ color: '#EA580C', fontSize: 11, fontWeight: 700, letterSpacing: '.14em', textTransform: 'uppercase', display: 'block', marginBottom: 10 }}>How It Works</span>
+                <h2 className="dp" style={{ fontSize: 'clamp(22px,2.8vw,30px)', fontWeight: 800, color: '#0B1C3D', margin: 0 }}>Four steps to results</h2>
               </div>
             </Reveal>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 18 }} className="grid-4">
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 16 }} className="grid-4">
               {steps.map((s, i) => (
-                <Reveal key={i} delay={i * 90}>
+                <Reveal key={i} delay={i * 80}>
                   <div className="scard">
-                    <div className="dp" style={{ fontSize: 'clamp(32px,4vw,42px)', fontWeight: 800, background: 'linear-gradient(135deg,#E0F2FE,#FFE4CC)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', lineHeight: 1, marginBottom: 14 }}>{s.n}</div>
-                    <h3 className="dp" style={{ fontSize: 17, fontWeight: 700, color: '#0B1C3D', margin: '0 0 10px' }}>{s.title}</h3>
-                    <p style={{ color: '#64748B', fontSize: 14, lineHeight: 1.65, margin: 0 }}>{s.body}</p>
-                    <div style={{ width: 32, height: 3, background: 'linear-gradient(90deg,#0EA5E9,#F97316)', borderRadius: 99, marginTop: 18 }} />
+                    <div className="dp" style={{ fontSize: 'clamp(26px,3.2vw,32px)', fontWeight: 800, background: 'linear-gradient(135deg,#0EA5E9,#F97316)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', lineHeight: 1, marginBottom: 12, opacity: 0.35 }}>{s.n}</div>
+                    <h3 className="dp" style={{ fontSize: 16, fontWeight: 700, color: '#0B1C3D', margin: '0 0 8px' }}>{s.title}</h3>
+                    <p style={{ color: '#64748B', fontSize: 13.5, lineHeight: 1.65, margin: 0 }}>{s.body}</p>
+                    <div style={{ width: 28, height: 3, background: 'linear-gradient(90deg,#0EA5E9,#F97316)', borderRadius: 99, marginTop: 16 }} />
                   </div>
                 </Reveal>
               ))}
             </div>
           </div>
         </section>
-
-        {/* transition: light -> navy */}
-        <WaveDivider from="#fff" to="#0B1C3D" />
 
         {/* FEATURES */}
-        <section style={{ padding: 'clamp(56px,9vw,90px) clamp(16px,4vw,24px) clamp(60px,10vw,96px)', background: '#0B1C3D', position: 'relative', overflow: 'hidden' }}>
-          <div className="blob" style={{ width: 460, height: 460, background: 'rgba(249,115,22,.10)', top: '-10%', right: '-6%' }} />
+        <section style={{ padding: 'clamp(48px,8vw,76px) clamp(16px,4vw,24px) clamp(52px,9vw,80px)', background: '#DCEEFF', position: 'relative', overflow: 'hidden' }}>
+          <div className="blob" style={{ width: 400, height: 400, background: 'rgba(249,115,22,.08)', top: '-8%', right: '-6%' }} />
           <div style={{ maxWidth: 1100, margin: '0 auto', position: 'relative' }}>
             <Reveal>
-              <div style={{ textAlign: 'center', marginBottom: 48 }}>
-                <span style={{ color: '#38BDF8', fontSize: 11.5, fontWeight: 700, letterSpacing: '.16em', textTransform: 'uppercase', display: 'block', marginBottom: 12 }}>Platform Features</span>
-                <h2 className="dp" style={{ fontSize: 'clamp(26px,3.2vw,36px)', fontWeight: 800, color: '#fff', margin: 0 }}>Why engineers choose GSH</h2>
+              <div style={{ textAlign: 'center', marginBottom: 42 }}>
+                <span style={{ color: '#0369A1', fontSize: 11, fontWeight: 700, letterSpacing: '.14em', textTransform: 'uppercase', display: 'block', marginBottom: 10 }}>Platform Features</span>
+                <h2 className="dp" style={{ fontSize: 'clamp(22px,2.8vw,30px)', fontWeight: 800, color: '#0B1C3D', margin: 0 }}>Why engineers choose GSH</h2>
               </div>
             </Reveal>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 16 }} className="grid-3">
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 14 }} className="grid-3">
               {features.map(({ icon, title, body, tint }, i) => (
-                <Reveal key={title} delay={(i % 3) * 90}>
+                <Reveal key={title} delay={(i % 3) * 80}>
                   <div className="fcard">
-                    <div className="iconwrap" style={{ background: `${tint}1A`, border: `1px solid ${tint}33` }}>
-                      <Icon name={icon} size={21} color={tint} />
+                    <div className="iconwrap" style={{ background: `${tint}14`, border: `1px solid ${tint}33` }}>
+                      <Icon name={icon} size={19} color={tint} />
                     </div>
-                    <h3 className="dp" style={{ color: '#fff', fontWeight: 700, fontSize: 16, margin: '0 0 8px' }}>{title}</h3>
-                    <p style={{ color: '#8291AC', fontSize: 13.5, lineHeight: 1.65, margin: 0 }}>{body}</p>
+                    <h3 className="dp" style={{ color: '#0B1C3D', fontWeight: 700, fontSize: 15, margin: '0 0 7px' }}>{title}</h3>
+                    <p style={{ color: '#64748B', fontSize: 13, lineHeight: 1.6, margin: 0 }}>{body}</p>
                   </div>
                 </Reveal>
               ))}
@@ -505,55 +489,52 @@ export default function LandingPage() {
           </div>
         </section>
 
-        {/* transition: navy -> light */}
-        <WaveDivider from="#0B1C3D" to="#F8FAFC" />
-
         {/* TESTIMONIALS */}
-        <section style={{ padding: 'clamp(56px,9vw,90px) clamp(16px,4vw,24px) clamp(60px,10vw,96px)', background: '#F8FAFC' }}>
+        <section style={{ padding: 'clamp(48px,8vw,76px) clamp(16px,4vw,24px) clamp(52px,9vw,80px)', background: '#F5FAFF' }}>
           <div style={{ maxWidth: 1100, margin: '0 auto' }}>
             <Reveal>
-              <div style={{ textAlign: 'center', marginBottom: 44 }}>
-                <span style={{ color: '#0EA5E9', fontSize: 11.5, fontWeight: 700, letterSpacing: '.16em', textTransform: 'uppercase', display: 'block', marginBottom: 12 }}>Client Voices</span>
-                <h2 className="dp" style={{ fontSize: 'clamp(26px,3.2vw,36px)', fontWeight: 800, color: '#0B1C3D', margin: '0 0 12px' }}>Trusted by engineers worldwide</h2>
-                <p style={{ color: '#94A3B8', fontSize: 14.5, maxWidth: 480, margin: '0 auto' }}>Real results from students and professionals who needed simulations done right.</p>
+              <div style={{ textAlign: 'center', marginBottom: 40 }}>
+                <span style={{ color: '#0EA5E9', fontSize: 11, fontWeight: 700, letterSpacing: '.14em', textTransform: 'uppercase', display: 'block', marginBottom: 10 }}>Client Voices</span>
+                <h2 className="dp" style={{ fontSize: 'clamp(22px,2.8vw,30px)', fontWeight: 800, color: '#0B1C3D', margin: '0 0 10px' }}>Trusted by engineers worldwide</h2>
+                <p style={{ color: '#8092A8', fontSize: 13.5, maxWidth: 460, margin: '0 auto' }}>Real results from students and professionals who needed simulations done right.</p>
               </div>
             </Reveal>
 
             <Reveal>
-              <div style={{ background: '#0B1C3D', borderRadius: 24, padding: 'clamp(30px,5vw,44px) clamp(22px,5vw,48px)', marginBottom: 26, position: 'relative', overflow: 'hidden' }}>
-                <div className="blob" style={{ width: 260, height: 260, background: 'rgba(249,115,22,.18)', top: '-30%', left: '-6%' }} />
-                <div className="blob" style={{ width: 220, height: 220, background: 'rgba(14,165,233,.16)', bottom: '-40%', right: '4%' }} />
-                <div style={{ position: 'relative', maxWidth: 680, margin: '0 auto', textAlign: 'center' }}>
-                  <Icon name="quote" size={28} color="#FDBA74" />
-                  <p className="dp" style={{ color: '#fff', fontSize: 'clamp(18px,2.4vw,21px)', lineHeight: 1.55, fontWeight: 600, margin: '18px 0 22px' }}>
+              <div style={{ background: 'linear-gradient(135deg,#0EA5E9,#2563EB)', borderRadius: 22, padding: 'clamp(28px,5vw,40px) clamp(20px,5vw,44px)', marginBottom: 24, position: 'relative', overflow: 'hidden' }}>
+                <div className="blob" style={{ width: 240, height: 240, background: 'rgba(249,115,22,.20)', top: '-30%', left: '-6%' }} />
+                <div className="blob" style={{ width: 200, height: 200, background: 'rgba(255,255,255,.14)', bottom: '-40%', right: '4%' }} />
+                <div style={{ position: 'relative', maxWidth: 660, margin: '0 auto', textAlign: 'center' }}>
+                  <Icon name="quote" size={26} color="#FED7AA" />
+                  <p className="dp" style={{ color: '#fff', fontSize: 'clamp(16px,2.1vw,19px)', lineHeight: 1.55, fontWeight: 600, margin: '16px 0 20px' }}>
                     "{featured.quote}"
                   </p>
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 12, flexWrap: 'wrap' }}>
-                    <Avatar photo={featured.photo} initials={featured.initials} size={40} gradient="linear-gradient(135deg,#0EA5E9,#F97316)" />
+                    <Avatar photo={featured.photo} initials={featured.initials} size={38} gradient="linear-gradient(135deg,#F97316,#FDBA74)" />
                     <div style={{ textAlign: 'left' }}>
-                      <p style={{ color: '#fff', fontWeight: 600, fontSize: 13.5, margin: 0 }}>{featured.name}</p>
-                      <p style={{ color: '#7C8CA6', fontSize: 12, margin: 0 }}>{featured.role}</p>
+                      <p style={{ color: '#fff', fontWeight: 600, fontSize: 13, margin: 0 }}>{featured.name}</p>
+                      <p style={{ color: 'rgba(255,255,255,.75)', fontSize: 11.5, margin: 0 }}>{featured.role}</p>
                     </div>
-                    <StarRow count={featured.rating} />
+                    <StarRow count={featured.rating} color="#FED7AA" />
                   </div>
                 </div>
               </div>
             </Reveal>
 
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 16 }} className="grid-3">
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 14 }} className="grid-3">
               {testimonials.slice(1).map((t, i) => (
-                <Reveal key={t.name} delay={i * 100}>
+                <Reveal key={t.name} delay={i * 90}>
                   <div className="tcard">
-                    <Icon name="quote" size={19} color="#7DD3FC" />
-                    <p style={{ color: '#334155', fontSize: 14, lineHeight: 1.7, margin: '14px 0 20px' }}>{t.quote}</p>
+                    <Icon name="quote" size={18} color="#7DD3FC" />
+                    <p style={{ color: '#3B506E', fontSize: 13.5, lineHeight: 1.65, margin: '12px 0 18px' }}>{t.quote}</p>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                      <Avatar photo={t.photo} initials={t.initials} size={36} gradient={i % 2 === 0 ? 'linear-gradient(135deg,#0EA5E9,#38BDF8)' : 'linear-gradient(135deg,#F97316,#FB923C)'} />
+                      <Avatar photo={t.photo} initials={t.initials} size={34} gradient={i % 2 === 0 ? 'linear-gradient(135deg,#0EA5E9,#38BDF8)' : 'linear-gradient(135deg,#F97316,#FB923C)'} />
                       <div style={{ flex: 1, minWidth: 0 }}>
-                        <p style={{ color: '#0B1C3D', fontWeight: 600, fontSize: 13.5, margin: 0 }}>{t.name}</p>
-                        <p style={{ color: '#94A3B8', fontSize: 11.5, margin: 0 }}>{t.role}</p>
+                        <p style={{ color: '#0B1C3D', fontWeight: 600, fontSize: 13, margin: 0 }}>{t.name}</p>
+                        <p style={{ color: '#8092A8', fontSize: 11, margin: 0 }}>{t.role}</p>
                       </div>
                     </div>
-                    <div style={{ marginTop: 14 }}><StarRow count={t.rating} /></div>
+                    <div style={{ marginTop: 12 }}><StarRow count={t.rating} /></div>
                   </div>
                 </Reveal>
               ))}
@@ -562,25 +543,25 @@ export default function LandingPage() {
         </section>
 
         {/* EXPERT LEVELS */}
-        <section style={{ padding: 'clamp(56px,9vw,90px) clamp(16px,4vw,24px) clamp(60px,10vw,96px)', background: '#F8FAFC' }}>
+        <section style={{ padding: 'clamp(48px,8vw,76px) clamp(16px,4vw,24px) clamp(52px,9vw,80px)', background: '#EAF4FF' }}>
           <div style={{ maxWidth: 900, margin: '0 auto' }}>
             <Reveal>
-              <div style={{ textAlign: 'center', marginBottom: 46 }}>
-                <span style={{ color: '#EA580C', fontSize: 11.5, fontWeight: 700, letterSpacing: '.16em', textTransform: 'uppercase', display: 'block', marginBottom: 12 }}>Expert Tiers</span>
-                <h2 className="dp" style={{ fontSize: 'clamp(26px,3.2vw,36px)', fontWeight: 800, color: '#0B1C3D', margin: '0 0 12px' }}>Ranked by performance</h2>
-                <p style={{ color: '#94A3B8', fontSize: 14.5, maxWidth: 480, margin: '0 auto' }}>Every expert advances based on completed projects, ratings, and success rate.</p>
+              <div style={{ textAlign: 'center', marginBottom: 40 }}>
+                <span style={{ color: '#EA580C', fontSize: 11, fontWeight: 700, letterSpacing: '.14em', textTransform: 'uppercase', display: 'block', marginBottom: 10 }}>Expert Tiers</span>
+                <h2 className="dp" style={{ fontSize: 'clamp(22px,2.8vw,30px)', fontWeight: 800, color: '#0B1C3D', margin: '0 0 10px' }}>Ranked by performance</h2>
+                <p style={{ color: '#8092A8', fontSize: 13.5, maxWidth: 460, margin: '0 auto' }}>Every expert advances based on completed projects, ratings, and success rate.</p>
               </div>
             </Reveal>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 14 }} className="grid-4">
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 12 }} className="grid-4">
               {levels.map((l, i) => (
-                <Reveal key={l.label} delay={i * 90}>
+                <Reveal key={l.label} delay={i * 80}>
                   <div className="lcard">
-                    <div style={{ width: 46, height: 46, borderRadius: '50%', background: l.color + '16', margin: '0 auto 12px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 1 }}>
-                      <StarRow count={l.stars} size={10} color={l.color} />
+                    <div style={{ width: 44, height: 44, borderRadius: '50%', background: l.color + '14', margin: '0 auto 10px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 1 }}>
+                      <StarRow count={l.stars} size={9} color={l.color} />
                     </div>
-                    <p className="dp" style={{ fontWeight: 700, color: '#0B1C3D', margin: '0 0 4px', fontSize: 14.5 }}>{l.label}</p>
-                    <p style={{ color: '#94A3B8', fontSize: 12, margin: '0 0 12px' }}>{l.projects}</p>
-                    <div style={{ height: 5, background: '#F1F5F9', borderRadius: 99, overflow: 'hidden' }}>
+                    <p className="dp" style={{ fontWeight: 700, color: '#0B1C3D', margin: '0 0 4px', fontSize: 14 }}>{l.label}</p>
+                    <p style={{ color: '#8092A8', fontSize: 11.5, margin: '0 0 10px' }}>{l.projects}</p>
+                    <div style={{ height: 5, background: '#EAF4FF', borderRadius: 99, overflow: 'hidden' }}>
                       <div style={{ height: '100%', width: `${(i + 1) * 25}%`, background: l.color, borderRadius: 99, transition: 'width 1s ease' }} />
                     </div>
                   </div>
@@ -591,64 +572,64 @@ export default function LandingPage() {
         </section>
 
         {/* CTA */}
-        <section style={{ padding: 'clamp(64px,10vw,96px) clamp(16px,4vw,24px)', background: 'linear-gradient(135deg,#0B1C3D 0%,#123B7A 50%,#C2410C 100%)', position: 'relative', overflow: 'hidden', textAlign: 'center' }} className="hgrid">
-          <div className="blob drift" style={{ width: 500, height: 300, background: 'rgba(251,146,60,.16)', top: '50%', left: '50%', transform: 'translate(-50%,-50%)' }} />
+        <section style={{ padding: 'clamp(56px,9vw,84px) clamp(16px,4vw,24px)', background: 'linear-gradient(135deg,#0EA5E9 0%,#2563EB 60%,#1D4ED8 100%)', position: 'relative', overflow: 'hidden', textAlign: 'center' }}>
+          <div className="blob drift" style={{ width: 460, height: 280, background: 'rgba(249,180,60,.20)', top: '50%', left: '50%', transform: 'translate(-50%,-50%)' }} />
           <Reveal>
-            <div style={{ position: 'relative', maxWidth: 640, margin: '0 auto' }}>
-              <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: 'rgba(255,255,255,.08)', border: '1px solid rgba(255,255,255,.15)', borderRadius: 999, padding: '7px 18px', marginBottom: 30 }}>
-                <span style={{ width: 8, height: 8, background: '#4ADE80', borderRadius: '50%', display: 'inline-block' }} />
-                <span style={{ color: 'rgba(255,255,255,.75)', fontSize: 12.5, fontWeight: 500 }}>Platform live — accepting projects now</span>
+            <div style={{ position: 'relative', maxWidth: 620, margin: '0 auto' }}>
+              <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: 'rgba(255,255,255,.14)', border: '1px solid rgba(255,255,255,.22)', borderRadius: 999, padding: '6px 16px', marginBottom: 26 }}>
+                <span style={{ width: 7, height: 7, background: '#BBF7D0', borderRadius: '50%', display: 'inline-block' }} />
+                <span style={{ color: 'rgba(255,255,255,.85)', fontSize: 12, fontWeight: 500 }}>Platform live — accepting projects now</span>
               </div>
-              <h2 className="dp" style={{ fontSize: 'clamp(28px,3.6vw,42px)', fontWeight: 800, color: '#fff', margin: '0 0 18px', lineHeight: 1.15 }}>
+              <h2 className="dp" style={{ fontSize: 'clamp(24px,3.1vw,34px)', fontWeight: 800, color: '#fff', margin: '0 0 16px', lineHeight: 1.15 }}>
                 Ready to get your<br />
-                <span style={{ background: 'linear-gradient(120deg,#38BDF8,#FDBA74)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>simulation done?</span>
+                <span style={{ color: '#FED7AA' }}>simulation done?</span>
               </h2>
-              <p style={{ color: '#B9C4DE', fontSize: 15, margin: '0 0 36px', lineHeight: 1.7 }}>No account needed. Describe your project and we'll set everything up automatically.</p>
-              <div style={{ display: 'flex', gap: 16, justifyContent: 'center', flexWrap: 'wrap' }}>
-                <Link to="/submit" className="btncta" style={{ fontSize: 15, padding: '16px 34px' }}>
+              <p style={{ color: 'rgba(255,255,255,.85)', fontSize: 14, margin: '0 0 30px', lineHeight: 1.7 }}>No account needed. Describe your project and we'll set everything up automatically.</p>
+              <div style={{ display: 'flex', gap: 14, justifyContent: 'center', flexWrap: 'wrap' }}>
+                <Link to="/submit" className="btncta" style={{ fontSize: 14, padding: '15px 32px', background: '#fff', color: '#1D4ED8' }}>
                   Submit a Project
-                  <Icon name="arrow-right" size={16} />
+                  <Icon name="arrow-right" size={15} color="#1D4ED8" />
                 </Link>
-                <Link to="/apply-expert" className="btngl" style={{ fontSize: 15, padding: '16px 30px' }}>Become an Expert</Link>
+                <Link to="/apply-expert" className="btngl" style={{ fontSize: 14, padding: '15px 28px', background: 'rgba(255,255,255,.1)', color: '#fff', border: '1px solid rgba(255,255,255,.32)' }}>Become an Expert</Link>
               </div>
             </div>
           </Reveal>
         </section>
 
-        {/* FOOTER */}
-        <footer style={{ background: '#040C1F', padding: '52px clamp(16px,4vw,24px) 26px', borderTop: '1px solid rgba(255,255,255,.04)' }}>
+        {/* FOOTER — a deeper blue anchor at the base of the page */}
+        <footer style={{ background: 'linear-gradient(180deg,#0F2A57,#0B1E3F)', padding: '48px clamp(16px,4vw,24px) 24px' }}>
           <div style={{ maxWidth: 1100, margin: '0 auto' }}>
-            <div style={{ display: 'grid', gridTemplateColumns: '280px 1fr', gap: 40, marginBottom: 44 }} className="grid-2">
+            <div style={{ display: 'grid', gridTemplateColumns: '280px 1fr', gap: 36, marginBottom: 40 }} className="grid-2">
               <div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16 }}>
-                  <GSHLogo size={38} />
+                <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 14 }}>
+                  <GSHLogo size={34} />
                   <div>
-                    <p className="dp" style={{ color: '#fff', fontWeight: 700, fontSize: 14, margin: 0 }}>Global Simulation Hub</p>
-                    <p style={{ color: '#3A4A6B', fontSize: 11.5, margin: 0 }}>Engineering excellence, delivered.</p>
+                    <p className="dp" style={{ color: '#fff', fontWeight: 700, fontSize: 13.5, margin: 0 }}>Global Simulation Hub</p>
+                    <p style={{ color: '#5D7DAA', fontSize: 11, margin: 0 }}>Engineering excellence, delivered.</p>
                   </div>
                 </div>
-                <p style={{ color: '#3A4A6B', fontSize: 13, lineHeight: 1.7, margin: 0 }}>Connecting the world's best simulation engineers with clients who need results — fast, verified, and secure.</p>
+                <p style={{ color: '#5D7DAA', fontSize: 12.5, lineHeight: 1.7, margin: 0 }}>Connecting the world's best simulation engineers with clients who need results — fast, verified, and secure.</p>
               </div>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 28 }} className="grid-3">
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 26 }} className="grid-3">
                 {[
                   { title: 'Platform', links: [['Submit Project', '/submit'], ['Become Expert', '/apply-expert'], ['Login', '/login'], ['Register', '/register']] },
                   { title: 'Software', links: [['MATLAB/Simulink', '#'], ['Proteus', '#'], ['ANSYS', '#'], ['LabVIEW', '#'], ['PSCAD', '#']] },
                   { title: 'Delivery', links: [['Express · 6-12h', '#'], ['Urgent · 24h', '#'], ['Standard · Flexible', '#']] },
                 ].map(({ title, links }) => (
                   <div key={title}>
-                    <p style={{ color: '#fff', fontWeight: 600, fontSize: 13, margin: '0 0 14px' }}>{title}</p>
+                    <p style={{ color: '#fff', fontWeight: 600, fontSize: 12.5, margin: '0 0 12px' }}>{title}</p>
                     {links.map(([label, href]) => (
-                      <Link key={label} to={href} style={{ display: 'block', color: '#3A4A6B', fontSize: 12.5, margin: '0 0 9px', textDecoration: 'none' }}>{label}</Link>
+                      <Link key={label} to={href} style={{ display: 'block', color: '#5D7DAA', fontSize: 12, margin: '0 0 9px', textDecoration: 'none' }}>{label}</Link>
                     ))}
                   </div>
                 ))}
               </div>
             </div>
-            <div style={{ borderTop: '1px solid rgba(255,255,255,.04)', paddingTop: 22, display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
-              <p style={{ color: '#243352', fontSize: 12, margin: 0 }}>© {new Date().getFullYear()} Global Simulation Hub. All rights reserved.</p>
+            <div style={{ borderTop: '1px solid rgba(255,255,255,.06)', paddingTop: 20, display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
+              <p style={{ color: '#3E5A83', fontSize: 11.5, margin: 0 }}>© {new Date().getFullYear()} Global Simulation Hub. All rights reserved.</p>
               <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
                 <span style={{ width: 7, height: 7, background: '#4ADE80', borderRadius: '50%' }} />
-                <span style={{ color: '#243352', fontSize: 12 }}>All systems operational</span>
+                <span style={{ color: '#3E5A83', fontSize: 11.5 }}>All systems operational</span>
               </div>
             </div>
           </div>
