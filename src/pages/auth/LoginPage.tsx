@@ -29,6 +29,31 @@ function Icon({ name, size = 15, color = 'currentColor', strokeWidth = 1.8 }:
   }
 }
 
+/* Layered, softly animated waves used behind the card. Two SVG bands drift
+   at different speeds in opposite directions for a gentle, sky/water feel —
+   purely decorative, so it's hidden from screen readers. */
+function SkyWaves() {
+  return (
+    <div aria-hidden="true" style={{ position: 'absolute', inset: 0, overflow: 'hidden', zIndex: 0 }}>
+      <div className="wave-layer wave-back">
+        <svg viewBox="0 0 1440 320" preserveAspectRatio="none" style={{ width: '200%', height: '46%', position: 'absolute', bottom: 0, left: 0 }}>
+          <path fill="#BFE0FB" fillOpacity="0.55" d="M0,160 C240,220 480,100 720,150 C960,200 1200,240 1440,140 L1440,320 L0,320 Z" />
+        </svg>
+      </div>
+      <div className="wave-layer wave-mid">
+        <svg viewBox="0 0 1440 320" preserveAspectRatio="none" style={{ width: '200%', height: '38%', position: 'absolute', bottom: 0, left: 0 }}>
+          <path fill="#9FD0F5" fillOpacity="0.55" d="M0,180 C300,120 600,240 900,170 C1150,110 1300,190 1440,160 L1440,320 L0,320 Z" />
+        </svg>
+      </div>
+      <div className="wave-layer wave-front">
+        <svg viewBox="0 0 1440 320" preserveAspectRatio="none" style={{ width: '200%', height: '30%', position: 'absolute', bottom: 0, left: 0 }}>
+          <path fill="#0EA5E9" fillOpacity="0.16" d="M0,200 C260,150 520,250 780,190 C1040,130 1250,210 1440,180 L1440,320 L0,320 Z" />
+        </svg>
+      </div>
+    </div>
+  )
+}
+
 const schema = z.object({
   email: z.string().email('Invalid email address'),
   password: z.string().min(1, 'Password is required'),
@@ -70,44 +95,84 @@ export default function LoginPage() {
   return (
     <AuthCard>
       <style>{authStyles}</style>
+      {/* Sky-blue theme override — sits after authStyles so it wins on equal
+          specificity, and is scoped to .gsh-sky so it never leaks elsewhere. */}
       <style>{`
+        .gsh-sky-bg { position: fixed; inset: 0; z-index: -1; background: linear-gradient(180deg,#F5FAFF 0%,#DCEEFF 55%,#BFE0FB 100%); overflow: hidden; }
+        @keyframes waveDriftBack { from { transform: translateX(0); } to { transform: translateX(-25%); } }
+        @keyframes waveDriftMid { from { transform: translateX(-10%); } to { transform: translateX(-35%); } }
+        @keyframes waveDriftFront { from { transform: translateX(-25%); } to { transform: translateX(0); } }
+        .wave-layer { position: absolute; inset: 0; }
+        .wave-back { animation: waveDriftBack 22s ease-in-out infinite alternate; }
+        .wave-mid { animation: waveDriftMid 16s ease-in-out infinite alternate; }
+        .wave-front { animation: waveDriftFront 11s ease-in-out infinite alternate; }
+        @media (prefers-reduced-motion: reduce) {
+          .wave-back, .wave-mid, .wave-front { animation: none !important; }
+        }
+
+        .gsh-sky .afield label { color: #3B506E; }
+        .gsh-sky .afield input {
+          background: #F5FAFF !important;
+          border: 1px solid #DCEEFF !important;
+          color: #0B1C3D !important;
+        }
+        .gsh-sky .afield input::placeholder { color: #94A3B8; }
+        .gsh-sky .afield input:focus {
+          border-color: #0EA5E9 !important;
+          box-shadow: 0 0 0 3px rgba(14,165,233,.14) !important;
+        }
+        .gsh-sky .err { color: #DC2626; }
+        .gsh-sky .abtn {
+          background: linear-gradient(120deg,#0EA5E9,#2563EB) !important;
+          color: #fff !important;
+          box-shadow: 0 10px 24px rgba(14,165,233,.25);
+        }
+        .gsh-sky .divider { color: #94A3B8; }
+        .gsh-sky .divider::before, .gsh-sky .divider::after { background: #DCEEFF !important; }
         .lp-toggle-pw { transition: color .2s; }
-        .lp-toggle-pw:hover { color: #94A3B8; }
+        .lp-toggle-pw:hover { color: #0EA5E9; }
         .lp-link { transition: color .2s, opacity .2s; }
       `}</style>
 
+      {/* Full-viewport sky background with drifting wave bands, sitting behind the card */}
+      <div className="gsh-sky-bg">
+        <SkyWaves />
+      </div>
+
       {/* Card */}
-      <div className="au" style={{
-        background: 'rgba(255,255,255,.03)', border: '1px solid rgba(255,255,255,.08)',
-        borderRadius: 24, padding: 'clamp(28px,6vw,40px) clamp(20px,5vw,36px)', backdropFilter: 'blur(12px)',
+      <div className="gsh-sky au" style={{
+        position: 'relative', zIndex: 1,
+        background: 'rgba(255,255,255,.86)', border: '1px solid #DCEEFF',
+        borderRadius: 24, padding: 'clamp(28px,6vw,40px) clamp(20px,5vw,36px)', backdropFilter: 'blur(14px)',
+        boxShadow: '0 24px 60px rgba(14,116,233,.14)',
       }}>
         {/* Logo */}
         <div className="au" style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 30 }}>
           <GSHLogo size={38} />
           <div style={{ minWidth: 0 }}>
-            <div className="dp" style={{ color: '#fff', fontWeight: 700, fontSize: 15, lineHeight: 1.2 }}>Global Simulation Hub</div>
-            <div style={{ color: '#38BDF8', fontSize: 9.5, fontWeight: 600, letterSpacing: '0.16em', textTransform: 'uppercase' }}>Engineering · Simulation · Delivery</div>
+            <div className="dp" style={{ color: '#0B1C3D', fontWeight: 700, fontSize: 15, lineHeight: 1.2 }}>Global Simulation Hub</div>
+            <div style={{ color: '#0EA5E9', fontSize: 9.5, fontWeight: 600, letterSpacing: '0.16em', textTransform: 'uppercase' }}>Engineering · Simulation · Delivery</div>
           </div>
         </div>
 
         {/* Header — tofauti kama alikuja kutoka apply-expert */}
         {fromExpert ? (
           <>
-            <div style={{ background: 'rgba(16,185,129,.08)', border: '1px solid rgba(16,185,129,.2)', borderRadius: 12, padding: '10px 14px', marginBottom: 20, display: 'flex', alignItems: 'center', gap: 10 }}>
-              <span style={{ width: 26, height: 26, borderRadius: 8, background: 'rgba(16,185,129,.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                <Icon name="graduation-cap" size={14} color="#6EE7B7" />
+            <div style={{ background: '#ECFDF5', border: '1px solid #A7F3D0', borderRadius: 12, padding: '10px 14px', marginBottom: 20, display: 'flex', alignItems: 'center', gap: 10 }}>
+              <span style={{ width: 26, height: 26, borderRadius: 8, background: '#D1FAE5', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                <Icon name="graduation-cap" size={14} color="#059669" />
               </span>
-              <p style={{ fontSize: 12, color: '#6EE7B7', margin: 0, lineHeight: 1.5 }}>
+              <p style={{ fontSize: 12, color: '#047857', margin: 0, lineHeight: 1.5 }}>
                 <strong>Expert Application</strong> — Sign in, then you'll be taken to the application form.
               </p>
             </div>
-            <h1 className="dp au1" style={{ color: '#fff', fontSize: 'clamp(24px,6vw,28px)', fontWeight: 800, marginBottom: 6, lineHeight: 1.15 }}>Sign in to apply</h1>
-            <p className="au1" style={{ color: '#8291AC', fontSize: 14, marginBottom: 30 }}>Sign in to your GSH account to continue.</p>
+            <h1 className="dp au1" style={{ color: '#0B1C3D', fontSize: 'clamp(24px,6vw,28px)', fontWeight: 800, marginBottom: 6, lineHeight: 1.15 }}>Sign in to apply</h1>
+            <p className="au1" style={{ color: '#64748B', fontSize: 14, marginBottom: 30 }}>Sign in to your GSH account to continue.</p>
           </>
         ) : (
           <>
-            <h1 className="dp au1" style={{ color: '#fff', fontSize: 'clamp(24px,6vw,28px)', fontWeight: 800, marginBottom: 6, lineHeight: 1.15 }}>Welcome back</h1>
-            <p className="au1" style={{ color: '#8291AC', fontSize: 14, marginBottom: 30 }}>Sign in to your GSH account</p>
+            <h1 className="dp au1" style={{ color: '#0B1C3D', fontSize: 'clamp(24px,6vw,28px)', fontWeight: 800, marginBottom: 6, lineHeight: 1.15 }}>Welcome back</h1>
+            <p className="au1" style={{ color: '#64748B', fontSize: 14, marginBottom: 30 }}>Sign in to your GSH account</p>
           </>
         )}
 
@@ -116,7 +181,7 @@ export default function LoginPage() {
           <div className="afield au2" style={{ marginBottom: 16 }}>
             <label>Email Address</label>
             <div style={{ position: 'relative' }}>
-              <span style={{ position: 'absolute', left: 13, top: '50%', transform: 'translateY(-50%)', color: '#64748B', display: 'flex' }}>
+              <span style={{ position: 'absolute', left: 13, top: '50%', transform: 'translateY(-50%)', color: '#94A3B8', display: 'flex' }}>
                 <Icon name="mail" size={15} />
               </span>
               <input {...register('email')} type="email" placeholder="you@example.com" autoComplete="email" style={{ paddingLeft: 38 }} />
@@ -130,7 +195,7 @@ export default function LoginPage() {
               <label style={{ margin: 0 }}>Password</label>
             </div>
             <div style={{ position: 'relative' }}>
-              <span style={{ position: 'absolute', left: 13, top: '50%', transform: 'translateY(-50%)', color: '#64748B', display: 'flex' }}>
+              <span style={{ position: 'absolute', left: 13, top: '50%', transform: 'translateY(-50%)', color: '#94A3B8', display: 'flex' }}>
                 <Icon name="lock" size={15} />
               </span>
               <input
@@ -146,7 +211,7 @@ export default function LoginPage() {
                 className="lp-toggle-pw"
                 aria-label={showPw ? 'Hide password' : 'Show password'}
                 aria-pressed={showPw}
-                style={{ position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: '#64748B', padding: 2, display: 'flex' }}
+                style={{ position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: '#94A3B8', padding: 2, display: 'flex' }}
               >
                 <Icon name={showPw ? 'eye-off' : 'eye'} size={15} />
               </button>
@@ -156,7 +221,7 @@ export default function LoginPage() {
 
           <button type="submit" className="abtn au3" disabled={mutation.isPending}>
             {mutation.isPending
-              ? <><span style={{ width: 16, height: 16, border: '2px solid rgba(255,255,255,.3)', borderTop: '2px solid #fff', borderRadius: '50%', display: 'inline-block', animation: 'spin .7s linear infinite' }} />Signing in...</>
+              ? <><span style={{ width: 16, height: 16, border: '2px solid rgba(255,255,255,.4)', borderTop: '2px solid #fff', borderRadius: '50%', display: 'inline-block', animation: 'spin .7s linear infinite' }} />Signing in...</>
               : <>Sign In <Icon name="arrow-right" size={15} /></>
             }
           </button>
@@ -164,7 +229,7 @@ export default function LoginPage() {
 
         <div className="divider au3"><span>or</span></div>
 
-        <div className="au4" style={{ textAlign: 'center', fontSize: 13, color: '#8291AC' }}>
+        <div className="au4" style={{ textAlign: 'center', fontSize: 13, color: '#64748B' }}>
           Don't have an account?{' '}
           <Link
             to={fromExpert ? '/register?from=expert' : '/register'}
@@ -176,9 +241,9 @@ export default function LoginPage() {
         </div>
 
         {!fromExpert && (
-          <div className="au4" style={{ textAlign: 'center', fontSize: 13, color: '#8291AC', marginTop: 10 }}>
+          <div className="au4" style={{ textAlign: 'center', fontSize: 13, color: '#64748B', marginTop: 10 }}>
             Want to submit without account?{' '}
-            <Link to="/submit" className="lp-link" style={{ display: 'inline-flex', alignItems: 'center', gap: 4, color: '#38BDF8', fontWeight: 600, textDecoration: 'none' }}>
+            <Link to="/submit" className="lp-link" style={{ display: 'inline-flex', alignItems: 'center', gap: 4, color: '#0EA5E9', fontWeight: 600, textDecoration: 'none' }}>
               Submit here <Icon name="arrow-right" size={12} />
             </Link>
           </div>
@@ -186,12 +251,12 @@ export default function LoginPage() {
       </div>
 
       {/* Bottom links */}
-      <div className="au4" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, marginTop: 20, fontSize: 12, color: '#334155', flexWrap: 'wrap' }}>
-        <Link to="/" className="lp-link" style={{ display: 'inline-flex', alignItems: 'center', gap: 4, color: '#334155', textDecoration: 'none' }}>
+      <div className="au4" style={{ position: 'relative', zIndex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, marginTop: 20, fontSize: 12, color: '#3B506E', flexWrap: 'wrap' }}>
+        <Link to="/" className="lp-link" style={{ display: 'inline-flex', alignItems: 'center', gap: 4, color: '#3B506E', textDecoration: 'none' }}>
           <Icon name="arrow-left" size={11} /> Back to home
         </Link>
         <span>·</span>
-        <Link to="/apply-expert" className="lp-link" style={{ color: '#334155', textDecoration: 'none' }}>Become an Expert</Link>
+        <Link to="/apply-expert" className="lp-link" style={{ color: '#3B506E', textDecoration: 'none' }}>Become an Expert</Link>
       </div>
 
       <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
