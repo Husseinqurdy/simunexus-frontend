@@ -30,6 +30,40 @@ function useInView(threshold = 0.18) {
   return { ref, inView }
 }
 
+/* Types a set of lines out one character at a time, in order, on mount.
+   Returns the currently-visible slice of each line plus the index of the
+   line the caret should sit on (stays on the last line once finished). */
+function useTypewriter(lines: string[], speed = 42, lineDelay = 260, startDelay = 400) {
+  const [output, setOutput] = useState<string[]>(() => lines.map(() => ''))
+  useEffect(() => {
+    const reduced = typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    if (reduced) { setOutput(lines); return }
+    let li = 0
+    let ci = 0
+    let timer: ReturnType<typeof setTimeout>
+    const startTimer = setTimeout(function tick() {
+      setOutput((prev) => {
+        const next = [...prev]
+        next[li] = lines[li].slice(0, ci + 1)
+        return next
+      })
+      ci++
+      if (ci >= lines[li].length) {
+        li++
+        ci = 0
+        if (li >= lines.length) return
+        timer = setTimeout(tick, lineDelay)
+      } else {
+        timer = setTimeout(tick, speed)
+      }
+    }, startDelay)
+    return () => { clearTimeout(startTimer); clearTimeout(timer) }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+  const activeIndex = output.findIndex((t, i) => t.length < lines[i].length)
+  return { output, activeIndex: activeIndex === -1 ? lines.length - 1 : activeIndex }
+}
+
 /* --------------------------------- icons ---------------------------------- */
 /* Hand-built line icons (no emoji anywhere on the page) */
 
@@ -178,6 +212,8 @@ function Reveal({ children, delay = 0 }: { children: React.ReactNode; delay?: nu
 export default function LandingPage() {
   const [navScrolled, setNavScrolled] = useState(false)
   const [mobileNavOpen, setMobileNavOpen] = useState(false)
+  const heroLines = ['Simulation', 'Delivered Fast', 'Globally.']
+  const { output: heroTyped, activeIndex: heroCaretLine } = useTypewriter(heroLines)
   const statsRef = useInView()
   const c1 = useCounter(1200, 1800, statsRef.inView)
   const c2 = useCounter(98, 1800, statsRef.inView)
@@ -209,6 +245,8 @@ export default function LandingPage() {
         @keyframes marquee { from { transform:translateX(0); } to { transform:translateX(-50%); } }
         @keyframes drift { 0%,100% { transform:translate(0,0) scale(1); } 50% { transform:translate(16px,-12px) scale(1.04); } }
         @keyframes slideDown { from { opacity:0; transform:translateY(-8px); } to { opacity:1; transform:translateY(0); } }
+        @keyframes blink { 50% { opacity:0; } }
+        .caret { display:inline-block; width:3px; height:0.82em; background:currentColor; margin-left:5px; vertical-align:-0.08em; animation:blink 1s steps(1) infinite; border-radius:1px; }
         .au { animation: fadeUp .6s cubic-bezier(.22,.61,.36,1) both; }
         .au1 { animation: fadeUp .6s .1s cubic-bezier(.22,.61,.36,1) both; }
         .au2 { animation: fadeUp .6s .2s cubic-bezier(.22,.61,.36,1) both; }
@@ -339,10 +377,15 @@ export default function LandingPage() {
                 <span className="pr" style={{ width: 7, height: 7, borderRadius: '50%', background: '#0EA5E9', display: 'inline-block', flexShrink: 0 }} />
                 <span style={{ color: '#0369A1', fontSize: 11, fontWeight: 600, letterSpacing: '.04em' }}>Engineering Simulation Marketplace</span>
               </div>
-              <h1 className="dp au1" style={{ fontSize: 'clamp(30px, 3.6vw, 44px)', fontWeight: 800, lineHeight: 1.14, color: '#0B1C3D', margin: '0 0 18px' }}>
-                Simulation<br />
-                <span style={{ background: 'linear-gradient(120deg,#0EA5E9,#F97316)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>Delivered Fast</span><br />
-                Globally.
+              <h1 className="dp au1" style={{ fontSize: 'clamp(30px, 3.6vw, 44px)', fontWeight: 800, lineHeight: 1.14, color: '#0B1C3D', margin: '0 0 18px', minHeight: 'calc(3 * 1.14 * clamp(30px, 3.6vw, 44px))' }}>
+                {heroTyped[0]}
+                {heroCaretLine === 0 && <span className="caret" style={{ color: '#0B1C3D' }} />}
+                <br />
+                <span style={{ background: 'linear-gradient(120deg,#0EA5E9,#F97316)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>{heroTyped[1]}</span>
+                {heroCaretLine === 1 && <span className="caret" style={{ color: '#F97316' }} />}
+                <br />
+                {heroTyped[2]}
+                {heroCaretLine === 2 && <span className="caret" style={{ color: '#0B1C3D' }} />}
               </h1>
               <p className="au2" style={{ color: '#4C6076', fontSize: 15.5, lineHeight: 1.7, maxWidth: 430, margin: '0 0 28px' }}>
                 Connect with verified engineers for MATLAB, Proteus, ANSYS & more. Submit your project in 60 seconds — no account needed.
