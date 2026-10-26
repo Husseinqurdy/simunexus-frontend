@@ -54,7 +54,7 @@ export default function NotificationBell() {
     <div className="nb-wrap">
       <style>{`
         @keyframes nbFadeIn {
-          from { opacity: 0; transform: translateY(-6px) scale(0.98); }
+          from { opacity: 0; transform: translateY(0) scale(0.98); }
           to { opacity: 1; transform: translateY(0) scale(1); }
         }
         @keyframes nbPulse {
@@ -66,9 +66,9 @@ export default function NotificationBell() {
           position: relative; width: 36px; height: 36px; border-radius: 10px;
           display: flex; align-items: center; justify-content: center;
           cursor: pointer; transition: background .18s ease, border-color .18s ease, transform .12s ease;
-          color: #64748B;
+          color: #4E5E82;
         }
-        .nb-bell:hover { transform: translateY(-1px); }
+        .nb-bell:hover { transform: translateY(0); }
         .nb-bell:active { transform: translateY(0) scale(0.96); }
         .nb-badge { animation: nbPulse 1.8s ease-in-out infinite; }
         .nb-dropdown {
@@ -99,16 +99,16 @@ export default function NotificationBell() {
         className="nb-bell"
         onClick={handleOpen}
         style={{
-          background: open ? '#EFF6FF' : '#F8FAFC',
-          border: `1px solid ${open ? '#BFDBFE' : '#F1F5F9'}`,
+          background: open ? '#EAF1FD' : '#F5F7FC',
+          border: `1px solid ${open ? '#C4DBF1' : '#EBEFF8'}`,
         }}
       >
         <Bell size={17} strokeWidth={1.8} />
         {!!unread && unread > 0 && (
           <span className="nb-badge" style={{
             position: 'absolute', top: -4, right: -4,
-            minWidth: 17, height: 17, background: '#EF4444', borderRadius: 999,
-            color: '#fff', fontSize: 10, fontWeight: 800, display: 'flex',
+            minWidth: 17, height: 17, background: '#D03A3A', borderRadius: 999,
+            color: '#fff', fontSize: 12, fontWeight: 700, display: 'flex',
             alignItems: 'center', justifyContent: 'center', padding: '0 4px',
             border: '2px solid #fff',
           }}>
@@ -123,24 +123,24 @@ export default function NotificationBell() {
           <div style={{ position: 'fixed', inset: 0, zIndex: 30 }} onClick={() => setOpen(false)} />
           <div className="nb-dropdown" style={{
             position: 'absolute', right: 0, top: 44, width: 340, maxWidth: '90vw', zIndex: 40,
-            background: '#fff', borderRadius: 16, border: '1px solid #F1F5F9',
-            boxShadow: '0 20px 60px rgba(0,0,0,.12)', overflow: 'hidden',
+            background: '#fff', borderRadius: 12, border: '1px solid #EBEFF8',
+            boxShadow: '0 1px 3px rgba(10,31,107,.08)', overflow: 'hidden',
           }}>
             {/* Header */}
-            <div style={{ padding: '14px 18px', borderBottom: '1px solid #F8FAFC', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-              <p style={{ fontFamily: 'Syne, sans-serif', fontWeight: 700, fontSize: 15, color: '#0F172A', margin: 0 }}>Notifications</p>
+            <div style={{ padding: '14px 18px', borderBottom: '1px solid #F5F7FC', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <p style={{ fontFamily: 'inherit', fontWeight: 700, fontSize: 15, color: '#0A1F4D', margin: 0 }}>Notifications</p>
               {unread && unread > 0
-                ? <span style={{ fontSize: 12, color: '#0EA5E9', fontWeight: 700 }}>{unread} new</span>
-                : <span style={{ fontSize: 12, color: '#94A3B8' }}>All read</span>
+                ? <span style={{ fontSize: 12, color: '#0D52CE', fontWeight: 700 }}>{unread} new</span>
+                : <span style={{ fontSize: 12, color: '#667697' }}>All read</span>
               }
             </div>
 
             {/* List */}
             <div style={{ maxHeight: 340, overflowY: 'auto' }}>
               {!notifs || notifs.length === 0 ? (
-                <div style={{ textAlign: 'center', padding: '36px 20px', color: '#94A3B8' }}>
-                  <div style={{ width: 52, height: 52, borderRadius: '50%', background: '#F8FAFC', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 10px' }}>
-                    <Bell size={22} style={{ color: '#CBD5E1' }} />
+                <div style={{ textAlign: 'center', padding: '36px 20px', color: '#667697' }}>
+                  <div style={{ width: 52, height: 52, borderRadius: '50%', background: '#F5F7FC', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 10px' }}>
+                    <Bell size={22} style={{ color: '#C3CEE2' }} />
                   </div>
                   <p style={{ fontSize: 13, margin: 0 }}>No notifications yet</p>
                 </div>
@@ -148,27 +148,27 @@ export default function NotificationBell() {
                 const Icon = TYPE_ICONS[n.type] || BellRing
                 return (
                   <div key={n.id} className="nb-row" style={{
-                    padding: '13px 18px', borderBottom: '1px solid #F8FAFC',
-                    background: !n.is_read ? '#F0F9FF' : '#fff',
+                    padding: '13px 18px', borderBottom: '1px solid #F5F7FC',
+                    background: !n.is_read ? '#EAF1FD' : '#fff',
                   }}>
                     <div style={{ display: 'flex', gap: 10 }}>
                       <div style={{
-                        width: 30, height: 30, borderRadius: 9, flexShrink: 0,
-                        background: !n.is_read ? '#DBEAFE' : '#F1F5F9',
-                        color: !n.is_read ? '#2563EB' : '#94A3B8',
+                        width: 30, height: 30, borderRadius: 8, flexShrink: 0,
+                        background: !n.is_read ? '#DCE8FA' : '#EBEFF8',
+                        color: !n.is_read ? '#0D52CE' : '#667697',
                         display: 'flex', alignItems: 'center', justifyContent: 'center',
                       }}>
                         <Icon size={15} strokeWidth={2} />
                       </div>
                       <div style={{ flex: 1, minWidth: 0 }}>
-                        <p style={{ fontSize: 13.5, fontWeight: 700, color: '#0F172A', margin: '0 0 2px', lineHeight: 1.35, fontFamily: 'Syne, sans-serif' }}>{n.title}</p>
-                        <p style={{ fontSize: 12.5, color: '#64748B', margin: '0 0 4px', lineHeight: 1.45 }}>{n.body}</p>
-                        <p style={{ fontSize: 11, color: '#CBD5E1', margin: 0 }}>
+                        <p style={{ fontSize: 14, fontWeight: 700, color: '#0A1F4D', margin: '0 0 2px', lineHeight: 1.35, fontFamily: 'inherit' }}>{n.title}</p>
+                        <p style={{ fontSize: 13, color: '#4E5E82', margin: '0 0 4px', lineHeight: 1.45 }}>{n.body}</p>
+                        <p style={{ fontSize: 12, color: '#C3CEE2', margin: 0 }}>
                           {formatDistanceToNow(new Date(n.created_at), { addSuffix: true })}
                         </p>
                       </div>
                       {!n.is_read && (
-                        <span style={{ width: 7, height: 7, background: '#0EA5E9', borderRadius: '50%', flexShrink: 0, marginTop: 4 }} />
+                        <span style={{ width: 7, height: 7, background: '#0D52CE', borderRadius: '50%', flexShrink: 0, marginTop: 4 }} />
                       )}
                     </div>
                   </div>
@@ -178,8 +178,8 @@ export default function NotificationBell() {
 
             {/* Footer */}
             {notifs && notifs.length > 0 && (
-              <div style={{ padding: '10px 18px', borderTop: '1px solid #F8FAFC', textAlign: 'center' }}>
-                <button className="nb-footer-btn" onClick={() => markRead.mutate()} style={{ fontSize: 12.5, color: '#0EA5E9', fontWeight: 600, background: 'none', border: 'none', cursor: 'pointer' }}>
+              <div style={{ padding: '10px 18px', borderTop: '1px solid #F5F7FC', textAlign: 'center' }}>
+                <button className="nb-footer-btn" onClick={() => markRead.mutate()} style={{ fontSize: 13, color: '#0D52CE', fontWeight: 600, background: 'none', border: 'none', cursor: 'pointer' }}>
                   Mark all as read
                 </button>
               </div>

@@ -78,41 +78,41 @@ export default function TopUpComplete() {
   }, [queryClient])
 
   return (
-    <div style={{ fontFamily: "'DM Sans',sans-serif", maxWidth: 420, margin: '80px auto', textAlign: 'center', padding: '0 20px' }}>
+    <div style={{ fontFamily: 'inherit', maxWidth: 420, margin: '80px auto', textAlign: 'center', padding: '0 20px' }}>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@400;500;600&display=swap');
+        
         @keyframes spin{to{transform:rotate(360deg)}}
-        .tcbtn{display:inline-flex;align-items:center;justify-content:center;gap:8px;background:linear-gradient(120deg,#0EA5E9,#7C3AED);color:#fff;font-family:'Syne',sans-serif;font-weight:700;font-size:14.5px;padding:12px 24px;border-radius:12px;border:none;cursor:pointer;text-decoration:none}
+        .tcbtn{display:inline-flex;align-items:center;justify-content:center;gap:8px;background:#0D52CE;color:#fff;font-family: inherit;font-weight:700;font-size:14px;padding:12px 24px;border-radius:12px;border:none;cursor:pointer;text-decoration:none}
       `}</style>
 
       {state === 'checking' && (
         <>
-          <div style={{ width: 44, height: 44, borderRadius: '50%', border: '3px solid #E2E8F0', borderTop: '3px solid #0EA5E9', margin: '0 auto 20px', animation: 'spin .8s linear infinite' }} />
-          <h1 style={{ fontFamily: 'Syne,sans-serif', fontSize: 19, fontWeight: 800, color: '#0F172A', margin: '0 0 8px' }}>Confirming your payment...</h1>
-          <p style={{ fontSize: 13.5, color: '#64748B', margin: 0 }}>This usually takes a few seconds. Please don't close this page.</p>
+          <div style={{ width: 44, height: 44, borderRadius: '50%', border: '3px solid #DCE3F0', borderTop: '3px solid #0D52CE', margin: '0 auto 20px', animation: 'spin .8s linear infinite' }} />
+          <h1 style={{ fontFamily: 'inherit', fontSize: 18, fontWeight: 700, color: '#0A1F4D', margin: '0 0 8px' }}>Confirming your payment...</h1>
+          <p style={{ fontSize: 14, color: '#4E5E82', margin: 0 }}>This usually takes a few seconds. Please don't close this page.</p>
         </>
       )}
 
       {state === 'success' && (
         <>
-          <div style={{ width: 56, height: 56, borderRadius: '50%', background: '#F0FDF4', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 18px' }}>
-            <Icon name="check" size={26} color="#10B981" />
+          <div style={{ width: 56, height: 56, borderRadius: '50%', background: '#EDF8F1', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 18px' }}>
+            <Icon name="check" size={26} color="#1B9B63" />
           </div>
-          <h1 style={{ fontFamily: 'Syne,sans-serif', fontSize: 20, fontWeight: 800, color: '#0F172A', margin: '0 0 8px' }}>Payment successful!</h1>
-          <p style={{ fontSize: 13.5, color: '#64748B', margin: '0 0 24px' }}>Your wallet has been credited.</p>
+          <h1 style={{ fontFamily: 'inherit', fontSize: 20, fontWeight: 700, color: '#0A1F4D', margin: '0 0 8px' }}>Payment successful!</h1>
+          <p style={{ fontSize: 14, color: '#4E5E82', margin: '0 0 24px' }}>Your wallet has been credited.</p>
           <button className="tcbtn" onClick={() => navigate('/client/wallet')}>Back to Wallet</button>
         </>
       )}
 
       {(state === 'failed' || state === 'timeout') && (
         <>
-          <div style={{ width: 56, height: 56, borderRadius: '50%', background: '#FEF2F2', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 18px' }}>
-            <Icon name="alert" size={24} color="#EF4444" />
+          <div style={{ width: 56, height: 56, borderRadius: '50%', background: '#FDEDED', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 18px' }}>
+            <Icon name="alert" size={24} color="#D03A3A" />
           </div>
-          <h1 style={{ fontFamily: 'Syne,sans-serif', fontSize: 20, fontWeight: 800, color: '#0F172A', margin: '0 0 8px' }}>
+          <h1 style={{ fontFamily: 'inherit', fontSize: 20, fontWeight: 700, color: '#0A1F4D', margin: '0 0 8px' }}>
             {state === 'timeout' ? 'Still confirming' : 'Payment not completed'}
           </h1>
-          <p style={{ fontSize: 13.5, color: '#64748B', margin: '0 0 24px' }}>
+          <p style={{ fontSize: 14, color: '#4E5E82', margin: '0 0 24px' }}>
             {state === 'timeout'
               ? "This is taking longer than usual. If you completed checkout, your wallet will update shortly — check back in a minute."
               : 'The payment was cancelled or failed. You can try again from your wallet.'}

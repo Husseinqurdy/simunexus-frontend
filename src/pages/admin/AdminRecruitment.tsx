@@ -1,3 +1,4 @@
+import { ClipboardList, GraduationCap } from 'lucide-react'
 import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { recruitApi } from '@/api/client'
@@ -8,12 +9,12 @@ import { formatDistanceToNow, format } from 'date-fns'
 import toast from 'react-hot-toast'
 
 const STATUS_CFG: Record<string, { label: string; color: string; bg: string }> = {
-  pending:   { label: 'Pending Test',     color: '#D97706', bg: '#FFFBEB' },
-  testing:   { label: 'Taking Test',      color: '#2563EB', bg: '#EFF6FF' },
-  submitted: { label: 'Test Submitted',   color: '#7C3AED', bg: '#F5F3FF' },
-  passed:    { label: 'Passed ✓',         color: '#059669', bg: '#F0FDF4' },
-  failed:    { label: 'Failed ✗',         color: '#E11D48', bg: '#FFF1F2' },
-  retry:     { label: 'Retry Allowed',    color: '#64748B', bg: '#F8FAFC' },
+  pending:   { label: 'Pending Test',     color: '#B85F00', bg: '#FFF8E6' },
+  testing:   { label: 'Taking Test',      color: '#0D52CE', bg: '#EAF1FD' },
+  submitted: { label: 'Test Submitted',   color: '#2E4DA7', bg: '#EEF2FB' },
+  passed:    { label: 'Passed ',         color: '#137A4E', bg: '#EDF8F1' },
+  failed:    { label: 'Failed ',         color: '#B92D2D', bg: '#FDEDED' },
+  retry:     { label: 'Retry Allowed',    color: '#4E5E82', bg: '#F5F7FC' },
 }
 
 export default function AdminRecruitment() {
@@ -33,9 +34,9 @@ export default function AdminRecruitment() {
       recruitApi.adminReview(id, { action, notes }),
     onSuccess: (_, { action }) => {
       const msgs: Record<string, string> = {
-        pass: '🎉 Applicant promoted to Expert!',
-        fail: '❌ Application rejected.',
-        retry: '🔄 Retry allowed.',
+        pass: 'Applicant promoted to Expert!',
+        fail: 'Application rejected.',
+        retry: 'Retry allowed.',
       }
       toast.success(msgs[action] || 'Done.')
       qc.invalidateQueries({ queryKey: ['admin-applications'] })
@@ -66,13 +67,13 @@ export default function AdminRecruitment() {
 
       {/* Alert for pending reviews */}
       {submitted.length > 0 && (
-        <div style={{ background: '#F5F3FF', border: '1px solid #DDD6FE', borderRadius: 12, padding: '12px 18px', marginBottom: 20, display: 'flex', alignItems: 'center', gap: 10 }}>
-          <span style={{ fontSize: 18 }}>📋</span>
+        <div style={{ background: '#EEF2FB', border: '1px solid #C9D4F0', borderRadius: 12, padding: '12px 18px', marginBottom: 20, display: 'flex', alignItems: 'center', gap: 10 }}>
+          <ClipboardList size={18} color="#0D52CE" />
           <div>
-            <p style={{ fontSize: 13, fontWeight: 700, color: '#7C3AED', margin: 0, fontFamily: 'Syne,sans-serif' }}>
+            <p style={{ fontSize: 13, fontWeight: 700, color: '#2E4DA7', margin: 0, fontFamily: 'inherit' }}>
               {submitted.length} test submission{submitted.length > 1 ? 's' : ''} waiting for review
             </p>
-            <p style={{ fontSize: 12, color: '#9333EA', margin: '2px 0 0' }}>Review applicants and decide who becomes an Expert.</p>
+            <p style={{ fontSize: 12, color: '#2E4DA7', margin: '2px 0 0' }}>Review applicants and decide who becomes an Expert.</p>
           </div>
         </div>
       )}
@@ -86,8 +87,8 @@ export default function AdminRecruitment() {
             style={{
               padding: '6px 14px', borderRadius: 999, fontSize: 12, fontWeight: 700,
               cursor: 'pointer', border: 'none', transition: 'all .2s',
-              background: statusFilter === f.value ? '#0B1C3D' : '#F1F5F9',
-              color: statusFilter === f.value ? '#fff' : '#64748B',
+              background: statusFilter === f.value ? '#0A1F6B' : '#EBEFF8',
+              color: statusFilter === f.value ? '#fff' : '#4E5E82',
             }}
           >
             {f.label}
@@ -100,35 +101,35 @@ export default function AdminRecruitment() {
         {isLoading ? (
           <LoadingSpinner label="Loading applications..." />
         ) : applications.length === 0 ? (
-          <EmptyState icon="🎓" title="No applications yet" body="Applications from the /apply-expert page will appear here." />
+          <EmptyState icon={<GraduationCap size={26} strokeWidth={1.8} />} title="No applications yet" body="Applications from the /apply-expert page will appear here." />
         ) : (
-          <div style={{ background: '#fff', borderRadius: 16, border: '1px solid #F1F5F9', overflow: 'hidden' }}>
+          <div style={{ background: '#fff', borderRadius: 12, border: '1px solid #EBEFF8', overflow: 'hidden' }}>
             <Table headers={['Applicant', 'Skills', 'Experience', 'Status', 'Applied', 'Action']}>
               {applications.map((a: any) => {
                 const cfg = STATUS_CFG[a.status] || STATUS_CFG.pending
                 return (
                   <Tr key={a.id} onClick={() => { setSelected(a); setAdminNotes(a.admin_notes || '') }}>
                     <Td>
-                      <p style={{ fontSize: 13, fontWeight: 700, margin: 0, color: '#0F172A' }}>{a.applicant_email}</p>
+                      <p style={{ fontSize: 13, fontWeight: 700, margin: 0, color: '#0A1F4D' }}>{a.applicant_email}</p>
                     </Td>
                     <Td>
                       <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
                         {(a.skills || []).slice(0, 3).map((s: string) => (
-                          <span key={s} style={{ padding: '2px 7px', borderRadius: 999, background: '#F1F5F9', fontSize: 10, color: '#475569', fontWeight: 600 }}>{s}</span>
+                          <span key={s} style={{ padding: '2px 7px', borderRadius: 999, background: '#EBEFF8', fontSize: 12, color: '#3A4A70', fontWeight: 600 }}>{s}</span>
                         ))}
-                        {(a.skills || []).length > 3 && <span style={{ fontSize: 10, color: '#94A3B8' }}>+{a.skills.length - 3}</span>}
+                        {(a.skills || []).length > 3 && <span style={{ fontSize: 12, color: '#667697' }}>+{a.skills.length - 3}</span>}
                       </div>
                     </Td>
-                    <Td><span style={{ fontSize: 13, color: '#64748B' }}>{a.experience_years}y exp</span></Td>
+                    <Td><span style={{ fontSize: 13, color: '#4E5E82' }}>{a.experience_years}y exp</span></Td>
                     <Td>
-                      <span style={{ padding: '4px 10px', borderRadius: 999, fontSize: 11, fontWeight: 700, background: cfg.bg, color: cfg.color, border: `1px solid ${cfg.color}20` }}>
+                      <span style={{ padding: '4px 10px', borderRadius: 999, fontSize: 12, fontWeight: 700, background: cfg.bg, color: cfg.color, border: `1px solid ${cfg.color}20` }}>
                         {cfg.label}
                       </span>
                     </Td>
-                    <Td><span style={{ fontSize: 12, color: '#94A3B8' }}>{formatDistanceToNow(new Date(a.created_at), { addSuffix: true })}</span></Td>
+                    <Td><span style={{ fontSize: 12, color: '#667697' }}>{formatDistanceToNow(new Date(a.created_at), { addSuffix: true })}</span></Td>
                     <Td>
                       {a.status === 'submitted' && (
-                        <span style={{ fontSize: 12, fontWeight: 700, color: '#7C3AED' }}>⚡ Review</span>
+                        <span style={{ fontSize: 12, fontWeight: 700, color: '#2E4DA7' }}>Review</span>
                       )}
                     </Td>
                   </Tr>
@@ -144,7 +145,7 @@ export default function AdminRecruitment() {
             <Card>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
                 <SectionTitle>Application Details</SectionTitle>
-                <button onClick={() => setSelected(null)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#94A3B8', fontSize: 20, lineHeight: 1 }}>×</button>
+                <button onClick={() => setSelected(null)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#667697', fontSize: 20, lineHeight: 1 }}>×</button>
               </div>
 
               {[
@@ -156,18 +157,18 @@ export default function AdminRecruitment() {
                 ...(selected.test_started_at ? [{ label: 'Test Started', value: format(new Date(selected.test_started_at), 'dd MMM HH:mm') }] : []),
                 ...(selected.test_submitted_at ? [{ label: 'Test Submitted', value: format(new Date(selected.test_submitted_at), 'dd MMM HH:mm') }] : []),
               ].map(({ label, value }) => (
-                <div key={label} style={{ display: 'flex', justifyContent: 'space-between', padding: '7px 0', borderBottom: '1px solid #F8FAFC' }}>
-                  <span style={{ fontSize: 11, color: '#94A3B8', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.04em' }}>{label}</span>
-                  <span style={{ fontSize: 12, color: '#374151', fontWeight: 600 }}>{String(value)}</span>
+                <div key={label} style={{ display: 'flex', justifyContent: 'space-between', padding: '7px 0', borderBottom: '1px solid #F5F7FC' }}>
+                  <span style={{ fontSize: 12, color: '#667697', fontWeight: 600,}}>{label}</span>
+                  <span style={{ fontSize: 12, color: '#2B3A60', fontWeight: 600 }}>{String(value)}</span>
                 </div>
               ))}
 
               {selected.skills?.length > 0 && (
                 <div style={{ marginTop: 12 }}>
-                  <p style={{ fontSize: 11, color: '#94A3B8', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.04em', margin: '0 0 8px' }}>Skills</p>
+                  <p style={{ fontSize: 12, color: '#667697', fontWeight: 700, margin: '0 0 8px' }}>Skills</p>
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5 }}>
                     {selected.skills.map((s: string) => (
-                      <span key={s} style={{ padding: '4px 10px', borderRadius: 999, background: '#EFF6FF', fontSize: 12, color: '#2563EB', fontWeight: 600, border: '1px solid #BFDBFE' }}>{s}</span>
+                      <span key={s} style={{ padding: '4px 10px', borderRadius: 999, background: '#EAF1FD', fontSize: 12, color: '#0D52CE', fontWeight: 600, border: '1px solid #C4DBF1' }}>{s}</span>
                     ))}
                   </div>
                 </div>
@@ -175,29 +176,29 @@ export default function AdminRecruitment() {
 
               {selected.bio && (
                 <div style={{ marginTop: 12 }}>
-                  <p style={{ fontSize: 11, color: '#94A3B8', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.04em', margin: '0 0 6px' }}>Bio</p>
-                  <p style={{ fontSize: 12, color: '#374151', lineHeight: 1.6, margin: 0 }}>{selected.bio}</p>
+                  <p style={{ fontSize: 12, color: '#667697', fontWeight: 700, margin: '0 0 6px' }}>Bio</p>
+                  <p style={{ fontSize: 12, color: '#2B3A60', lineHeight: 1.6, margin: 0 }}>{selected.bio}</p>
                 </div>
               )}
 
               {selected.portfolio_url && (
                 <div style={{ marginTop: 12 }}>
                   <a href={selected.portfolio_url} target="_blank" rel="noreferrer"
-                    style={{ fontSize: 12, color: '#0EA5E9', fontWeight: 600, textDecoration: 'none' }}>
-                    🔗 View Portfolio
+                    style={{ fontSize: 12, color: '#0D52CE', fontWeight: 600, textDecoration: 'none' }}>
+                    View Portfolio
                   </a>
                 </div>
               )}
 
               {selected.test_submission && (
-                <div style={{ marginTop: 14, padding: '12px 14px', background: '#F5F3FF', border: '1px solid #DDD6FE', borderRadius: 10 }}>
-                  <p style={{ fontSize: 12, fontWeight: 700, color: '#7C3AED', margin: '0 0 8px' }}>📎 Test Submission</p>
+                <div style={{ marginTop: 14, padding: '12px 14px', background: '#EEF2FB', border: '1px solid #C9D4F0', borderRadius: 10 }}>
+                  <p style={{ fontSize: 12, fontWeight: 700, color: '#2E4DA7', margin: '0 0 8px' }}>Test Submission</p>
                   <a href={selected.test_submission.file} target="_blank" rel="noreferrer"
-                    style={{ fontSize: 12, color: '#7C3AED', fontWeight: 600, textDecoration: 'none' }}>
+                    style={{ fontSize: 12, color: '#2E4DA7', fontWeight: 600, textDecoration: 'none' }}>
                     Download Test File →
                   </a>
                   {selected.test_submission.notes && (
-                    <p style={{ fontSize: 11, color: '#6D28D9', margin: '6px 0 0', lineHeight: 1.5 }}>{selected.test_submission.notes}</p>
+                    <p style={{ fontSize: 12, color: '#2E4DA7', margin: '6px 0 0', lineHeight: 1.5 }}>{selected.test_submission.notes}</p>
                   )}
                 </div>
               )}
@@ -205,25 +206,25 @@ export default function AdminRecruitment() {
 
             {/* Review Actions — only for submitted applications */}
             {selected.status === 'submitted' && (
-              <Card style={{ border: '1.5px solid #DDD6FE', background: '#F5F3FF' }}>
+              <Card style={{ border: '1.5px solid #C9D4F0', background: '#EEF2FB' }}>
                 <SectionTitle>Review Decision</SectionTitle>
                 <div style={{ marginBottom: 12 }}>
-                  <label style={{ fontSize: 11, color: '#6D28D9', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', display: 'block', marginBottom: 5 }}>Admin Notes (optional)</label>
+                  <label style={{ fontSize: 12, color: '#2E4DA7', fontWeight: 700, display: 'block', marginBottom: 5 }}>Admin Notes (optional)</label>
                   <textarea
                     value={adminNotes}
                     onChange={e => setAdminNotes(e.target.value)}
                     placeholder="Feedback for this applicant..."
                     rows={3}
-                    style={{ width: '100%', padding: '8px 10px', borderRadius: 8, border: '1.5px solid #DDD6FE', fontSize: 12, fontFamily: 'inherit', resize: 'none', outline: 'none', boxSizing: 'border-box', background: '#fff' }}
+                    style={{ width: '100%', padding: '8px 10px', borderRadius: 8, border: '1.5px solid #C9D4F0', fontSize: 12, fontFamily: 'inherit', resize: 'none', outline: 'none', boxSizing: 'border-box', background: '#fff' }}
                   />
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                   <Btn
-                    style={{ background: '#059669', color: '#fff', border: 'none', width: '100%' }}
+                    style={{ background: '#137A4E', color: '#fff', border: 'none', width: '100%' }}
                     onClick={() => reviewMutation.mutate({ id: selected.id, action: 'pass', notes: adminNotes })}
                     disabled={reviewMutation.isPending}
                   >
-                    ✅ Pass — Promote to Expert
+                    Pass — Promote to Expert
                   </Btn>
                   <Btn
                     variant="outline"
@@ -232,7 +233,7 @@ export default function AdminRecruitment() {
                     onClick={() => reviewMutation.mutate({ id: selected.id, action: 'retry', notes: adminNotes })}
                     disabled={reviewMutation.isPending}
                   >
-                    🔄 Allow Retry
+                    Allow Retry
                   </Btn>
                   <Btn
                     variant="danger"
@@ -241,7 +242,7 @@ export default function AdminRecruitment() {
                     onClick={() => reviewMutation.mutate({ id: selected.id, action: 'fail', notes: adminNotes })}
                     disabled={reviewMutation.isPending}
                   >
-                    ❌ Reject Application
+                    Reject Application
                   </Btn>
                 </div>
               </Card>

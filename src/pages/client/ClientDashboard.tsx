@@ -42,19 +42,19 @@ function Icon({ name, size = 16, color = 'currentColor', strokeWidth = 1.8 }:
 const fmtTZS = (n: number) => `TSh ${Math.round(n).toLocaleString('en-US')}`
 
 const STATUS_CFG: Record<string, { label: string; color: string; bg: string; dot: string }> = {
-  received:    { label: 'Received',      color: '#64748B', bg: '#F8FAFC', dot: '#94A3B8' },
-  assigned:    { label: 'Assigned',      color: '#2563EB', bg: '#EFF6FF', dot: '#3B82F6' },
-  in_progress: { label: 'In Progress',   color: '#D97706', bg: '#FFFBEB', dot: '#F59E0B' },
-  qc:          { label: 'Quality Check', color: '#7C3AED', bg: '#F5F3FF', dot: '#8B5CF6' },
-  completed:   { label: 'Completed',     color: '#059669', bg: '#F0FDF4', dot: '#10B981' },
-  revision:    { label: 'Revision',      color: '#E11D48', bg: '#FFF1F2', dot: '#F43F5E' },
-  cancelled:   { label: 'Cancelled',     color: '#64748B', bg: '#F8FAFC', dot: '#94A3B8' },
+  received:    { label: 'Received',      color: '#4E5E82', bg: '#F5F7FC', dot: '#667697' },
+  assigned:    { label: 'Assigned',      color: '#0D52CE', bg: '#EAF1FD', dot: '#3F7BE0' },
+  in_progress: { label: 'In Progress',   color: '#B85F00', bg: '#FFF8E6', dot: '#E5A00D' },
+  qc:          { label: 'Quality Check', color: '#2E4DA7', bg: '#EEF2FB', dot: '#3F5FB8' },
+  completed:   { label: 'Completed',     color: '#137A4E', bg: '#EDF8F1', dot: '#1B9B63' },
+  revision:    { label: 'Revision',      color: '#B92D2D', bg: '#FDEDED', dot: '#D03A3A' },
+  cancelled:   { label: 'Cancelled',     color: '#4E5E82', bg: '#F5F7FC', dot: '#667697' },
 }
 
 function StatusPill({ status }: { status: string }) {
   const c = STATUS_CFG[status] || STATUS_CFG.received
   return (
-    <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, padding: '4px 10px', borderRadius: 999, fontSize: 11, fontWeight: 700, background: c.bg, color: c.color, border: `1px solid ${c.dot}25` }}>
+    <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, padding: '4px 10px', borderRadius: 999, fontSize: 12, fontWeight: 700, background: c.bg, color: c.color, border: `1px solid ${c.dot}25` }}>
       <span style={{ width: 5, height: 5, borderRadius: '50%', background: c.dot, flexShrink: 0 }} />
       {c.label}
     </span>
@@ -75,23 +75,23 @@ function StageTracker({ status }: { status: string }) {
         return (
           <div key={s} style={{ display: 'flex', alignItems: 'center', flexShrink: 0 }}>
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-              <div style={{ width: 28, height: 28, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 700, transition: 'all .3s cubic-bezier(.22,.61,.36,1)', background: done ? '#10B981' : active ? '#0EA5E9' : '#F1F5F9', color: done || active ? '#fff' : '#94A3B8', border: `2px solid ${done ? '#10B981' : active ? '#0EA5E9' : '#E2E8F0'}` }}>
+              <div style={{ width: 28, height: 28, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 700, transition: 'all .3s cubic-bezier(.22,.61,.36,1)', background: done ? '#1B9B63' : active ? '#0D52CE' : '#EBEFF8', color: done || active ? '#fff' : '#667697', border: `2px solid ${done ? '#1B9B63' : active ? '#0D52CE' : '#DCE3F0'}` }}>
                 {done ? <Icon name="check" size={12} color="#fff" strokeWidth={3} /> : i + 1}
               </div>
-              <span style={{ fontSize: 10.5, marginTop: 5, whiteSpace: 'nowrap', color: done ? '#10B981' : active ? '#0EA5E9' : '#94A3B8', fontWeight: active ? 700 : 400 }}>
+              <span style={{ fontSize: 12, marginTop: 5, whiteSpace: 'nowrap', color: done ? '#1B9B63' : active ? '#0D52CE' : '#667697', fontWeight: active ? 700 : 400 }}>
                 {STAGE_LABELS[i]}
               </span>
             </div>
             {i < STAGE_STEPS.length - 1 && (
-              <div style={{ width: 32, height: 2, background: i < cur ? '#10B981' : '#E2E8F0', margin: '0 4px', marginBottom: 18, flexShrink: 0, transition: 'background .3s' }} />
+              <div style={{ width: 32, height: 2, background: i < cur ? '#1B9B63' : '#DCE3F0', margin: '0 4px', marginBottom: 18, flexShrink: 0, transition: 'background .3s' }} />
             )}
           </div>
         )
       })}
       {isRevision && (
-        <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginLeft: 8, padding: '3px 10px', background: '#FFF1F2', border: '1px solid #FECDD3', borderRadius: 999 }}>
-          <Icon name="corner-up-left" size={11} color="#E11D48" />
-          <span style={{ fontSize: 11, color: '#E11D48', fontWeight: 700 }}>Revision</span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginLeft: 8, padding: '3px 10px', background: '#FDEDED', border: '1px solid #F3C7C7', borderRadius: 999 }}>
+          <Icon name="corner-up-left" size={11} color="#B92D2D" />
+          <span style={{ fontSize: 12, color: '#B92D2D', fontWeight: 700 }}>Revision</span>
         </div>
       )}
     </div>
@@ -121,25 +121,25 @@ function ExpertApplicationCard() {
   if (isLoading || !app) return null
 
   const STATUS_CFG_APP: Record<string, { label: string; icon: IconName; color: string; bg: string; border: string }> = {
-    pending:   { label: 'Pending Test',     icon: 'clock',        color: '#D97706', bg: '#FFFBEB', border: '#FDE68A' },
-    testing:   { label: 'Test In Progress', icon: 'clock',        color: '#2563EB', bg: '#EFF6FF', border: '#BFDBFE' },
-    submitted: { label: 'Under Review',     icon: 'file-text',    color: '#7C3AED', bg: '#F5F3FF', border: '#DDD6FE' },
-    passed:    { label: 'Passed!',          icon: 'check-circle', color: '#059669', bg: '#F0FDF4', border: '#BBF7D0' },
-    failed:    { label: 'Not Passed',       icon: 'x-circle',     color: '#E11D48', bg: '#FFF1F2', border: '#FECDD3' },
-    retry:     { label: 'Retry Allowed',    icon: 'refresh',      color: '#64748B', bg: '#F8FAFC', border: '#E2E8F0' },
+    pending:   { label: 'Pending Test',     icon: 'clock',        color: '#B85F00', bg: '#FFF8E6', border: '#F8DC8A' },
+    testing:   { label: 'Test In Progress', icon: 'clock',        color: '#0D52CE', bg: '#EAF1FD', border: '#C4DBF1' },
+    submitted: { label: 'Under Review',     icon: 'file-text',    color: '#2E4DA7', bg: '#EEF2FB', border: '#C9D4F0' },
+    passed:    { label: 'Passed!',          icon: 'check-circle', color: '#137A4E', bg: '#EDF8F1', border: '#BFE5CF' },
+    failed:    { label: 'Not Passed',       icon: 'x-circle',     color: '#B92D2D', bg: '#FDEDED', border: '#F3C7C7' },
+    retry:     { label: 'Retry Allowed',    icon: 'refresh',      color: '#4E5E82', bg: '#F5F7FC', border: '#DCE3F0' },
   }
 
   const cfg = STATUS_CFG_APP[app.status] || STATUS_CFG_APP.pending
 
   return (
-    <div className="fade-up" style={{ background: cfg.bg, border: `1.5px solid ${cfg.border}`, borderRadius: 16, padding: '18px 20px', marginBottom: 24, transition: 'all .3s' }}>
+    <div className="fade-up" style={{ background: cfg.bg, border: `1.5px solid ${cfg.border}`, borderRadius: 12, padding: '18px 20px', marginBottom: 24, transition: 'all .3s' }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
         <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
-          <div style={{ width: 32, height: 32, borderRadius: 9, background: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, boxShadow: '0 1px 3px rgba(0,0,0,.06)' }}>
+          <div style={{ width: 32, height: 32, borderRadius: 8, background: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, boxShadow: '0 1px 3px rgba(10,31,107,.08)' }}>
             <Icon name="graduation" size={16} color={cfg.color} />
           </div>
           <div>
-            <p style={{ fontFamily: 'Syne,sans-serif', fontWeight: 800, fontSize: 13.5, color: '#0F172A', margin: '0 0 4px' }}>
+            <p style={{ fontFamily: 'inherit', fontWeight: 700, fontSize: 14, color: '#0A1F4D', margin: '0 0 4px' }}>
               Expert Application
             </p>
             <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 12, fontWeight: 700, color: cfg.color }}>
@@ -147,7 +147,7 @@ function ExpertApplicationCard() {
               {cfg.label}
             </span>
             {app.admin_notes && (
-              <p style={{ fontSize: 12, color: '#64748B', margin: '4px 0 0' }}>
+              <p style={{ fontSize: 12, color: '#4E5E82', margin: '4px 0 0' }}>
                 Admin: {app.admin_notes}
               </p>
             )}
@@ -158,8 +158,8 @@ function ExpertApplicationCard() {
           <button
             onClick={() => startTestMutation.mutate(app.id)}
             disabled={startTestMutation.isPending}
-            style={{ display: 'inline-flex', alignItems: 'center', gap: 7, padding: '9px 18px', borderRadius: 10, background: '#F59E0B', color: '#fff', border: 'none', cursor: 'pointer', fontFamily: 'Syne,sans-serif', fontWeight: 700, fontSize: 13, whiteSpace: 'nowrap', transition: 'all .2s' }}
-            onMouseEnter={e => (e.currentTarget as HTMLButtonElement).style.transform = 'translateY(-1px)'}
+            style={{ display: 'inline-flex', alignItems: 'center', gap: 7, padding: '9px 18px', borderRadius: 10, background: '#E5A00D', color: '#fff', border: 'none', cursor: 'pointer', fontFamily: 'inherit', fontWeight: 700, fontSize: 13, whiteSpace: 'nowrap', transition: 'all .2s' }}
+            onMouseEnter={e => (e.currentTarget as HTMLButtonElement).style.transform = 'translateY(0)'}
             onMouseLeave={e => (e.currentTarget as HTMLButtonElement).style.transform = 'translateY(0)'}
           >
             <Icon name="rocket" size={14} color="#fff" />
@@ -169,15 +169,15 @@ function ExpertApplicationCard() {
         {app.status === 'testing' && (
           <button
             onClick={() => navigate(`/expert/test/${app.id}`)}
-            style={{ display: 'inline-flex', alignItems: 'center', gap: 7, padding: '9px 18px', borderRadius: 10, background: '#EF4444', color: '#fff', border: 'none', cursor: 'pointer', fontFamily: 'Syne,sans-serif', fontWeight: 700, fontSize: 13, whiteSpace: 'nowrap', animation: 'pulse 2s infinite' }}
+            style={{ display: 'inline-flex', alignItems: 'center', gap: 7, padding: '9px 18px', borderRadius: 10, background: '#D03A3A', color: '#fff', border: 'none', cursor: 'pointer', fontFamily: 'inherit', fontWeight: 700, fontSize: 13, whiteSpace: 'nowrap', animation: 'pulse 2s infinite' }}
           >
             <Icon name="clock" size={14} color="#fff" />
             Continue Test →
           </button>
         )}
         {app.status === 'passed' && (
-          <p style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 13, fontWeight: 700, color: '#059669', margin: 0 }}>
-            <Icon name="star" size={15} color="#059669" />
+          <p style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 13, fontWeight: 700, color: '#137A4E', margin: 0 }}>
+            <Icon name="star" size={15} color="#137A4E" />
             You're now a verified Expert!
           </p>
         )}
@@ -209,34 +209,34 @@ export default function ClientDashboard() {
 
   if (isLoading) return (
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: 400, gap: 16 }}>
-      <div style={{ width: 44, height: 44, borderRadius: '50%', border: '3px solid #E2E8F0', borderTop: '3px solid #0EA5E9', animation: 'spin .8s linear infinite' }} />
-      <p style={{ color: '#94A3B8', fontSize: 14 }}>Loading your dashboard...</p>
+      <div style={{ width: 44, height: 44, borderRadius: '50%', border: '3px solid #DCE3F0', borderTop: '3px solid #0D52CE', animation: 'spin .8s linear infinite' }} />
+      <p style={{ color: '#667697', fontSize: 14 }}>Loading your dashboard...</p>
       <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
     </div>
   )
 
   return (
-    <div style={{ fontFamily: "'DM Sans',sans-serif" }}>
+    <div style={{ fontFamily: 'inherit' }}>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@400;500;600&display=swap');
+        
         @keyframes spin{to{transform:rotate(360deg)}}
-        @keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+        @keyframes fadeUp{from{opacity:0;transform:translateY(0)}to{opacity:1;transform:translateY(0)}}
         @keyframes pulse{0%,100%{opacity:1}50%{opacity:.7}}
         .fade-up{animation:fadeUp .55s cubic-bezier(.22,.61,.36,1) both}
         .stat-card{transition:transform .25s cubic-bezier(.22,.61,.36,1), box-shadow .25s cubic-bezier(.22,.61,.36,1)}
-        .stat-card:hover{transform:translateY(-3px); box-shadow:0 10px 28px rgba(15,23,42,.08)}
+        .stat-card:hover{transform:translateY(0); box-shadow:0 10px 28px rgba(10,31,77,.08)}
       `}</style>
 
       {/* Header */}
       <div className="fade-up" style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12, marginBottom: 28 }}>
         <div>
-          <h1 style={{ fontFamily: 'Syne,sans-serif', fontSize: 26, fontWeight: 800, color: '#0F172A', margin: 0 }}>
+          <h1 style={{ fontFamily: 'inherit', fontSize: 24, fontWeight: 700, color: '#0A1F4D', margin: 0 }}>
             Welcome back{user?.first_name ? `, ${user.first_name}` : ''}!
           </h1>
-          <p style={{ color: '#94A3B8', fontSize: 14, margin: '4px 0 0' }}>Here's what's happening with your simulation projects.</p>
+          <p style={{ color: '#667697', fontSize: 14, margin: '4px 0 0' }}>Here's what's happening with your simulation projects.</p>
         </div>
-        <Link to="/client/projects/new" style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: 'linear-gradient(120deg,#0EA5E9,#7C3AED)', color: '#fff', fontFamily: 'Syne,sans-serif', fontWeight: 700, fontSize: 14, padding: '11px 22px', borderRadius: 12, textDecoration: 'none', boxShadow: '0 4px 14px rgba(14,165,233,.3)', transition: 'all .25s' }}
-          onMouseEnter={e => (e.currentTarget as HTMLAnchorElement).style.transform = 'translateY(-2px)'}
+        <Link to="/client/projects/new" style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: '#0D52CE', color: '#fff', fontFamily: 'inherit', fontWeight: 700, fontSize: 14, padding: '11px 22px', borderRadius: 12, textDecoration: 'none', boxShadow: '0 1px 3px rgba(10,31,107,.08)', transition: 'all .25s' }}
+          onMouseEnter={e => (e.currentTarget as HTMLAnchorElement).style.transform = 'translateY(0)'}
           onMouseLeave={e => (e.currentTarget as HTMLAnchorElement).style.transform = 'translateY(0)'}
         >
           <Icon name="plus" size={15} color="#fff" />
@@ -247,39 +247,39 @@ export default function ClientDashboard() {
       {/* Alerts */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 24 }}>
         {!user?.is_profile_complete && (
-          <div className="fade-up" style={{ background: '#FFFBEB', border: '1px solid #FDE68A', borderRadius: 14, padding: '14px 18px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
+          <div className="fade-up" style={{ background: '#FFF8E6', border: '1px solid #F8DC8A', borderRadius: 12, padding: '14px 18px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-              <div style={{ width: 32, height: 32, borderRadius: 9, background: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                <Icon name="alert" size={16} color="#D97706" />
+              <div style={{ width: 32, height: 32, borderRadius: 8, background: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                <Icon name="alert" size={16} color="#B85F00" />
               </div>
               <div>
-                <p style={{ fontFamily: 'Syne,sans-serif', fontWeight: 700, fontSize: 13.5, color: '#D97706', margin: 0 }}>Complete your profile to download results</p>
-                <p style={{ fontSize: 12, color: '#B45309', margin: '2px 0 0' }}>Required before downloading completed simulation files.</p>
+                <p style={{ fontFamily: 'inherit', fontWeight: 700, fontSize: 14, color: '#B85F00', margin: 0 }}>Complete your profile to download results</p>
+                <p style={{ fontSize: 12, color: '#9A5B00', margin: '2px 0 0' }}>Required before downloading completed simulation files.</p>
               </div>
             </div>
-            <Link to="/client/profile" style={{ background: '#D97706', color: '#fff', fontSize: 12, fontWeight: 700, padding: '7px 14px', borderRadius: 8, textDecoration: 'none', fontFamily: 'Syne,sans-serif', flexShrink: 0 }}>Complete Now</Link>
+            <Link to="/client/profile" style={{ background: '#B85F00', color: '#fff', fontSize: 12, fontWeight: 700, padding: '7px 14px', borderRadius: 8, textDecoration: 'none', fontFamily: 'inherit', flexShrink: 0 }}>Complete Now</Link>
           </div>
         )}
         {pendingPayment.length > 0 && (
-          <div className="fade-up" style={{ background: '#EFF6FF', border: '1px solid #BFDBFE', borderRadius: 14, padding: '14px 18px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
+          <div className="fade-up" style={{ background: '#EAF1FD', border: '1px solid #C4DBF1', borderRadius: 12, padding: '14px 18px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-              <div style={{ width: 32, height: 32, borderRadius: 9, background: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                <Icon name="card" size={16} color="#1D4ED8" />
+              <div style={{ width: 32, height: 32, borderRadius: 8, background: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                <Icon name="card" size={16} color="#0A42A8" />
               </div>
               <div>
-                <p style={{ fontFamily: 'Syne,sans-serif', fontWeight: 700, fontSize: 13.5, color: '#1D4ED8', margin: 0 }}>{pendingPayment.length} project{pendingPayment.length > 1 ? 's' : ''} awaiting payment</p>
-                <p style={{ fontSize: 12, color: '#2563EB', margin: '2px 0 0' }}>Make your advance payment so experts can start working.</p>
+                <p style={{ fontFamily: 'inherit', fontWeight: 700, fontSize: 14, color: '#0A42A8', margin: 0 }}>{pendingPayment.length} project{pendingPayment.length > 1 ? 's' : ''} awaiting payment</p>
+                <p style={{ fontSize: 12, color: '#0D52CE', margin: '2px 0 0' }}>Make your advance payment so experts can start working.</p>
               </div>
             </div>
-            <Link to="/client/projects" style={{ background: '#1D4ED8', color: '#fff', fontSize: 12, fontWeight: 700, padding: '7px 14px', borderRadius: 8, textDecoration: 'none', fontFamily: 'Syne,sans-serif', flexShrink: 0 }}>Pay Now</Link>
+            <Link to="/client/projects" style={{ background: '#0A42A8', color: '#fff', fontSize: 12, fontWeight: 700, padding: '7px 14px', borderRadius: 8, textDecoration: 'none', fontFamily: 'inherit', flexShrink: 0 }}>Pay Now</Link>
           </div>
         )}
         {inQC.length > 0 && (
-          <div className="fade-up" style={{ background: '#F5F3FF', border: '1px solid #DDD6FE', borderRadius: 14, padding: '14px 18px', display: 'flex', alignItems: 'center', gap: 10 }}>
-            <div style={{ width: 32, height: 32, borderRadius: 9, background: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-              <Icon name="search" size={16} color="#7C3AED" />
+          <div className="fade-up" style={{ background: '#EEF2FB', border: '1px solid #C9D4F0', borderRadius: 12, padding: '14px 18px', display: 'flex', alignItems: 'center', gap: 10 }}>
+            <div style={{ width: 32, height: 32, borderRadius: 8, background: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+              <Icon name="search" size={16} color="#2E4DA7" />
             </div>
-            <p style={{ fontFamily: 'Syne,sans-serif', fontWeight: 700, fontSize: 13.5, color: '#7C3AED', margin: 0 }}>
+            <p style={{ fontFamily: 'inherit', fontWeight: 700, fontSize: 14, color: '#2E4DA7', margin: 0 }}>
               {inQC.length} project{inQC.length > 1 ? 's' : ''} in Quality Check — almost done! We'll notify you when ready.
             </p>
           </div>
@@ -292,40 +292,40 @@ export default function ClientDashboard() {
       {/* Stats */}
       <div className="fade-up" style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 14, marginBottom: 28 }}>
         {[
-          { label: 'Total Projects', value: String(projects.length), color: '#0B1C3D', icon: 'folder' as IconName, tint: '#0B1C3D' },
-          { label: 'Active', value: String(active.length), color: '#0EA5E9', icon: 'zap' as IconName, tint: '#0EA5E9' },
-          { label: 'Completed', value: String(completed.length), color: '#10B981', icon: 'check-circle' as IconName, tint: '#10B981' },
-          { label: 'Wallet', value: fmtTZS(parseFloat(walletData?.wallet?.balance || '0')), color: '#7C3AED', icon: 'wallet' as IconName, tint: '#7C3AED' },
+          { label: 'Total Projects', value: String(projects.length), color: '#0A1F6B', icon: 'folder' as IconName, tint: '#0A1F6B' },
+          { label: 'Active', value: String(active.length), color: '#0D52CE', icon: 'zap' as IconName, tint: '#0D52CE' },
+          { label: 'Completed', value: String(completed.length), color: '#137A4E', icon: 'check-circle' as IconName, tint: '#1B9B63' },
+          { label: 'Wallet', value: fmtTZS(parseFloat(walletData?.wallet?.balance || '0')), color: '#2E4DA7', icon: 'wallet' as IconName, tint: '#2E4DA7' },
         ].map(({ label, value, color, icon, tint }) => (
-          <div key={label} className="stat-card" style={{ background: '#fff', borderRadius: 16, padding: '20px 22px', border: '1px solid #F1F5F9', boxShadow: '0 1px 3px rgba(0,0,0,.04)' }}>
+          <div key={label} className="stat-card" style={{ background: '#fff', borderRadius: 12, padding: '20px 22px', border: '1px solid #EBEFF8', boxShadow: '0 1px 3px rgba(10,31,107,.08)' }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
-              <p style={{ fontSize: 11, fontWeight: 600, color: '#94A3B8', margin: 0, letterSpacing: '.04em', textTransform: 'uppercase' }}>{label}</p>
+              <p style={{ fontSize: 12, fontWeight: 600, color: '#667697', margin: 0,}}>{label}</p>
               <div style={{ width: 30, height: 30, borderRadius: 8, background: `${tint}15`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                 <Icon name={icon} size={15} color={tint} />
               </div>
             </div>
-            <p style={{ fontSize: label === 'Wallet' ? 22 : 28, fontWeight: 800, color, margin: 0, fontFamily: 'Syne,sans-serif', lineHeight: 1 }}>{value}</p>
+            <p style={{ fontSize: label === 'Wallet' ? 22 : 28, fontWeight: 700, color, margin: 0, fontFamily: 'inherit', lineHeight: 1 }}>{value}</p>
           </div>
         ))}
       </div>
 
       {/* Projects list */}
-      <div className="fade-up" style={{ background: '#fff', borderRadius: 20, border: '1px solid #F1F5F9', boxShadow: '0 1px 3px rgba(0,0,0,.04)', overflow: 'hidden' }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '20px 24px', borderBottom: '1px solid #F8FAFC' }}>
-          <h2 style={{ fontFamily: 'Syne,sans-serif', fontSize: 17, fontWeight: 700, color: '#0F172A', margin: 0 }}>My Projects</h2>
-          <Link to="/client/projects" style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 13, color: '#0EA5E9', fontWeight: 600, textDecoration: 'none' }}>
-            View all <Icon name="arrow-right" size={13} color="#0EA5E9" />
+      <div className="fade-up" style={{ background: '#fff', borderRadius: 16, border: '1px solid #EBEFF8', boxShadow: '0 1px 3px rgba(10,31,107,.08)', overflow: 'hidden' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '20px 24px', borderBottom: '1px solid #F5F7FC' }}>
+          <h2 style={{ fontFamily: 'inherit', fontSize: 16, fontWeight: 700, color: '#0A1F4D', margin: 0 }}>My Projects</h2>
+          <Link to="/client/projects" style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 13, color: '#0D52CE', fontWeight: 600, textDecoration: 'none' }}>
+            View all <Icon name="arrow-right" size={13} color="#0D52CE" />
           </Link>
         </div>
 
         {projects.length === 0 ? (
           <div style={{ textAlign: 'center', padding: '64px 24px' }}>
-            <div style={{ width: 64, height: 64, borderRadius: '50%', background: '#F0F9FF', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 18px' }}>
-              <Icon name="rocket" size={28} color="#0EA5E9" />
+            <div style={{ width: 64, height: 64, borderRadius: '50%', background: '#EAF1FD', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 18px' }}>
+              <Icon name="rocket" size={28} color="#0D52CE" />
             </div>
-            <p style={{ fontFamily: 'Syne,sans-serif', fontSize: 20, fontWeight: 700, color: '#0F172A', margin: '0 0 8px' }}>Submit your first project</p>
-            <p style={{ fontSize: 14, color: '#94A3B8', margin: '0 0 24px', lineHeight: 1.6 }}>No account needed — describe your simulation and we'll connect you with a verified expert immediately.</p>
-            <Link to="/client/projects/new" style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: 'linear-gradient(120deg,#0EA5E9,#7C3AED)', color: '#fff', fontFamily: 'Syne,sans-serif', fontWeight: 700, fontSize: 14, padding: '12px 24px', borderRadius: 12, textDecoration: 'none', boxShadow: '0 4px 14px rgba(14,165,233,.3)' }}>
+            <p style={{ fontFamily: 'inherit', fontSize: 20, fontWeight: 700, color: '#0A1F4D', margin: '0 0 8px' }}>Submit your first project</p>
+            <p style={{ fontSize: 14, color: '#667697', margin: '0 0 24px', lineHeight: 1.6 }}>No account needed — describe your simulation and we'll connect you with a verified expert immediately.</p>
+            <Link to="/client/projects/new" style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: '#0D52CE', color: '#fff', fontFamily: 'inherit', fontWeight: 700, fontSize: 14, padding: '12px 24px', borderRadius: 12, textDecoration: 'none', boxShadow: '0 1px 3px rgba(10,31,107,.08)' }}>
               Submit a Project <Icon name="arrow-right" size={15} color="#fff" />
             </Link>
           </div>
@@ -337,25 +337,25 @@ export default function ClientDashboard() {
               const needsPay = p.client_price && !p.is_fully_paid && !['completed', 'cancelled'].includes(p.status)
               return (
                 <div key={p.id} onClick={() => navigate(`/client/projects/${p.id}`)}
-                  style={{ padding: '20px 24px', borderBottom: idx < Math.min(projects.length, 5) - 1 ? '1px solid #F8FAFC' : 'none', cursor: 'pointer', transition: 'background .2s' }}
-                  onMouseEnter={e => (e.currentTarget as HTMLDivElement).style.background = '#F8FAFC'}
+                  style={{ padding: '20px 24px', borderBottom: idx < Math.min(projects.length, 5) - 1 ? '1px solid #F5F7FC' : 'none', cursor: 'pointer', transition: 'background .2s' }}
+                  onMouseEnter={e => (e.currentTarget as HTMLDivElement).style.background = '#F5F7FC'}
                   onMouseLeave={e => (e.currentTarget as HTMLDivElement).style.background = 'transparent'}
                 >
                   <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12, marginBottom: 12 }}>
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4, flexWrap: 'wrap' }}>
-                        <p style={{ fontFamily: 'Syne,sans-serif', fontWeight: 700, fontSize: 15, color: '#0F172A', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.title}</p>
-                        {urgent && <span style={{ fontSize: 10, background: '#FFF1F2', color: '#E11D48', padding: '2px 7px', borderRadius: 999, fontWeight: 700, flexShrink: 0 }}>URGENT</span>}
-                        {needsPay && <span style={{ fontSize: 10, background: '#FFF7ED', color: '#C2410C', padding: '2px 7px', borderRadius: 999, fontWeight: 700, flexShrink: 0 }}>PAYMENT DUE</span>}
+                        <p style={{ fontFamily: 'inherit', fontWeight: 700, fontSize: 15, color: '#0A1F4D', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.title}</p>
+                        {urgent && <span style={{ fontSize: 12, background: '#FDEDED', color: '#B92D2D', padding: '2px 7px', borderRadius: 999, fontWeight: 700, flexShrink: 0 }}>URGENT</span>}
+                        {needsPay && <span style={{ fontSize: 12, background: '#FFF3E6', color: '#B85F00', padding: '2px 7px', borderRadius: 999, fontWeight: 700, flexShrink: 0 }}>PAYMENT DUE</span>}
                       </div>
                       <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-                        <span style={{ fontSize: 11.5, color: '#94A3B8' }}>Deadline: {formatDistanceToNow(new Date(p.deadline), { addSuffix: true })}</span>
-                        <span style={{ fontSize: 11.5, color: '#CBD5E1' }}>·</span>
-                        <span style={{ fontSize: 11.5, color: '#94A3B8' }}>{p.software?.toUpperCase()}</span>
+                        <span style={{ fontSize: 12, color: '#667697' }}>Deadline: {formatDistanceToNow(new Date(p.deadline), { addSuffix: true })}</span>
+                        <span style={{ fontSize: 12, color: '#C3CEE2' }}>·</span>
+                        <span style={{ fontSize: 12, color: '#667697' }}>{p.software?.toUpperCase()}</span>
                         {p.client_price && (
                           <>
-                            <span style={{ fontSize: 11.5, color: '#CBD5E1' }}>·</span>
-                            <span style={{ fontSize: 11.5, color: '#059669', fontWeight: 700 }}>{fmtTZS(parseFloat(p.client_price))}</span>
+                            <span style={{ fontSize: 12, color: '#C3CEE2' }}>·</span>
+                            <span style={{ fontSize: 12, color: '#137A4E', fontWeight: 700 }}>{fmtTZS(parseFloat(p.client_price))}</span>
                           </>
                         )}
                       </div>
@@ -365,12 +365,12 @@ export default function ClientDashboard() {
                   <StageTracker status={p.status} />
                   {latest && (
                     <div style={{ marginTop: 10 }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11.5, color: '#94A3B8', marginBottom: 5 }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, color: '#667697', marginBottom: 5 }}>
                         <span>Expert progress</span>
-                        <span style={{ fontWeight: 600, color: latest.percentage >= 80 ? '#10B981' : latest.percentage >= 40 ? '#0EA5E9' : '#F59E0B' }}>{latest.percentage}% — {latest.time_remaining} remaining</span>
+                        <span style={{ fontWeight: 600, color: latest.percentage >= 80 ? '#1B9B63' : latest.percentage >= 40 ? '#0D52CE' : '#E5A00D' }}>{latest.percentage}% — {latest.time_remaining} remaining</span>
                       </div>
-                      <div style={{ height: 5, background: '#F1F5F9', borderRadius: 999, overflow: 'hidden' }}>
-                        <div style={{ height: '100%', width: `${latest.percentage}%`, borderRadius: 999, background: latest.percentage >= 80 ? '#10B981' : latest.percentage >= 40 ? '#0EA5E9' : '#F59E0B', transition: 'width .6s cubic-bezier(.22,.61,.36,1)' }} />
+                      <div style={{ height: 5, background: '#EBEFF8', borderRadius: 999, overflow: 'hidden' }}>
+                        <div style={{ height: '100%', width: `${latest.percentage}%`, borderRadius: 999, background: latest.percentage >= 80 ? '#1B9B63' : latest.percentage >= 40 ? '#0D52CE' : '#E5A00D', transition: 'width .6s cubic-bezier(.22,.61,.36,1)' }} />
                       </div>
                     </div>
                   )}
@@ -378,9 +378,9 @@ export default function ClientDashboard() {
               )
             })}
             {projects.length > 5 && (
-              <div style={{ padding: '14px 24px', textAlign: 'center', borderTop: '1px solid #F8FAFC' }}>
-                <Link to="/client/projects" style={{ display: 'inline-flex', alignItems: 'center', gap: 4, color: '#0EA5E9', fontSize: 13, fontWeight: 600, textDecoration: 'none' }}>
-                  View all {projects.length} projects <Icon name="arrow-right" size={13} color="#0EA5E9" />
+              <div style={{ padding: '14px 24px', textAlign: 'center', borderTop: '1px solid #F5F7FC' }}>
+                <Link to="/client/projects" style={{ display: 'inline-flex', alignItems: 'center', gap: 4, color: '#0D52CE', fontSize: 13, fontWeight: 600, textDecoration: 'none' }}>
+                  View all {projects.length} projects <Icon name="arrow-right" size={13} color="#0D52CE" />
                 </Link>
               </div>
             )}

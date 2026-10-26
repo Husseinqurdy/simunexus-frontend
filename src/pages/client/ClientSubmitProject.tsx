@@ -1,3 +1,4 @@
+import { Check, Paperclip } from 'lucide-react'
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useForm } from 'react-hook-form'
@@ -20,9 +21,9 @@ const SOFTWARE = [
 ]
 
 const DELIVERY = [
-  { value: 'standard', label: 'Standard', desc: 'Flexible deadline',   color: '#64748B', badge: 'Best price' },
-  { value: 'urgent',   label: 'Urgent',   desc: '24 hours delivery',   color: '#F59E0B', badge: '2× price'  },
-  { value: 'express',  label: 'Express',  desc: '6–12 hours delivery', color: '#EF4444', badge: '3× price'  },
+  { value: 'standard', label: 'Standard', desc: 'Flexible deadline',   color: '#4E5E82', badge: 'Best price' },
+  { value: 'urgent',   label: 'Urgent',   desc: '24 hours delivery',   color: '#9A5B00', badge: '2× price'  },
+  { value: 'express',  label: 'Express',  desc: '6–12 hours delivery', color: '#B92D2D', badge: '3× price'  },
 ]
 
 type FormData = {
@@ -36,18 +37,18 @@ type FormData = {
 }
 
 const label: React.CSSProperties = {
-  display: 'block', fontSize: 11, fontWeight: 700, color: '#64748B',
-  textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 8,
+  display: 'block', fontSize: 12, fontWeight: 700, color: '#4E5E82',
+ marginBottom: 8,
 }
 const input: React.CSSProperties = {
   width: '100%', padding: '9px 12px', borderRadius: 10,
-  border: '1.5px solid #E2E8F0', fontSize: 13, outline: 'none',
-  fontFamily: 'DM Sans, sans-serif', color: '#0F172A', boxSizing: 'border-box',
+  border: '1.5px solid #DCE3F0', fontSize: 13, outline: 'none',
+  fontFamily: 'inherit', color: '#0A1F4D', boxSizing: 'border-box',
 }
-const err: React.CSSProperties = { fontSize: 11, color: '#EF4444', margin: '4px 0 0', fontWeight: 600 }
+const err: React.CSSProperties = { fontSize: 12, color: '#B92D2D', margin: '4px 0 0', fontWeight: 600 }
 const nextBtn: React.CSSProperties = {
-  flex: 2, padding: '13px', borderRadius: 12, background: '#0EA5E9',
-  color: '#fff', fontFamily: 'Syne,sans-serif', fontWeight: 700,
+  flex: 2, padding: '13px', borderRadius: 12, background: '#0D52CE',
+  color: '#fff', fontFamily: 'inherit', fontWeight: 700,
   fontSize: 15, border: 'none', cursor: 'pointer',
   display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
 }
@@ -78,7 +79,7 @@ export default function ClientSubmitProject() {
       include_explanation: data.include_explanation,
     }),
     onSuccess: () => {
-      toast.success("✅ Project submitted! We'll review it and set a price shortly.")
+      toast.success("Project submitted! We'll review it and set a price shortly.")
       navigate('/client/projects')
     },
     onError: (e: any) => {
@@ -112,16 +113,16 @@ export default function ClientSubmitProject() {
   const STEPS = ['Project Info', 'Technical Details', 'Delivery & Payment']
 
   return (
-    <div style={{ fontFamily: "'DM Sans',sans-serif", maxWidth: 700, margin: '0 auto' }}>
+    <div style={{ fontFamily: 'inherit', maxWidth: 700, margin: '0 auto' }}>
       <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
 
       {/* Header */}
       <div style={{ marginBottom: 28 }}>
-        <h1 style={{ fontFamily: 'Syne,sans-serif', fontSize: 24, fontWeight: 800, color: '#0F172A', margin: '0 0 4px' }}>
+        <h1 style={{ fontFamily: 'inherit', fontSize: 24, fontWeight: 700, color: '#0A1F4D', margin: '0 0 4px' }}>
           Submit New Project
         </h1>
-        <p style={{ color: '#94A3B8', fontSize: 13, margin: 0 }}>
-          Submitting as <strong style={{ color: '#0F172A' }}>{user?.first_name} {user?.last_name}</strong> · {user?.email}
+        <p style={{ color: '#667697', fontSize: 13, margin: 0 }}>
+          Submitting as <strong style={{ color: '#0A1F4D' }}>{user?.first_name} {user?.last_name}</strong> · {user?.email}
         </p>
       </div>
 
@@ -137,40 +138,40 @@ export default function ClientSubmitProject() {
                 <div style={{
                   width: 30, height: 30, borderRadius: '50%', display: 'flex', alignItems: 'center',
                   justifyContent: 'center', fontWeight: 700, fontSize: 12,
-                  background: isDone ? '#10B981' : isActive ? '#0EA5E9' : '#F1F5F9',
-                  color: isDone || isActive ? '#fff' : '#94A3B8',
+                  background: isDone ? '#1B9B63' : isActive ? '#0D52CE' : '#EBEFF8',
+                  color: isDone || isActive ? '#fff' : '#667697',
                 }}>
-                  {isDone ? '✓' : n}
+                  {isDone ? <Check size={14} strokeWidth={3} /> : n}
                 </div>
-                <span style={{ fontSize: 11, marginTop: 5, whiteSpace: 'nowrap', fontWeight: isActive ? 700 : 400, color: isActive ? '#0EA5E9' : isDone ? '#10B981' : '#94A3B8' }}>
+                <span style={{ fontSize: 12, marginTop: 5, whiteSpace: 'nowrap', fontWeight: isActive ? 700 : 400, color: isActive ? '#0D52CE' : isDone ? '#1B9B63' : '#667697' }}>
                   {lbl}
                 </span>
               </div>
-              {i < 2 && <div style={{ flex: 1, height: 1.5, background: step > n ? '#10B981' : '#E2E8F0', margin: '0 10px', marginBottom: 22 }} />}
+              {i < 2 && <div style={{ flex: 1, height: 1.5, background: step > n ? '#1B9B63' : '#DCE3F0', margin: '0 10px', marginBottom: 22 }} />}
             </div>
           )
         })}
       </div>
 
       {/* Card */}
-      <div style={{ background: '#fff', borderRadius: 20, border: '1px solid #F1F5F9', padding: '32px 28px', boxShadow: '0 2px 12px rgba(0,0,0,.04)' }}>
+      <div style={{ background: '#fff', borderRadius: 16, border: '1px solid #EBEFF8', padding: '32px 28px', boxShadow: '0 1px 3px rgba(10,31,107,.08)' }}>
 
         {/* STEP 1 */}
         {step === 1 && (
           <div>
-            <h2 style={{ fontFamily: 'Syne,sans-serif', fontSize: 17, fontWeight: 800, color: '#0F172A', margin: '0 0 20px' }}>Project Information</h2>
+            <h2 style={{ fontFamily: 'inherit', fontSize: 16, fontWeight: 700, color: '#0A1F4D', margin: '0 0 20px' }}>Project Information</h2>
 
             {/* User info badge */}
-            <div style={{ background: '#F8FAFC', border: '1px solid #F1F5F9', borderRadius: 12, padding: '12px 16px', marginBottom: 20, display: 'flex', alignItems: 'center', gap: 10 }}>
-              <div style={{ width: 36, height: 36, borderRadius: '50%', background: '#EFF6FF', color: '#2563EB', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: 14, flexShrink: 0 }}>
+            <div style={{ background: '#F5F7FC', border: '1px solid #EBEFF8', borderRadius: 12, padding: '12px 16px', marginBottom: 20, display: 'flex', alignItems: 'center', gap: 10 }}>
+              <div style={{ width: 36, height: 36, borderRadius: '50%', background: '#EAF1FD', color: '#0D52CE', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: 14, flexShrink: 0 }}>
                 {user?.first_name?.[0]?.toUpperCase() || user?.email?.[0]?.toUpperCase()}
               </div>
               <div>
-                <p style={{ fontSize: 13, fontWeight: 700, color: '#0F172A', margin: 0 }}>{user?.first_name} {user?.last_name}</p>
-                <p style={{ fontSize: 12, color: '#94A3B8', margin: 0 }}>{user?.email}</p>
+                <p style={{ fontSize: 13, fontWeight: 700, color: '#0A1F4D', margin: 0 }}>{user?.first_name} {user?.last_name}</p>
+                <p style={{ fontSize: 12, color: '#667697', margin: 0 }}>{user?.email}</p>
               </div>
-              <span style={{ marginLeft: 'auto', fontSize: 11, background: '#F0FDF4', color: '#059669', padding: '3px 10px', borderRadius: 999, fontWeight: 700, border: '1px solid #BBF7D0' }}>
-                ✓ Logged in
+              <span style={{ marginLeft: 'auto', fontSize: 12, background: '#EDF8F1', color: '#137A4E', padding: '3px 10px', borderRadius: 999, fontWeight: 700, border: '1px solid #BFE5CF' }}>
+                Logged in
               </span>
             </div>
 
@@ -192,17 +193,17 @@ export default function ClientSubmitProject() {
 
             {/* Software */}
             <div>
-              <label style={{ ...label, color: swError ? '#EF4444' : '#64748B' }}>
-                Simulation Software * {swError && <span style={{ color: '#EF4444', fontWeight: 700, textTransform: 'none' }}>— Please select one</span>}
+              <label style={{ ...label, color: swError ? '#D03A3A' : '#4E5E82' }}>
+                Simulation Software * {swError && <span style={{ color: '#B92D2D', fontWeight: 700, textTransform: 'none' }}>— Please select one</span>}
               </label>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5,1fr)', gap: 8 }}>
                 {SOFTWARE.map(sw => (
                   <button key={sw.value} type="button" onClick={() => { setSelectedSw(sw.value); setSwError(false) }}
-                    style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, padding: '10px 6px', borderRadius: 12, cursor: 'pointer', transition: 'all .2s', border: `1.5px solid ${selectedSw === sw.value ? '#0EA5E9' : swError ? '#FCA5A5' : '#E2E8F0'}`, background: selectedSw === sw.value ? '#EFF6FF' : '#FAFAFA' }}>
-                    <div style={{ width: 30, height: 30, borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: 11, fontFamily: 'Syne,sans-serif', background: selectedSw === sw.value ? '#0EA5E9' : '#F1F5F9', color: selectedSw === sw.value ? '#fff' : '#64748B' }}>
+                    style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, padding: '10px 6px', borderRadius: 12, cursor: 'pointer', transition: 'all .2s', border: `1.5px solid ${selectedSw === sw.value ? '#0D52CE' : swError ? '#F0B3B3' : '#DCE3F0'}`, background: selectedSw === sw.value ? '#EAF1FD' : '#F8FAFD' }}>
+                    <div style={{ width: 30, height: 30, borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: 12, fontFamily: 'inherit', background: selectedSw === sw.value ? '#0D52CE' : '#EBEFF8', color: selectedSw === sw.value ? '#fff' : '#4E5E82' }}>
                       {sw.icon}
                     </div>
-                    <span style={{ fontSize: 10, color: selectedSw === sw.value ? '#0EA5E9' : '#64748B', fontWeight: 600, textAlign: 'center', lineHeight: 1.2 }}>{sw.label}</span>
+                    <span style={{ fontSize: 12, color: selectedSw === sw.value ? '#0D52CE' : '#4E5E82', fontWeight: 600, textAlign: 'center', lineHeight: 1.2 }}>{sw.label}</span>
                   </button>
                 ))}
               </div>
@@ -213,7 +214,7 @@ export default function ClientSubmitProject() {
         {/* STEP 2 */}
         {step === 2 && (
           <div>
-            <h2 style={{ fontFamily: 'Syne,sans-serif', fontSize: 17, fontWeight: 800, color: '#0F172A', margin: '0 0 20px' }}>Technical Details</h2>
+            <h2 style={{ fontFamily: 'inherit', fontSize: 16, fontWeight: 700, color: '#0A1F4D', margin: '0 0 20px' }}>Technical Details</h2>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14, marginBottom: 16 }}>
               <div>
                 <label style={label}>Software Version</label>
@@ -227,25 +228,25 @@ export default function ClientSubmitProject() {
             </div>
 
             <div style={{ marginBottom: 16 }}>
-              <label style={label}>Attach Files <span style={{ color: '#CBD5E1', fontWeight: 400, textTransform: 'none' }}>(optional)</span></label>
-              <label htmlFor="fileup" style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '14px 16px', border: '1.5px dashed #E2E8F0', borderRadius: 12, cursor: 'pointer', background: '#FAFAFA' }}>
-                <span style={{ fontSize: 20 }}>📎</span>
+              <label style={label}>Attach Files <span style={{ color: '#667697', fontWeight: 400, textTransform: 'none' }}>(optional)</span></label>
+              <label htmlFor="fileup" style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '14px 16px', border: '1.5px dashed #DCE3F0', borderRadius: 12, cursor: 'pointer', background: '#F8FAFD' }}>
+                <Paperclip size={20} color="#667697" />
                 <div>
-                  <p style={{ color: '#475569', fontSize: 13, margin: 0, fontWeight: 500 }}>Click to attach files</p>
-                  <p style={{ color: '#94A3B8', fontSize: 11, margin: 0 }}>PDF, MATLAB files, schematics...</p>
+                  <p style={{ color: '#3A4A70', fontSize: 13, margin: 0, fontWeight: 500 }}>Click to attach files</p>
+                  <p style={{ color: '#667697', fontSize: 12, margin: 0 }}>PDF, MATLAB files, schematics...</p>
                 </div>
                 <input id="fileup" type="file" multiple style={{ display: 'none' }} />
               </label>
             </div>
 
             <div style={{ display: 'flex', gap: 20 }}>
-              <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', fontSize: 13, color: '#475569' }}>
-                <input {...register('is_nda')} type="checkbox" style={{ accentColor: '#0EA5E9' }} />
-                🔒 NDA / Confidential
+              <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', fontSize: 13, color: '#3A4A70' }}>
+                <input {...register('is_nda')} type="checkbox" style={{ accentColor: '#0D52CE' }} />
+                NDA / Confidential
               </label>
-              <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', fontSize: 13, color: '#475569' }}>
-                <input {...register('include_explanation')} type="checkbox" style={{ accentColor: '#0EA5E9' }} />
-                📖 Include explanation
+              <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', fontSize: 13, color: '#3A4A70' }}>
+                <input {...register('include_explanation')} type="checkbox" style={{ accentColor: '#0D52CE' }} />
+                Include explanation
               </label>
             </div>
           </div>
@@ -254,9 +255,9 @@ export default function ClientSubmitProject() {
         {/* STEP 3 */}
         {step === 3 && (
           <div>
-            <h2 style={{ fontFamily: 'Syne,sans-serif', fontSize: 17, fontWeight: 800, color: '#0F172A', margin: '0 0 8px' }}>Delivery & Payment</h2>
-            <div style={{ background: '#F0F9FF', border: '1px solid #BAE6FD', borderRadius: 10, padding: '10px 14px', marginBottom: 20, fontSize: 12, color: '#0369A1' }}>
-              💡 Admin will review your project and set the final price.
+            <h2 style={{ fontFamily: 'inherit', fontSize: 16, fontWeight: 700, color: '#0A1F4D', margin: '0 0 8px' }}>Delivery & Payment</h2>
+            <div style={{ background: '#EAF1FD', border: '1px solid #C4DBF1', borderRadius: 10, padding: '10px 14px', marginBottom: 20, fontSize: 12, color: '#0A42A8' }}>
+              Admin will review your project and set the final price.
             </div>
 
             <div style={{ marginBottom: 20 }}>
@@ -264,14 +265,14 @@ export default function ClientSubmitProject() {
               <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                 {DELIVERY.map(d => (
                   <button key={d.value} type="button" onClick={() => setSelectedDel(d.value)}
-                    style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px', borderRadius: 12, cursor: 'pointer', textAlign: 'left', border: `1.5px solid ${selectedDel === d.value ? d.color : '#E2E8F0'}`, background: selectedDel === d.value ? d.color + '08' : '#FAFAFA', transition: 'all .2s' }}>
+                    style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px', borderRadius: 12, cursor: 'pointer', textAlign: 'left', border: `1.5px solid ${selectedDel === d.value ? d.color : '#DCE3F0'}`, background: selectedDel === d.value ? d.color + '08' : '#F8FAFD', transition: 'all .2s' }}>
                     <div>
-                      <p style={{ color: '#0F172A', fontWeight: 700, fontSize: 13, margin: 0, fontFamily: 'Syne,sans-serif' }}>{d.label}</p>
-                      <p style={{ color: '#64748B', fontSize: 12, margin: 0 }}>{d.desc}</p>
+                      <p style={{ color: '#0A1F4D', fontWeight: 700, fontSize: 13, margin: 0, fontFamily: 'inherit' }}>{d.label}</p>
+                      <p style={{ color: '#4E5E82', fontSize: 12, margin: 0 }}>{d.desc}</p>
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                      <span style={{ padding: '3px 8px', borderRadius: 999, background: d.color + '18', color: d.color, fontSize: 11, fontWeight: 700 }}>{d.badge}</span>
-                      {selectedDel === d.value && <span style={{ width: 18, height: 18, borderRadius: '50%', background: d.color, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: 10, fontWeight: 700 }}>✓</span>}
+                      <span style={{ padding: '3px 8px', borderRadius: 999, background: d.color + '18', color: d.color, fontSize: 12, fontWeight: 700 }}>{d.badge}</span>
+                      {selectedDel === d.value && <span style={{ width: 18, height: 18, borderRadius: '50%', background: d.color, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: 12, fontWeight: 700 }}><Check size={11} strokeWidth={3} /></span>}
                     </div>
                   </button>
                 ))}
@@ -288,10 +289,10 @@ export default function ClientSubmitProject() {
                   const sel = watch('payment_type') === p.value
                   return (
                     <button key={p.value} type="button" onClick={() => setValue('payment_type', p.value)}
-                      style={{ padding: '14px', borderRadius: 12, cursor: 'pointer', textAlign: 'left', border: `1.5px solid ${sel ? '#0EA5E9' : '#E2E8F0'}`, background: sel ? '#EFF6FF' : '#FAFAFA', position: 'relative', transition: 'all .2s' }}>
-                      {sel && <span style={{ position: 'absolute', top: 8, right: 8, width: 16, height: 16, borderRadius: '50%', background: '#0EA5E9', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: 10, fontWeight: 700 }}>✓</span>}
-                      <p style={{ fontWeight: 700, fontSize: 13, margin: '0 0 3px', fontFamily: 'Syne,sans-serif', color: '#0F172A' }}>{p.label}</p>
-                      <p style={{ fontSize: 12, color: '#64748B', margin: 0 }}>{p.desc}</p>
+                      style={{ padding: '14px', borderRadius: 12, cursor: 'pointer', textAlign: 'left', border: `1.5px solid ${sel ? '#0D52CE' : '#DCE3F0'}`, background: sel ? '#EAF1FD' : '#F8FAFD', position: 'relative', transition: 'all .2s' }}>
+                      {sel && <span style={{ position: 'absolute', top: 8, right: 8, width: 16, height: 16, borderRadius: '50%', background: '#0D52CE', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: 12, fontWeight: 700 }}><Check size={11} strokeWidth={3} /></span>}
+                      <p style={{ fontWeight: 700, fontSize: 13, margin: '0 0 3px', fontFamily: 'inherit', color: '#0A1F4D' }}>{p.label}</p>
+                      <p style={{ fontSize: 12, color: '#4E5E82', margin: 0 }}>{p.desc}</p>
                     </button>
                   )
                 })}
@@ -299,8 +300,8 @@ export default function ClientSubmitProject() {
             </div>
 
             {/* Summary */}
-            <div style={{ background: '#F8FAFC', border: '1px solid #F1F5F9', borderRadius: 14, padding: '16px 18px' }}>
-              <p style={{ fontSize: 11, color: '#94A3B8', fontWeight: 700, letterSpacing: '.06em', textTransform: 'uppercase', margin: '0 0 12px' }}>Order Summary</p>
+            <div style={{ background: '#F5F7FC', border: '1px solid #EBEFF8', borderRadius: 12, padding: '16px 18px' }}>
+              <p style={{ fontSize: 12, color: '#667697', fontWeight: 700, margin: '0 0 12px' }}>Order Summary</p>
               {[
                 ['Client',   `${user?.first_name} ${user?.last_name} (${user?.email})`],
                 ['Project',  getValues('title') || '—'],
@@ -309,9 +310,9 @@ export default function ClientSubmitProject() {
                 ['Payment',  watch('payment_type') === 'partial' ? '50% advance + 50% on delivery' : 'Full upfront'],
                 ['NDA',      watch('is_nda') ? 'Yes — confidential' : 'No'],
               ].map(([k, v]) => (
-                <div key={String(k)} style={{ display: 'flex', justifyContent: 'space-between', padding: '5px 0', borderBottom: '1px solid #F1F5F9', fontSize: 12 }}>
-                  <span style={{ color: '#94A3B8' }}>{k}</span>
-                  <span style={{ color: '#374151', fontWeight: 600, textAlign: 'right', maxWidth: '65%' }}>{v}</span>
+                <div key={String(k)} style={{ display: 'flex', justifyContent: 'space-between', padding: '5px 0', borderBottom: '1px solid #EBEFF8', fontSize: 12 }}>
+                  <span style={{ color: '#667697' }}>{k}</span>
+                  <span style={{ color: '#2B3A60', fontWeight: 600, textAlign: 'right', maxWidth: '65%' }}>{v}</span>
                 </div>
               ))}
             </div>
@@ -323,7 +324,7 @@ export default function ClientSubmitProject() {
       <div style={{ display: 'flex', gap: 10, marginTop: 16 }}>
         {step > 1 && (
           <button type="button" onClick={() => setStep(s => s - 1)}
-            style={{ flex: 1, padding: '13px', borderRadius: 12, background: '#F8FAFC', border: '1.5px solid #E2E8F0', color: '#64748B', fontSize: 14, fontWeight: 600, cursor: 'pointer' }}>
+            style={{ flex: 1, padding: '13px', borderRadius: 12, background: '#F5F7FC', border: '1.5px solid #DCE3F0', color: '#4E5E82', fontSize: 14, fontWeight: 600, cursor: 'pointer' }}>
             ← Back
           </button>
         )}
@@ -331,10 +332,10 @@ export default function ClientSubmitProject() {
         {step === 2 && <button type="button" onClick={goStep3} style={nextBtn}>Continue →</button>}
         {step === 3 && (
           <button type="button" onClick={handleSubmit} disabled={mutation.isPending}
-            style={{ ...nextBtn, background: mutation.isPending ? '#6EE7B7' : '#10B981', cursor: mutation.isPending ? 'not-allowed' : 'pointer' }}>
+            style={{ ...nextBtn, background: mutation.isPending ? '#7CCBA2' : '#1B9B63', cursor: mutation.isPending ? 'not-allowed' : 'pointer' }}>
             {mutation.isPending
               ? <><span style={{ width: 14, height: 14, border: '2px solid rgba(255,255,255,.4)', borderTop: '2px solid #fff', borderRadius: '50%', display: 'inline-block', animation: 'spin .7s linear infinite', marginRight: 8 }} />Submitting...</>
-              : '✓ Submit Project'
+              : 'Submit Project'
             }
           </button>
         )}

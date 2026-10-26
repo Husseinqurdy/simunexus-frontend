@@ -66,10 +66,10 @@ export default function ExpertDashboard() {
   const app = application
 
   return (
-    <div style={{ fontFamily: "'DM Sans',sans-serif", animation: 'gsh-fade-in .4s ease' }}>
+    <div style={{ fontFamily: 'inherit', animation: 'gsh-fade-in .4s ease' }}>
       <style>{`
         @keyframes gsh-fade-in {
-          from { opacity: 0; transform: translateY(6px); }
+          from { opacity: 0; transform: translateY(0); }
           to   { opacity: 1; transform: translateY(0); }
         }
         @keyframes gsh-pop-in {
@@ -80,8 +80,8 @@ export default function ExpertDashboard() {
           transition: transform .18s ease, box-shadow .18s ease;
         }
         .gsh-stat:hover {
-          transform: translateY(-2px);
-          box-shadow: 0 6px 16px rgba(15, 23, 42, 0.08);
+          transform: translateY(0);
+          box-shadow: 0 6px 16px rgba(10,31,77, 0.08);
         }
         .gsh-project-row {
           transition: background-color .15s ease, transform .15s ease;
@@ -106,26 +106,26 @@ export default function ExpertDashboard() {
       `}</style>
 
       <div style={{ marginBottom: 24 }}>
-        <h1 style={{ fontFamily: 'Syne,sans-serif', fontSize: TYPE.heading, fontWeight: 800, color: '#0F172A', margin: 0 }}>
+        <h1 style={{ fontFamily: 'inherit', fontSize: TYPE.heading, fontWeight: 700, color: '#0A1F4D', margin: 0 }}>
           Welcome back, {user?.first_name}!
         </h1>
-        <p style={{ color: '#94A3B8', fontSize: TYPE.body, margin: '4px 0 0' }}>Here's your expert dashboard overview.</p>
+        <p style={{ color: '#667697', fontSize: TYPE.body, margin: '4px 0 0' }}>Here's your expert dashboard overview.</p>
       </div>
 
       {/* Stats */}
       {profile && (
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16, marginBottom: 24 }}>
           <div className="gsh-stat" style={{ animation: 'gsh-pop-in .35s ease .02s backwards' }}>
-            <StatCard label="Completed Projects" value={profile.completed_projects || 0} color="#0EA5E9" icon={<CheckCircle2 size={18} strokeWidth={2.25} />} />
+            <StatCard label="Completed Projects" value={profile.completed_projects || 0} color="#0D52CE" icon={<CheckCircle2 size={18} strokeWidth={2.25} />} />
           </div>
           <div className="gsh-stat" style={{ animation: 'gsh-pop-in .35s ease .08s backwards' }}>
-            <StatCard label="Success Rate" value={`${Number(profile.success_rate || 0).toFixed(0)}%`} color="#10B981" icon={<TrendingUp size={18} strokeWidth={2.25} />} />
+            <StatCard label="Success Rate" value={`${Number(profile.success_rate || 0).toFixed(0)}%`} color="#1B9B63" icon={<TrendingUp size={18} strokeWidth={2.25} />} />
           </div>
           <div className="gsh-stat" style={{ animation: 'gsh-pop-in .35s ease .14s backwards' }}>
-            <StatCard label="Total Earned" value={formatTsh(profile.total_earned)} color="#7C3AED" icon={<Wallet size={18} strokeWidth={2.25} />} />
+            <StatCard label="Total Earned" value={formatTsh(profile.total_earned)} color="#2E4DA7" icon={<Wallet size={18} strokeWidth={2.25} />} />
           </div>
           <div className="gsh-stat" style={{ animation: 'gsh-pop-in .35s ease .2s backwards' }}>
-            <StatCard label="Rating" value={`${Number(profile.rating || 0).toFixed(1)}`} color="#F59E0B" icon={<Star size={18} strokeWidth={2.25} fill="#F59E0B" />} />
+            <StatCard label="Rating" value={`${Number(profile.rating || 0).toFixed(1)}`} color="#E5A00D" icon={<Star size={18} strokeWidth={2.25} fill="#E5A00D" />} />
           </div>
         </div>
       )}
@@ -136,13 +136,13 @@ export default function ExpertDashboard() {
           <SectionTitle>Active Projects</SectionTitle>
           {projLoading ? <LoadingSpinner label="Loading..." /> :
             projects.length === 0 ? (
-              <div style={{ textAlign: 'center', padding: '32px 0', color: '#94A3B8' }}>
-                <FolderKanban size={32} strokeWidth={1.75} style={{ marginBottom: 10, color: '#CBD5E1' }} />
-                <p style={{ fontSize: TYPE.body, fontWeight: 600, color: '#64748B', margin: '0 0 8px' }}>No active projects</p>
+              <div style={{ textAlign: 'center', padding: '32px 0', color: '#667697' }}>
+                <FolderKanban size={32} strokeWidth={1.75} style={{ marginBottom: 10, color: '#C3CEE2' }} />
+                <p style={{ fontSize: TYPE.body, fontWeight: 600, color: '#4E5E82', margin: '0 0 8px' }}>No active projects</p>
                 <button
                   className="gsh-btn"
                   onClick={() => navigate('/expert/job-board')}
-                  style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '8px 16px', borderRadius: 10, background: '#0EA5E9', color: '#fff', border: 'none', cursor: 'pointer', fontSize: TYPE.body, fontWeight: 700 }}
+                  style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '8px 16px', borderRadius: 10, background: '#0D52CE', color: '#fff', border: 'none', cursor: 'pointer', fontSize: TYPE.body, fontWeight: 700 }}
                 >
                   Browse Job Board <ArrowRight size={14} strokeWidth={2.5} />
                 </button>
@@ -154,13 +154,13 @@ export default function ExpertDashboard() {
                     key={p.id}
                     className="gsh-project-row"
                     onClick={() => navigate(`/expert/projects/${p.id}`)}
-                    style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 14px', borderRadius: 12, border: '1px solid #F1F5F9', cursor: 'pointer' }}
-                    onMouseEnter={e => (e.currentTarget.style.background = '#F8FAFC')}
+                    style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 14px', borderRadius: 12, border: '1px solid #EBEFF8', cursor: 'pointer' }}
+                    onMouseEnter={e => (e.currentTarget.style.background = '#F5F7FC')}
                     onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
                   >
                     <div>
-                      <p style={{ fontSize: TYPE.body, fontWeight: 700, margin: 0, color: '#0F172A' }}>{p.title}</p>
-                      <p style={{ fontSize: TYPE.caption, color: '#94A3B8', margin: '2px 0 0' }}>
+                      <p style={{ fontSize: TYPE.body, fontWeight: 700, margin: 0, color: '#0A1F4D' }}>{p.title}</p>
+                      <p style={{ fontSize: TYPE.caption, color: '#667697', margin: '2px 0 0' }}>
                         Due {formatDistanceToNow(new Date(p.deadline), { addSuffix: true })}
                       </p>
                     </div>
@@ -175,38 +175,38 @@ export default function ExpertDashboard() {
         {/* Application / Test Status */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
           {appLoading ? <LoadingSpinner label="Loading..." /> : !app ? (
-            <Card style={{ border: '1.5px solid #BAE6FD', background: '#F0F9FF' }}>
+            <Card style={{ border: '1.5px solid #C4DBF1', background: '#EAF1FD' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, margin: '0 0 8px' }}>
-                <GraduationCap size={18} strokeWidth={2.25} color="#0369A1" />
-                <p style={{ fontFamily: 'Syne,sans-serif', fontWeight: 800, fontSize: TYPE.title, color: '#0369A1', margin: 0 }}>
+                <GraduationCap size={18} strokeWidth={2.25} color="#0A42A8" />
+                <p style={{ fontFamily: 'inherit', fontWeight: 700, fontSize: TYPE.title, color: '#0A42A8', margin: 0 }}>
                   Not applied yet
                 </p>
               </div>
-              <p style={{ fontSize: TYPE.caption, color: '#64748B', lineHeight: 1.6, margin: '0 0 14px' }}>
+              <p style={{ fontSize: TYPE.caption, color: '#4E5E82', lineHeight: 1.6, margin: '0 0 14px' }}>
                 Apply as an expert to unlock the job board and start earning commissions.
               </p>
               <button
                 className="gsh-btn"
                 onClick={() => navigate('/expert/apply')}
-                style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, width: '100%', padding: '10px', borderRadius: 10, background: '#0EA5E9', color: '#fff', border: 'none', cursor: 'pointer', fontSize: TYPE.body, fontWeight: 700 }}
+                style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, width: '100%', padding: '10px', borderRadius: 10, background: '#0D52CE', color: '#fff', border: 'none', cursor: 'pointer', fontSize: TYPE.body, fontWeight: 700 }}
               >
                 Apply Now <ArrowRight size={14} strokeWidth={2.5} />
               </button>
             </Card>
           ) : (
             <Card style={{
-              border: `1.5px solid ${app.status === 'passed' ? '#BBF7D0' : app.status === 'failed' ? '#FECDD3' : '#FDE68A'}`,
-              background: app.status === 'passed' ? '#F0FDF4' : app.status === 'failed' ? '#FFF1F2' : '#FFFBEB',
+              border: `1.5px solid ${app.status === 'passed' ? '#BFE5CF' : app.status === 'failed' ? '#F3C7C7' : '#F8DC8A'}`,
+              background: app.status === 'passed' ? '#EDF8F1' : app.status === 'failed' ? '#FDEDED' : '#FFF8E6',
             }}>
-              <p style={{ fontFamily: 'Syne,sans-serif', fontWeight: 800, fontSize: TYPE.title, margin: '0 0 4px', color: '#0F172A' }}>
+              <p style={{ fontFamily: 'inherit', fontWeight: 700, fontSize: TYPE.title, margin: '0 0 4px', color: '#0A1F4D' }}>
                 Application Status
               </p>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, margin: '0 0 12px' }}>
                 <span style={{
                   display: 'inline-flex', alignItems: 'center', gap: 6,
                   padding: '4px 12px', borderRadius: 999, fontSize: TYPE.caption, fontWeight: 700,
-                  background: app.status === 'passed' ? '#D1FAE5' : app.status === 'failed' ? '#FFE4E6' : '#FEF3C7',
-                  color: app.status === 'passed' ? '#059669' : app.status === 'failed' ? '#E11D48' : '#D97706',
+                  background: app.status === 'passed' ? '#D6EEDF' : app.status === 'failed' ? '#FDEDED' : '#FCEFC7',
+                  color: app.status === 'passed' ? '#137A4E' : app.status === 'failed' ? '#B92D2D' : '#B85F00',
                 }}>
                   {app.status === 'pending'   && <><Timer size={13} strokeWidth={2.5} /> Pending Test</>}
                   {app.status === 'testing'   && <><Timer size={13} strokeWidth={2.5} /> In Progress</>}
@@ -219,8 +219,8 @@ export default function ExpertDashboard() {
 
               {app.admin_notes && (
                 <div style={{ background: 'rgba(0,0,0,.03)', borderRadius: 8, padding: '10px 12px', marginBottom: 12 }}>
-                  <p style={{ fontSize: TYPE.eyebrow, color: '#94A3B8', fontWeight: 700, textTransform: 'uppercase', margin: '0 0 4px' }}>Admin Feedback</p>
-                  <p style={{ fontSize: TYPE.caption, color: '#374151', margin: 0, lineHeight: 1.5 }}>{app.admin_notes}</p>
+                  <p style={{ fontSize: TYPE.eyebrow, color: '#667697', fontWeight: 700, margin: '0 0 4px' }}>Admin Feedback</p>
+                  <p style={{ fontSize: TYPE.caption, color: '#2B3A60', margin: 0, lineHeight: 1.5 }}>{app.admin_notes}</p>
                 </div>
               )}
 
@@ -229,7 +229,7 @@ export default function ExpertDashboard() {
                   className="gsh-btn"
                   onClick={() => startTestMutation.mutate(app.id)}
                   disabled={startTestMutation.isPending}
-                  style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, width: '100%', padding: '10px', borderRadius: 10, background: '#F59E0B', color: '#fff', border: 'none', cursor: 'pointer', fontSize: TYPE.body, fontWeight: 700 }}
+                  style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, width: '100%', padding: '10px', borderRadius: 10, background: '#E5A00D', color: '#fff', border: 'none', cursor: 'pointer', fontSize: TYPE.body, fontWeight: 700 }}
                 >
                   <Rocket size={15} strokeWidth={2.5} /> {startTestMutation.isPending ? 'Starting…' : 'Start 2-Hour Test'}
                 </button>
@@ -238,13 +238,13 @@ export default function ExpertDashboard() {
                 <button
                   className="gsh-btn"
                   onClick={() => navigate(`/expert/test/${app.id}`)}
-                  style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, width: '100%', padding: '10px', borderRadius: 10, background: '#EF4444', color: '#fff', border: 'none', cursor: 'pointer', fontSize: TYPE.body, fontWeight: 700 }}
+                  style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, width: '100%', padding: '10px', borderRadius: 10, background: '#D03A3A', color: '#fff', border: 'none', cursor: 'pointer', fontSize: TYPE.body, fontWeight: 700 }}
                 >
                   <Timer size={15} strokeWidth={2.5} /> Continue Test <ArrowRight size={14} strokeWidth={2.5} />
                 </button>
               )}
               {app.status === 'passed' && (
-                <p style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, fontSize: TYPE.body, color: '#059669', fontWeight: 700, margin: 0, textAlign: 'center' }}>
+                <p style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, fontSize: TYPE.body, color: '#137A4E', fontWeight: 700, margin: 0, textAlign: 'center' }}>
                   <PartyPopper size={16} strokeWidth={2.25} /> You're a verified GSH Expert!
                 </p>
               )}
@@ -265,9 +265,9 @@ export default function ExpertDashboard() {
                   key={item.path}
                   className="gsh-quick-action"
                   onClick={() => navigate(item.path)}
-                  style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', borderRadius: 10, background: '#F8FAFC', border: '1px solid #F1F5F9', color: '#374151', fontSize: TYPE.body, fontWeight: 600, cursor: 'pointer', textAlign: 'left' }}
-                  onMouseEnter={e => (e.currentTarget.style.background = '#EFF6FF')}
-                  onMouseLeave={e => (e.currentTarget.style.background = '#F8FAFC')}
+                  style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', borderRadius: 10, background: '#F5F7FC', border: '1px solid #EBEFF8', color: '#2B3A60', fontSize: TYPE.body, fontWeight: 600, cursor: 'pointer', textAlign: 'left' }}
+                  onMouseEnter={e => (e.currentTarget.style.background = '#EAF1FD')}
+                  onMouseLeave={e => (e.currentTarget.style.background = '#F5F7FC')}
                 >
                   <item.Icon size={16} strokeWidth={2.1} />
                   {item.label}

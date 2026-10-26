@@ -63,21 +63,21 @@ export default function AdminDashboard() {
     <div style={{ animation: 'fadeIn 0.4s ease' }}>
       <style>{`
         @keyframes fadeIn {
-          from { opacity: 0; transform: translateY(6px); }
+          from { opacity: 0; transform: translateY(0); }
           to { opacity: 1; transform: translateY(0); }
         }
         .stat-card-anim {
           transition: transform 0.2s ease, box-shadow 0.2s ease;
         }
         .stat-card-anim:hover {
-          transform: translateY(-3px);
-          box-shadow: 0 8px 20px rgba(15, 23, 42, 0.08);
+          transform: translateY(0);
+          box-shadow: 0 8px 20px rgba(10,31,77, 0.08);
         }
         .admin-action-btn {
           transition: transform 0.15s ease, opacity 0.15s ease, background 0.15s ease;
         }
         .admin-action-btn:hover {
-          transform: scale(1.06);
+          transform: scale(1);
           opacity: 0.9;
         }
         .admin-action-btn:active {
@@ -101,7 +101,7 @@ export default function AdminDashboard() {
               <Link
                 to="/admin/projects?status=qc"
                 className="admin-action-btn"
-                style={{ display: 'inline-flex', background: '#D97706', color: '#fff', fontSize: 12, fontWeight: 700, padding: '6px 14px', borderRadius: 8, textDecoration: 'none', fontFamily: 'Syne,sans-serif' }}
+                style={{ display: 'inline-flex', background: '#B85F00', color: '#fff', fontSize: 12, fontWeight: 700, padding: '6px 14px', borderRadius: 8, textDecoration: 'none', fontFamily: 'inherit' }}
               >
                 Review Now
               </Link>
@@ -121,17 +121,17 @@ export default function AdminDashboard() {
           />
         </div>
         <div className="stat-card-anim">
-          <StatCard label="Total Experts" value={summary?.total_experts || 0} color="#10B981"
+          <StatCard label="Total Experts" value={summary?.total_experts || 0} color="#1B9B63"
             icon={<GraduationCap size={18} strokeWidth={1.8} />}
           />
         </div>
         <div className="stat-card-anim">
-          <StatCard label="Online Now" value={summary?.online_users || 0} color="#0EA5E9"
+          <StatCard label="Online Now" value={summary?.online_users || 0} color="#0D52CE"
             icon={<Radio size={16} strokeWidth={2} />}
           />
         </div>
         <div className="stat-card-anim">
-          <StatCard label="Total Revenue" value={formatTSH(financial?.total_revenue)} color="#7C3AED"
+          <StatCard label="Total Revenue" value={formatTSH(financial?.total_revenue)} color="#2E4DA7"
             icon={<Wallet size={18} strokeWidth={1.8} />}
           />
         </div>
@@ -139,31 +139,31 @@ export default function AdminDashboard() {
 
       {/* Stats row 2 — projects */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 16, marginBottom: 28 }}>
-        <div className="stat-card-anim"><StatCard label="Pending Review" value={pending.length} color="#F59E0B" /></div>
-        <div className="stat-card-anim"><StatCard label="In QC" value={inQC.length} color="#8B5CF6" /></div>
-        <div className="stat-card-anim"><StatCard label="Active" value={active.length} color="#0EA5E9" /></div>
-        <div className="stat-card-anim"><StatCard label="Completed" value={completed.length} color="#10B981" /></div>
+        <div className="stat-card-anim"><StatCard label="Pending Review" value={pending.length} color="#E5A00D" /></div>
+        <div className="stat-card-anim"><StatCard label="In QC" value={inQC.length} color="#3F5FB8" /></div>
+        <div className="stat-card-anim"><StatCard label="Active" value={active.length} color="#0D52CE" /></div>
+        <div className="stat-card-anim"><StatCard label="Completed" value={completed.length} color="#1B9B63" /></div>
       </div>
 
       {/* Financial mini overview */}
       {financial && (
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 16, marginBottom: 28 }}>
           {[
-            { label: 'Platform Profit', value: formatTSH(financial.total_platform_profit), color: '#10B981', Icon: TrendingUp },
-            { label: 'Paid to Experts', value: formatTSH(financial.total_expert_paid), color: '#0EA5E9', Icon: GraduationCap },
-            { label: 'Projects Delivered', value: financial.completed_projects || 0, color: '#7C3AED', Icon: Rocket },
+            { label: 'Platform Profit', value: formatTSH(financial.total_platform_profit), color: '#137A4E', Icon: TrendingUp },
+            { label: 'Paid to Experts', value: formatTSH(financial.total_expert_paid), color: '#0D52CE', Icon: GraduationCap },
+            { label: 'Projects Delivered', value: financial.completed_projects || 0, color: '#2E4DA7', Icon: Rocket },
           ].map(({ label, value, color, Icon }) => (
             <div
               key={label}
               className="stat-card-anim"
-              style={{ background: '#fff', borderRadius: 16, padding: '20px 22px', border: '1px solid #F1F5F9', display: 'flex', alignItems: 'center', gap: 16 }}
+              style={{ background: '#fff', borderRadius: 12, padding: '20px 22px', border: '1px solid #EBEFF8', display: 'flex', alignItems: 'center', gap: 16 }}
             >
               <div style={{ width: 44, height: 44, borderRadius: 12, background: color + '12', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                 <Icon size={20} color={color} strokeWidth={1.8} />
               </div>
               <div>
-                <p style={{ fontSize: 20, fontWeight: 800, color, margin: 0, fontFamily: 'Syne,sans-serif', lineHeight: 1.2 }}>{value}</p>
-                <p style={{ fontSize: 12, color: '#94A3B8', margin: '4px 0 0' }}>{label}</p>
+                <p style={{ fontSize: 20, fontWeight: 700, color, margin: 0, fontFamily: 'inherit', lineHeight: 1.2 }}>{value}</p>
+                <p style={{ fontSize: 12, color: '#667697', margin: '4px 0 0' }}>{label}</p>
               </div>
             </div>
           ))}
@@ -172,23 +172,23 @@ export default function AdminDashboard() {
 
       {/* All projects table */}
       <Card style={{ padding: 0 }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '18px 22px', borderBottom: '1px solid #F8FAFC' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '18px 22px', borderBottom: '1px solid #F5F7FC' }}>
           <SectionTitle>Recent Projects</SectionTitle>
-          <Link to="/admin/projects" style={{ fontSize: 13, color: '#0EA5E9', fontWeight: 600, textDecoration: 'none' }}>View all →</Link>
+          <Link to="/admin/projects" style={{ fontSize: 13, color: '#0D52CE', fontWeight: 600, textDecoration: 'none' }}>View all →</Link>
         </div>
         <Table headers={['Project', 'Client', 'Expert', 'Status', 'Price', 'Deadline', 'Actions']}>
           {projects.slice(0, 10).map(p => (
             <Tr key={p.id} onClick={() => navigate(`/admin/projects/${p.id}`)}>
               <Td>
-                <p style={{ fontFamily: 'Syne,sans-serif', fontWeight: 700, fontSize: 13, margin: '0 0 2px', color: '#0F172A' }}>{p.title}</p>
-                <span style={{ fontSize: 11, color: '#94A3B8' }}>{p.software?.toUpperCase()}</span>
+                <p style={{ fontFamily: 'inherit', fontWeight: 700, fontSize: 13, margin: '0 0 2px', color: '#0A1F4D' }}>{p.title}</p>
+                <span style={{ fontSize: 12, color: '#667697' }}>{p.software?.toUpperCase()}</span>
               </Td>
-              <Td><span style={{ fontSize: 13, color: '#475569' }}>{p.client_name || '—'}</span></Td>
+              <Td><span style={{ fontSize: 13, color: '#3A4A70' }}>{p.client_name || '—'}</span></Td>
               <Td>
                 {p.expert_name
-                  ? <span style={{ fontSize: 13, color: '#475569' }}>{p.expert_name}</span>
+                  ? <span style={{ fontSize: 13, color: '#3A4A70' }}>{p.expert_name}</span>
                   : (
-                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 12, color: '#F59E0B', fontWeight: 700 }}>
+                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 12, color: '#9A5B00', fontWeight: 700 }}>
                       <AlertTriangle size={13} strokeWidth={2} /> Unassigned
                     </span>
                   )
@@ -197,22 +197,22 @@ export default function AdminDashboard() {
               <Td><StatusBadge status={p.status} /></Td>
               <Td>
                 {p.client_price
-                  ? <span style={{ fontFamily: 'Syne,sans-serif', fontWeight: 700, color: '#059669', fontSize: 13 }}>{formatTSH(p.client_price)}</span>
-                  : <span style={{ fontSize: 12, color: '#CBD5E1' }}>Not set</span>
+                  ? <span style={{ fontFamily: 'inherit', fontWeight: 700, color: '#137A4E', fontSize: 13 }}>{formatTSH(p.client_price)}</span>
+                  : <span style={{ fontSize: 12, color: '#C3CEE2' }}>Not set</span>
                 }
               </Td>
-              <Td><span style={{ fontSize: 12, color: '#94A3B8' }}>{formatDistanceToNow(new Date(p.deadline), { addSuffix: true })}</span></Td>
+              <Td><span style={{ fontSize: 12, color: '#667697' }}>{formatDistanceToNow(new Date(p.deadline), { addSuffix: true })}</span></Td>
               <Td>
                 <div style={{ display: 'flex', gap: 6 }} onClick={e => e.stopPropagation()}>
-                  <button className="admin-action-btn" onClick={() => navigate(`/admin/projects/${p.id}`)} style={{ padding: '5px 12px', borderRadius: 8, background: '#EFF6FF', color: '#2563EB', border: 'none', cursor: 'pointer', fontSize: 12, fontWeight: 700 }}>
+                  <button className="admin-action-btn" onClick={() => navigate(`/admin/projects/${p.id}`)} style={{ padding: '5px 12px', borderRadius: 8, background: '#EAF1FD', color: '#0D52CE', border: 'none', cursor: 'pointer', fontSize: 12, fontWeight: 700 }}>
                     Manage
                   </button>
                   {p.status === 'qc' && (
                     <>
-                      <button className="admin-action-btn" onClick={() => approveMutation.mutate({ id: p.id, action: 'approve' })} style={{ padding: '5px 10px', borderRadius: 8, background: '#F0FDF4', color: '#059669', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
+                      <button className="admin-action-btn" onClick={() => approveMutation.mutate({ id: p.id, action: 'approve' })} style={{ padding: '5px 10px', borderRadius: 8, background: '#EDF8F1', color: '#137A4E', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
                         <Check size={14} strokeWidth={2.5} />
                       </button>
-                      <button className="admin-action-btn" onClick={() => { const r = prompt('Reason for revision?'); if (r) approveMutation.mutate({ id: p.id, action: 'reject', reason: r }) }} style={{ padding: '5px 10px', borderRadius: 8, background: '#FFF1F2', color: '#E11D48', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
+                      <button className="admin-action-btn" onClick={() => { const r = prompt('Reason for revision?'); if (r) approveMutation.mutate({ id: p.id, action: 'reject', reason: r }) }} style={{ padding: '5px 10px', borderRadius: 8, background: '#FDEDED', color: '#B92D2D', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
                         <X size={14} strokeWidth={2.5} />
                       </button>
                     </>

@@ -121,7 +121,7 @@ export default function App() {
         <Route path="/apply-expert" element={<ApplyExpertPage />} />
         <Route path="/set-password" element={<SetPasswordPage />} />
         <Route path="/unauthorized" element={
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh', color: '#64748B', fontSize: 18 }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh', color: '#4E5E82', fontSize: 18 }}>
             Access Denied
           </div>
         } />
@@ -130,7 +130,7 @@ export default function App() {
         <Route path="/login" element={<AuthRedirect><LoginPage /></AuthRedirect>} />
         <Route path="/register" element={<AuthRedirect><RegisterPage /></AuthRedirect>} />
 
-        {/* ✅ Expert Apply & Test — nje ya dashboard, inaruhusu client pia */}
+        {/* Expert Apply & Test — nje ya dashboard, inaruhusu client pia */}
         <Route path="/expert/apply" element={<ExpertApplyGuard />} />
         <Route path="/expert/test/:id" element={<ExpertTestGuard><ExpertTestPage /></ExpertTestGuard>} />
         <Route path="/register-expert" element={<RegisterExpertPage />} />

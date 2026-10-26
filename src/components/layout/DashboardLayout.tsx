@@ -27,26 +27,12 @@ function GSHLogo({ size = 32 }: { size?: number }) {
   )
 }
 
-// ── Topbar brand marquee — logo + moving "Global Simulation Hub" text ─────
+// ── Topbar brand — logo + jina ───────────────────────────────────────────
 function TopbarBrand() {
-  const text = 'GLOBAL SIMULATION HUB'
-  const items = Array.from({ length: 6 })
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0 }}>
-      <GSHLogo size={26} />
-      <div className="topbar-marquee-mask" style={{ width: 190, overflow: 'hidden', position: 'relative' }}>
-        <div className="topbar-marquee-track" style={{ display: 'flex', width: 'max-content' }}>
-          {items.map((_, i) => (
-            <span key={i} style={{ display: 'inline-flex', alignItems: 'center', gap: 8, whiteSpace: 'nowrap', paddingRight: 22 }}>
-              <span style={{
-                fontFamily: 'Syne,sans-serif', fontWeight: 700, fontSize: 11.5, letterSpacing: '.08em',
-                background: 'linear-gradient(90deg,#0EA5E9,#7C3AED)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
-              }}>{text}</span>
-              <span style={{ width: 4, height: 4, borderRadius: '50%', background: '#CBD5E1', flexShrink: 0 }} />
-            </span>
-          ))}
-        </div>
-      </div>
+      <GSHLogo size={28} />
+      <span className="topbar-brand-name" style={{ fontWeight: 700, fontSize: 14, color: '#0A1F6B', whiteSpace: 'nowrap' }}>Global Simulation Hub</span>
     </div>
   )
 }
@@ -101,12 +87,9 @@ function navLinks(role: string) {
   return []
 }
 
-const ROLE_COLOR: Record<string, string> = {
-  client: '#0EA5E9', expert: '#10B981', admin: '#8B5CF6', developer: '#F59E0B'
-}
-const ROLE_BG: Record<string, string> = {
-  client: 'rgba(14,165,233,.1)', expert: 'rgba(16,185,129,.1)', admin: 'rgba(139,92,246,.1)', developer: 'rgba(245,158,11,.1)'
-}
+// Rangi moja ya brand kwa majukumu yote: orange ya logo kwenye navy
+const ROLE_COLOR: Record<string, string> = { client: '#F0A04B', expert: '#F0A04B', admin: '#F0A04B', developer: '#F0A04B' }
+const ROLE_BG: Record<string, string> = { client: 'rgba(255,255,255,.10)', expert: 'rgba(255,255,255,.10)', admin: 'rgba(255,255,255,.10)', developer: 'rgba(255,255,255,.10)' }
 
 export default function DashboardLayout() {
   const { user, logout, refreshToken } = useAuthStore()
@@ -136,19 +119,19 @@ export default function DashboardLayout() {
   useEffect(() => { setSidebarOpen(false) }, [])
 
   const SidebarContent = () => (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', background: '#0B1C3D', padding: '0' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', background: '#0A1F6B', padding: '0' }}>
       {/* Logo */}
       <div style={{ padding: collapsed ? '20px 16px' : '20px 20px', borderBottom: '1px solid rgba(255,255,255,.06)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, overflow: 'hidden' }}>
           <GSHLogo size={32} />
           {!collapsed && (
             <div style={{ overflow: 'hidden' }}>
-              <div style={{ color: '#fff', fontFamily: 'Syne, sans-serif', fontWeight: 700, fontSize: 13, lineHeight: 1.2, whiteSpace: 'nowrap' }}>Global Simulation</div>
-              <div style={{ color: '#38BDF8', fontSize: 9, fontWeight: 600, letterSpacing: '0.15em', textTransform: 'uppercase' }}>Hub — GSH</div>
+              <div style={{ color: '#fff', fontFamily: 'inherit', fontWeight: 700, fontSize: 13, lineHeight: 1.2, whiteSpace: 'nowrap' }}>Global Simulation</div>
+              <div style={{ color: '#A9C8F0', fontSize: 12, fontWeight: 600,}}>Hub — GSH</div>
             </div>
           )}
         </div>
-        <button onClick={() => setCollapsed(!collapsed)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'rgba(255,255,255,.3)', padding: 4, display: 'flex', alignItems: 'center', flexShrink: 0 }}>
+        <button onClick={() => setCollapsed(!collapsed)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'rgba(255,255,255,.6)', padding: 4, display: 'flex', alignItems: 'center', flexShrink: 0 }}>
           <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
             {collapsed
               ? <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
@@ -164,9 +147,9 @@ export default function DashboardLayout() {
           <NavLink key={to} to={to} end={end} style={({ isActive }) => ({
             display: 'flex', alignItems: 'center', gap: 12, padding: collapsed ? '10px 12px' : '10px 14px',
             borderRadius: 10, marginBottom: 2, textDecoration: 'none', transition: 'all .2s',
-            background: isActive ? roleBg : 'transparent',
-            color: isActive ? roleColor : 'rgba(255,255,255,.45)',
-            borderLeft: isActive ? `3px solid ${roleColor}` : '3px solid transparent',
+            background: isActive ? 'rgba(255,255,255,.12)' : 'transparent',
+            color: isActive ? '#fff' : 'rgba(255,255,255,.72)',
+            borderLeft: isActive ? '3px solid #E37914' : '3px solid transparent',
           })}>
             <span style={{ flexShrink: 0 }}>{icons[icon]}</span>
             {!collapsed && <span style={{ fontSize: 13, fontWeight: 500, whiteSpace: 'nowrap' }}>{label}</span>}
@@ -178,23 +161,23 @@ export default function DashboardLayout() {
       <div style={{ borderTop: '1px solid rgba(255,255,255,.06)', padding: '14px 10px' }}>
         {!collapsed && (
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', marginBottom: 4, background: 'rgba(255,255,255,.03)', borderRadius: 10 }}>
-            <div style={{ width: 32, height: 32, borderRadius: '50%', background: roleBg, border: `1.5px solid ${roleColor}30`, display: 'flex', alignItems: 'center', justifyContent: 'center', color: roleColor, fontWeight: 700, fontSize: 13, fontFamily: 'Syne,sans-serif', flexShrink: 0, overflow: 'hidden' }}>
+            <div style={{ width: 32, height: 32, borderRadius: '50%', background: roleBg, border: `1.5px solid ${roleColor}30`, display: 'flex', alignItems: 'center', justifyContent: 'center', color: roleColor, fontWeight: 700, fontSize: 13, fontFamily: 'inherit', flexShrink: 0, overflow: 'hidden' }}>
               {avatarSrc
                 ? <img src={avatarSrc} alt="Avatar" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                 : initials
               }
             </div>
             <div style={{ flex: 1, minWidth: 0 }}>
-              <p style={{ color: '#fff', fontSize: 13, fontWeight: 600, margin: 0, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', fontFamily: 'Syne,sans-serif' }}>
+              <p style={{ color: '#fff', fontSize: 13, fontWeight: 600, margin: 0, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', fontFamily: 'inherit' }}>
                 {user?.first_name ? `${user.first_name} ${user.last_name}` : user?.email}
               </p>
-              <span style={{ fontSize: 10, color: roleColor, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em' }}>{role}</span>
+              <span style={{ fontSize: 12, color: roleColor, fontWeight: 600, textTransform: 'capitalize' }}>{role}</span>
             </div>
           </div>
         )}
-        <button onClick={handleLogout} style={{ display: 'flex', alignItems: 'center', gap: 12, width: '100%', padding: collapsed ? '10px 12px' : '10px 14px', borderRadius: 10, background: 'none', border: 'none', cursor: 'pointer', color: 'rgba(239,68,68,.6)', fontSize: 13, fontWeight: 500, transition: 'all .2s', textAlign: 'left' }}
-          onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.background = 'rgba(239,68,68,.06)'; (e.currentTarget as HTMLButtonElement).style.color = '#EF4444' }}
-          onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.background = 'none'; (e.currentTarget as HTMLButtonElement).style.color = 'rgba(239,68,68,.6)' }}>
+        <button onClick={handleLogout} style={{ display: 'flex', alignItems: 'center', gap: 12, width: '100%', padding: collapsed ? '10px 12px' : '10px 14px', borderRadius: 10, background: 'none', border: 'none', cursor: 'pointer', color: 'rgba(255,255,255,.72)', fontSize: 13, fontWeight: 500, transition: 'all .2s', textAlign: 'left' }}
+          onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.background = 'rgba(255,255,255,.08)'; (e.currentTarget as HTMLButtonElement).style.color = '#fff' }}
+          onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.background = 'none'; (e.currentTarget as HTMLButtonElement).style.color = 'rgba(255,255,255,.72)' }}>
           <span style={{ flexShrink: 0 }}>{icons.logout}</span>
           {!collapsed && 'Logout'}
         </button>
@@ -203,13 +186,9 @@ export default function DashboardLayout() {
   )
 
   return (
-    <div style={{ display: 'flex', minHeight: '100vh', background: '#F8FAFC', fontFamily: "'DM Sans', sans-serif" }}>
+    <div style={{ display: 'flex', minHeight: '100vh', background: '#F5F7FC', fontFamily: 'inherit' }}>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=DM+Sans:wght@300;400;500;600&display=swap');
-        @keyframes topbarMarquee { from { transform: translateX(0); } to { transform: translateX(-50%); } }
-        .topbar-marquee-track { animation: topbarMarquee 14s linear infinite; }
-        .topbar-marquee-mask { -webkit-mask-image: linear-gradient(90deg, transparent, #000 10%, #000 85%, transparent); mask-image: linear-gradient(90deg, transparent, #000 10%, #000 85%, transparent); }
-        @media (max-width: 640px) { .topbar-marquee-mask { display: none !important; } }
+        @media (max-width: 640px) { .topbar-brand-name { display: none !important; } }
       `}</style>
 
       {/* Desktop sidebar */}
@@ -229,10 +208,10 @@ export default function DashboardLayout() {
       {/* Main area */}
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
         {/* Top bar */}
-        <header style={{ background: '#fff', borderBottom: '1px solid #F1F5F9', padding: '0 24px', height: 60, display: 'flex', alignItems: 'center', justifyContent: 'space-between', position: 'sticky', top: 0, zIndex: 40 }}>
+        <header style={{ background: '#fff', borderBottom: '1px solid #EBEFF8', padding: '0 24px', height: 60, display: 'flex', alignItems: 'center', justifyContent: 'space-between', position: 'sticky', top: 0, zIndex: 40 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 16, minWidth: 0 }}>
             {/* Mobile hamburger */}
-            <button onClick={() => setSidebarOpen(true)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#64748B', padding: 4, display: 'flex', alignItems: 'center', flexShrink: 0 }} className="mobile-menu-btn">
+            <button onClick={() => setSidebarOpen(true)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#4E5E82', padding: 4, display: 'flex', alignItems: 'center', flexShrink: 0 }} className="mobile-menu-btn">
               {icons.menu}
             </button>
             <style>{`.mobile-menu-btn { display: none !important; } @media(max-width:768px){.mobile-menu-btn{display:flex !important;}}`}</style>
@@ -242,22 +221,22 @@ export default function DashboardLayout() {
 
             {/* Breadcrumb */}
             <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0 }}>
-              <svg width="12" height="12" fill="none" viewBox="0 0 24 24" stroke="#CBD5E1" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" /></svg>
-              <span style={{ fontSize: 13, color: '#475569', fontWeight: 500, textTransform: 'capitalize', whiteSpace: 'nowrap' }}>{role} Portal</span>
+              <svg width="12" height="12" fill="none" viewBox="0 0 24 24" stroke="#C3CEE2" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" /></svg>
+              <span style={{ fontSize: 13, color: '#3A4A70', fontWeight: 500, textTransform: 'capitalize', whiteSpace: 'nowrap' }}>{role} Portal</span>
             </div>
           </div>
 
           <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexShrink: 0 }}>
             {/* Online indicator */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: 6, background: '#F0FDF4', border: '1px solid #BBF7D0', borderRadius: 999, padding: '4px 12px' }}>
-              <span style={{ width: 6, height: 6, background: '#10B981', borderRadius: '50%', display: 'inline-block' }} />
-              <span style={{ fontSize: 11, color: '#059669', fontWeight: 600 }}>Online</span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6, background: '#EDF8F1', border: '1px solid #BFE5CF', borderRadius: 999, padding: '4px 12px' }}>
+              <span style={{ width: 6, height: 6, background: '#1B9B63', borderRadius: '50%', display: 'inline-block' }} />
+              <span style={{ fontSize: 12, color: '#137A4E', fontWeight: 600 }}>Online</span>
             </div>
 
             <NotificationBell />
 
             {/* Avatar */}
-            <div style={{ width: 34, height: 34, borderRadius: '50%', background: roleBg, border: `2px solid ${roleColor}30`, display: 'flex', alignItems: 'center', justifyContent: 'center', color: roleColor, fontWeight: 700, fontSize: 13, fontFamily: 'Syne,sans-serif', cursor: 'default', overflow: 'hidden' }}>
+            <div style={{ width: 34, height: 34, borderRadius: '50%', background: '#0A1F6B', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontWeight: 700, fontSize: 13, fontFamily: 'inherit', cursor: 'default', overflow: 'hidden' }}>
               {avatarSrc
                 ? <img src={avatarSrc} alt="Avatar" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                 : initials
@@ -267,7 +246,7 @@ export default function DashboardLayout() {
         </header>
 
         {/* Page content */}
-        <main style={{ flex: 1, padding: '28px 28px', overflow: 'auto' }}>
+        <main className="dash-main" style={{ flex: 1, padding: '28px 28px', overflow: 'auto', minWidth: 0 }}>
           <Outlet />
         </main>
       </div>

@@ -41,9 +41,9 @@ const formatTSH = (value: number | string | undefined | null) => {
 
 function InfoRow({ label, value }: { label: string; value: React.ReactNode }) {
   return (
-    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 0', borderBottom: '1px solid #F8FAFC' }}>
-      <span style={{ fontSize: 12, color: '#94A3B8', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>{label}</span>
-      <span style={{ fontSize: 13, color: '#0F172A', fontWeight: 600 }}>{value}</span>
+    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 0', borderBottom: '1px solid #F5F7FC' }}>
+      <span style={{ fontSize: 12, color: '#667697', fontWeight: 600,}}>{label}</span>
+      <span style={{ fontSize: 13, color: '#0A1F4D', fontWeight: 600 }}>{value}</span>
     </div>
   )
 }
@@ -59,13 +59,13 @@ export default function AdminProjectDetail() {
   const [showRevisionBox, setShowRevisionBox] = useState(false)
   const [assignExpertId, setAssignExpertId] = useState('')
 
-  // ✅ React Query v5 — hakuna onSuccess hapa
+  // React Query v5 — hakuna onSuccess hapa
   const { data: project, isLoading } = useQuery<Project>({
     queryKey: ['admin-project', id],
     queryFn: () => projectApi.detail(Number(id)).then(r => r.data as Project),
   })
 
-  // ✅ useEffect badala ya onSuccess
+  // useEffect badala ya onSuccess
   useEffect(() => {
     if (project) setAdminNotes(project.admin_notes || '')
   }, [project?.id])
@@ -114,9 +114,9 @@ export default function AdminProjectDetail() {
 
   if (isLoading) return <LoadingSpinner label="Loading project..." />
   if (!project) return (
-    <div style={{ textAlign: 'center', padding: 60, color: '#94A3B8' }}>
+    <div style={{ textAlign: 'center', padding: 60, color: '#667697' }}>
       <p style={{ fontSize: 16, fontWeight: 700 }}>Project not found.</p>
-      <button onClick={() => navigate('/admin/projects')} style={{ marginTop: 12, padding: '8px 18px', borderRadius: 10, background: '#0B1C3D', color: '#fff', border: 'none', cursor: 'pointer', fontWeight: 700 }}>
+      <button onClick={() => navigate('/admin/projects')} style={{ marginTop: 12, padding: '8px 18px', borderRadius: 10, background: '#0D52CE', color: '#fff', border: 'none', cursor: 'pointer', fontWeight: 700 }}>
         Back to Projects
       </button>
     </div>
@@ -131,21 +131,21 @@ export default function AdminProjectDetail() {
     <div style={{ animation: 'fadeIn 0.4s ease' }}>
       <style>{`
         @keyframes fadeIn {
-          from { opacity: 0; transform: translateY(6px); }
+          from { opacity: 0; transform: translateY(0); }
           to { opacity: 1; transform: translateY(0); }
         }
         .detail-card-anim {
           transition: transform 0.2s ease, box-shadow 0.2s ease;
         }
         .detail-card-anim:hover {
-          transform: translateY(-2px);
-          box-shadow: 0 8px 20px rgba(15, 23, 42, 0.07);
+          transform: translateY(0);
+          box-shadow: 0 8px 20px rgba(10,31,77, 0.07);
         }
         .detail-btn {
           transition: transform 0.15s ease, opacity 0.15s ease, background 0.15s ease;
         }
         .detail-btn:hover {
-          transform: scale(1.04);
+          transform: scale(1);
           opacity: 0.9;
         }
         .detail-btn:active {
@@ -155,14 +155,14 @@ export default function AdminProjectDetail() {
           animation: slideDown 0.2s ease;
         }
         @keyframes slideDown {
-          from { opacity: 0; transform: translateY(-6px); }
+          from { opacity: 0; transform: translateY(0); }
           to { opacity: 1; transform: translateY(0); }
         }
         .file-row {
           transition: background 0.15s ease, transform 0.15s ease;
         }
         .file-row:hover {
-          background: #F1F5F9;
+          background: #EBEFF8;
           transform: translateX(2px);
         }
       `}</style>
@@ -172,12 +172,12 @@ export default function AdminProjectDetail() {
         <button
           className="detail-btn"
           onClick={() => navigate('/admin/projects')}
-          style={{ display: 'flex', alignItems: 'center', gap: 6, background: '#F1F5F9', border: 'none', borderRadius: 10, padding: '8px 14px', cursor: 'pointer', fontSize: 13, color: '#64748B', fontWeight: 600 }}
+          style={{ display: 'flex', alignItems: 'center', gap: 6, background: '#EBEFF8', border: 'none', borderRadius: 10, padding: '8px 14px', cursor: 'pointer', fontSize: 13, color: '#4E5E82', fontWeight: 600 }}
         >
           <ArrowLeft size={14} strokeWidth={2.2} /> Back
         </button>
         <div style={{ flex: 1 }}>
-          <h1 style={{ fontFamily: 'Syne,sans-serif', fontSize: 20, fontWeight: 800, color: '#0F172A', margin: 0 }}>
+          <h1 style={{ fontFamily: 'inherit', fontSize: 20, fontWeight: 700, color: '#0A1F4D', margin: 0 }}>
             {project.title}
           </h1>
           <div style={{ display: 'flex', gap: 8, marginTop: 6, flexWrap: 'wrap' }}>
@@ -185,7 +185,7 @@ export default function AdminProjectDetail() {
             <SoftwareLabel software={project.software} />
             <DeliveryBadge type={project.delivery_type} />
             {project.is_nda && (
-              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 11, fontWeight: 700, color: '#7C3AED', background: '#F5F3FF', padding: '3px 10px', borderRadius: 999, border: '1px solid #DDD6FE' }}>
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 12, fontWeight: 700, color: '#2E4DA7', background: '#EEF2FB', padding: '3px 10px', borderRadius: 999, border: '1px solid #C9D4F0' }}>
                 <Lock size={11} strokeWidth={2.4} /> NDA
               </span>
             )}
@@ -195,11 +195,11 @@ export default function AdminProjectDetail() {
 
       {/* QC Banner */}
       {project.status === 'qc' && (
-        <div style={{ background: '#FFFBEB', border: '1px solid #FDE68A', borderRadius: 12, padding: '12px 18px', marginBottom: 20, display: 'flex', gap: 10, alignItems: 'flex-start' }}>
-          <AlertTriangle size={18} strokeWidth={2} color="#D97706" style={{ flexShrink: 0, marginTop: 1 }} />
+        <div style={{ background: '#FFF8E6', border: '1px solid #F8DC8A', borderRadius: 12, padding: '12px 18px', marginBottom: 20, display: 'flex', gap: 10, alignItems: 'flex-start' }}>
+          <AlertTriangle size={18} strokeWidth={2} color="#B85F00" style={{ flexShrink: 0, marginTop: 1 }} />
           <div>
-            <p style={{ fontSize: 13, fontWeight: 700, color: '#92400E', margin: 0 }}>Ready for Quality Check</p>
-            <p style={{ fontSize: 12, color: '#B45309', margin: '3px 0 0' }}>Expert has submitted. Review and approve to deliver to client, or request revision.</p>
+            <p style={{ fontSize: 13, fontWeight: 700, color: '#7A4A00', margin: 0 }}>Ready for Quality Check</p>
+            <p style={{ fontSize: 12, color: '#9A5B00', margin: '3px 0 0' }}>Expert has submitted. Review and approve to deliver to client, or request revision.</p>
           </div>
         </div>
       )}
@@ -217,7 +217,7 @@ export default function AdminProjectDetail() {
                 <button
                   className="detail-btn"
                   onClick={() => clientUser && openChatMutation.mutate(clientUser.id)}
-                  style={{ display: 'inline-flex', alignItems: 'center', gap: 4, padding: '3px 10px', borderRadius: 8, background: '#EFF6FF', color: '#2563EB', border: 'none', cursor: 'pointer', fontSize: 11, fontWeight: 700 }}
+                  style={{ display: 'inline-flex', alignItems: 'center', gap: 4, padding: '3px 10px', borderRadius: 8, background: '#EAF1FD', color: '#0D52CE', border: 'none', cursor: 'pointer', fontSize: 12, fontWeight: 700 }}
                 >
                   <MessageCircle size={12} strokeWidth={2.2} /> Chat
                 </button>
@@ -230,12 +230,12 @@ export default function AdminProjectDetail() {
                     <button
                       className="detail-btn"
                       onClick={() => openChatMutation.mutate(expertUser.id)}
-                      style={{ display: 'inline-flex', alignItems: 'center', gap: 4, padding: '3px 10px', borderRadius: 8, background: '#F0FDF4', color: '#059669', border: 'none', cursor: 'pointer', fontSize: 11, fontWeight: 700 }}
+                      style={{ display: 'inline-flex', alignItems: 'center', gap: 4, padding: '3px 10px', borderRadius: 8, background: '#EDF8F1', color: '#137A4E', border: 'none', cursor: 'pointer', fontSize: 12, fontWeight: 700 }}
                     >
                       <MessageCircle size={12} strokeWidth={2.2} /> Chat
                     </button>
                   </div>
-                : <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, color: '#F59E0B', fontWeight: 700 }}>
+                : <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, color: '#9A5B00', fontWeight: 700 }}>
                     <AlertTriangle size={13} strokeWidth={2.2} /> Not assigned
                   </span>
             } />
@@ -243,25 +243,25 @@ export default function AdminProjectDetail() {
             <InfoRow label="Submitted" value={safeDistance(project.created_at)} />
             <InfoRow label="Payment" value={
               project.is_fully_paid
-                ? <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, color: '#059669', fontWeight: 700 }}>
+                ? <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, color: '#137A4E', fontWeight: 700 }}>
                     <CheckCircle2 size={14} strokeWidth={2.2} /> Fully Paid
                   </span>
                 : project.advance_paid && project.advance_paid !== '0.00' && project.advance_paid !== '0'
-                ? <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, color: '#D97706', fontWeight: 700 }}>
+                ? <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, color: '#B85F00', fontWeight: 700 }}>
                     <Zap size={14} strokeWidth={2.2} /> Advance: {formatTSH(project.advance_paid)}
                   </span>
-                : <span style={{ color: '#94A3B8' }}>Not paid</span>
+                : <span style={{ color: '#667697' }}>Not paid</span>
             } />
             {project.include_explanation && (
               <InfoRow label="Explanation" value={
-                <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, color: '#7C3AED', fontWeight: 700 }}>
+                <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, color: '#2E4DA7', fontWeight: 700 }}>
                   Included <Check size={13} strokeWidth={2.4} />
                 </span>
               } />
             )}
             <div style={{ marginTop: 14 }}>
-              <p style={{ fontSize: 12, color: '#94A3B8', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 8 }}>Description</p>
-              <p style={{ fontSize: 13, color: '#374151', lineHeight: 1.7, margin: 0 }}>{project.description}</p>
+              <p style={{ fontSize: 12, color: '#667697', fontWeight: 600, marginBottom: 8 }}>Description</p>
+              <p style={{ fontSize: 13, color: '#2B3A60', lineHeight: 1.7, margin: 0 }}>{project.description}</p>
             </div>
           </Card>
 
@@ -272,21 +272,21 @@ export default function AdminProjectDetail() {
               {latestProgress && (
                 <div style={{ marginBottom: 16 }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
-                    <span style={{ fontSize: 13, color: '#374151', fontWeight: 700 }}>Overall Progress</span>
-                    <span style={{ fontSize: 13, fontWeight: 800, color: '#0EA5E9' }}>{latestProgress.percentage}%</span>
+                    <span style={{ fontSize: 13, color: '#2B3A60', fontWeight: 700 }}>Overall Progress</span>
+                    <span style={{ fontSize: 13, fontWeight: 700, color: '#0D52CE' }}>{latestProgress.percentage}%</span>
                   </div>
                   <ProgressBar percentage={latestProgress.percentage} />
-                  <p style={{ fontSize: 12, color: '#94A3B8', margin: '6px 0 0' }}>Time remaining: {latestProgress.time_remaining}</p>
+                  <p style={{ fontSize: 12, color: '#667697', margin: '6px 0 0' }}>Time remaining: {latestProgress.time_remaining}</p>
                 </div>
               )}
               <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                 {project.progress_updates.map((u: ProjectProgress) => (
-                  <div key={u.id} className="file-row" style={{ padding: '10px 14px', background: '#F8FAFC', borderRadius: 10, border: '1px solid #F1F5F9' }}>
+                  <div key={u.id} className="file-row" style={{ padding: '10px 14px', background: '#F5F7FC', borderRadius: 10, border: '1px solid #EBEFF8' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
-                      <span style={{ fontSize: 13, fontWeight: 700, color: '#0F172A' }}>{u.percentage}% — {u.time_remaining} remaining</span>
-                      <span style={{ fontSize: 11, color: '#94A3B8' }}>{safeDistance(u.created_at)}</span>
+                      <span style={{ fontSize: 13, fontWeight: 700, color: '#0A1F4D' }}>{u.percentage}% — {u.time_remaining} remaining</span>
+                      <span style={{ fontSize: 12, color: '#667697' }}>{safeDistance(u.created_at)}</span>
                     </div>
-                    {u.note && <p style={{ fontSize: 12, color: '#64748B', margin: 0, lineHeight: 1.5 }}>{u.note}</p>}
+                    {u.note && <p style={{ fontSize: 12, color: '#4E5E82', margin: 0, lineHeight: 1.5 }}>{u.note}</p>}
                   </div>
                 ))}
               </div>
@@ -299,20 +299,20 @@ export default function AdminProjectDetail() {
               <SectionTitle>Project Files</SectionTitle>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                 {project.files.map((f: ProjectFile) => (
-                  <div key={f.id} className="file-row" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 14px', background: '#F8FAFC', borderRadius: 10, border: '1px solid #F1F5F9' }}>
+                  <div key={f.id} className="file-row" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 14px', background: '#F5F7FC', borderRadius: 10, border: '1px solid #EBEFF8' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                      <div style={{ width: 34, height: 34, borderRadius: 8, background: '#EFF6FF', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                        <Paperclip size={16} strokeWidth={2} color="#2563EB" />
+                      <div style={{ width: 34, height: 34, borderRadius: 8, background: '#EAF1FD', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                        <Paperclip size={16} strokeWidth={2} color="#0D52CE" />
                       </div>
                       <div>
-                        <p style={{ fontSize: 13, fontWeight: 600, margin: 0, color: '#0F172A' }}>{f.original_name}</p>
-                        <p style={{ fontSize: 11, color: '#94A3B8', margin: '2px 0 0' }}>
+                        <p style={{ fontSize: 13, fontWeight: 600, margin: 0, color: '#0A1F4D' }}>{f.original_name}</p>
+                        <p style={{ fontSize: 12, color: '#667697', margin: '2px 0 0' }}>
                           {f.file_type.replace(/_/g, ' ')} · {(f.file_size / 1024).toFixed(1)} KB
                         </p>
                       </div>
                     </div>
                     <a href={f.file} target="_blank" rel="noreferrer" className="detail-btn"
-                      style={{ padding: '5px 12px', borderRadius: 8, background: '#EFF6FF', color: '#2563EB', fontSize: 12, fontWeight: 700, textDecoration: 'none' }}>
+                      style={{ padding: '5px 12px', borderRadius: 8, background: '#EAF1FD', color: '#0D52CE', fontSize: 12, fontWeight: 700, textDecoration: 'none' }}>
                       Download
                     </a>
                   </div>
@@ -327,9 +327,9 @@ export default function AdminProjectDetail() {
               <SectionTitle>Client Review</SectionTitle>
               <StarRating rating={project.review.rating} size={18} />
               {project.review.comment && (
-                <p style={{ fontSize: 13, color: '#374151', lineHeight: 1.6, marginTop: 10 }}>"{project.review.comment}"</p>
+                <p style={{ fontSize: 13, color: '#2B3A60', lineHeight: 1.6, marginTop: 10 }}>"{project.review.comment}"</p>
               )}
-              <p style={{ fontSize: 11, color: '#94A3B8', marginTop: 8 }}>
+              <p style={{ fontSize: 12, color: '#667697', marginTop: 8 }}>
                 {safeDistance(project.review.created_at)}
               </p>
             </Card>
@@ -343,7 +343,7 @@ export default function AdminProjectDetail() {
               onChange={e => setAdminNotes(e.target.value)}
               placeholder="Internal notes about this project..."
               rows={4}
-              style={{ width: '100%', padding: '10px 12px', borderRadius: 10, border: '1.5px solid #E2E8F0', fontSize: 13, fontFamily: 'inherit', resize: 'vertical', outline: 'none', boxSizing: 'border-box', color: '#374151', transition: 'border-color 0.15s ease' }}
+              style={{ width: '100%', padding: '10px 12px', borderRadius: 10, border: '1.5px solid #DCE3F0', fontSize: 13, fontFamily: 'inherit', resize: 'vertical', outline: 'none', boxSizing: 'border-box', color: '#2B3A60', transition: 'border-color 0.15s ease' }}
             />
             <div style={{ marginTop: 10, textAlign: 'right' }}>
               <Btn size="sm" onClick={() => saveNotesMutation.mutate()} disabled={saveNotesMutation.isPending}>
@@ -360,18 +360,18 @@ export default function AdminProjectDetail() {
           {!project.client_price && (
             <Card className="detail-card-anim">
               <SectionTitle>Set Client Price</SectionTitle>
-              <p style={{ fontSize: 12, color: '#94A3B8', margin: '0 0 12px', lineHeight: 1.5 }}>
+              <p style={{ fontSize: 12, color: '#667697', margin: '0 0 12px', lineHeight: 1.5 }}>
                 Set the price for this project. Client will be notified.
               </p>
               <div style={{ display: 'flex', gap: 8 }}>
                 <div style={{ position: 'relative', flex: 1 }}>
-                  <span style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', color: '#94A3B8', fontWeight: 700, fontSize: 12 }}>TSH</span>
+                  <span style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', color: '#667697', fontWeight: 700, fontSize: 12 }}>TSH</span>
                   <input
                     type="number"
                     placeholder="0"
                     value={priceInput}
                     onChange={e => setPriceInput(e.target.value)}
-                    style={{ width: '100%', padding: '9px 12px 9px 42px', borderRadius: 10, border: '1.5px solid #E2E8F0', fontSize: 14, fontWeight: 700, outline: 'none', boxSizing: 'border-box', fontFamily: 'Syne,sans-serif' }}
+                    style={{ width: '100%', padding: '9px 12px 9px 42px', borderRadius: 10, border: '1.5px solid #DCE3F0', fontSize: 14, fontWeight: 700, outline: 'none', boxSizing: 'border-box', fontFamily: 'inherit' }}
                   />
                 </div>
                 <Btn variant="accent" size="sm" className="detail-btn" onClick={() => setPriceMutation.mutate()} disabled={!priceInput || setPriceMutation.isPending}>
@@ -382,14 +382,14 @@ export default function AdminProjectDetail() {
           )}
 
           {project.client_price && (
-            <Card style={{ border: '1.5px solid #BBF7D0', background: '#F0FDF4' }}>
-              <p style={{ fontSize: 12, color: '#64748B', margin: '0 0 4px', textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: 600 }}>Client Price</p>
-              <p style={{ fontSize: 24, fontWeight: 800, color: '#059669', margin: 0, fontFamily: 'Syne,sans-serif' }}>{formatTSH(project.client_price)}</p>
-              <p style={{ fontSize: 12, color: '#94A3B8', margin: '6px 0 0', display: 'flex', alignItems: 'center', gap: 4 }}>
+            <Card style={{ border: '1.5px solid #BFE5CF', background: '#EDF8F1' }}>
+              <p style={{ fontSize: 12, color: '#4E5E82', margin: '0 0 4px', fontWeight: 600 }}>Client Price</p>
+              <p style={{ fontSize: 24, fontWeight: 700, color: '#137A4E', margin: 0, fontFamily: 'inherit' }}>{formatTSH(project.client_price)}</p>
+              <p style={{ fontSize: 12, color: '#667697', margin: '6px 0 0', display: 'flex', alignItems: 'center', gap: 4 }}>
                 {project.is_fully_paid
-                  ? <><CheckCircle2 size={13} strokeWidth={2.2} color="#059669" /> Fully paid</>
+                  ? <><CheckCircle2 size={13} strokeWidth={2.2} color="#137A4E" /> Fully paid</>
                   : project.advance_paid && project.advance_paid !== '0.00'
-                  ? <><Zap size={13} strokeWidth={2.2} color="#D97706" /> Advance: {formatTSH(project.advance_paid)}</>
+                  ? <><Zap size={13} strokeWidth={2.2} color="#B85F00" /> Advance: {formatTSH(project.advance_paid)}</>
                   : 'Awaiting payment'}
               </p>
             </Card>
@@ -402,7 +402,7 @@ export default function AdminProjectDetail() {
               <select
                 value={assignExpertId}
                 onChange={e => setAssignExpertId(e.target.value)}
-                style={{ width: '100%', padding: '9px 12px', borderRadius: 10, border: '1.5px solid #E2E8F0', fontSize: 13, marginBottom: 10, outline: 'none', fontFamily: 'inherit', color: '#374151' }}
+                style={{ width: '100%', padding: '9px 12px', borderRadius: 10, border: '1.5px solid #DCE3F0', fontSize: 13, marginBottom: 10, outline: 'none', fontFamily: 'inherit', color: '#2B3A60' }}
               >
                 <option value="">Select expert...</option>
                 {experts.map((e: User) => (
@@ -426,16 +426,16 @@ export default function AdminProjectDetail() {
 
           {/* QC Decision */}
           {project.status === 'qc' && (
-            <Card style={{ border: '1.5px solid #FDE68A', background: '#FFFBEB' }}>
+            <Card style={{ border: '1.5px solid #F8DC8A', background: '#FFF8E6' }}>
               <SectionTitle>QC Decision</SectionTitle>
-              <p style={{ fontSize: 12, color: '#92400E', margin: '0 0 14px', lineHeight: 1.5 }}>
+              <p style={{ fontSize: 12, color: '#7A4A00', margin: '0 0 14px', lineHeight: 1.5 }}>
                 Review the expert's submission and make a decision.
               </p>
               <Btn
                 variant="primary"
                 size="md"
                 className="detail-btn"
-                style={{ width: '100%', marginBottom: 8, background: '#059669', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}
+                style={{ width: '100%', marginBottom: 8, background: '#137A4E', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}
                 onClick={() => approveMutation.mutate({ action: 'approve' })}
                 disabled={approveMutation.isPending}
               >
@@ -452,7 +452,7 @@ export default function AdminProjectDetail() {
                     onChange={e => setRevisionReason(e.target.value)}
                     placeholder="Reason for revision..."
                     rows={3}
-                    style={{ width: '100%', padding: '8px 10px', borderRadius: 8, border: '1.5px solid #E2E8F0', fontSize: 12, fontFamily: 'inherit', resize: 'none', marginBottom: 8, outline: 'none', boxSizing: 'border-box' }}
+                    style={{ width: '100%', padding: '8px 10px', borderRadius: 8, border: '1.5px solid #DCE3F0', fontSize: 12, fontFamily: 'inherit', resize: 'none', marginBottom: 8, outline: 'none', boxSizing: 'border-box' }}
                   />
                   <div style={{ display: 'flex', gap: 8 }}>
                     <Btn
@@ -515,7 +515,7 @@ function UploadFileBox({ projectId, onSuccess }: { projectId: number; onSuccess:
       <select
         value={fileType}
         onChange={e => setFileType(e.target.value)}
-        style={{ width: '100%', padding: '8px 10px', borderRadius: 8, border: '1.5px solid #E2E8F0', fontSize: 12, marginBottom: 8, outline: 'none', fontFamily: 'inherit', color: '#374151' }}
+        style={{ width: '100%', padding: '8px 10px', borderRadius: 8, border: '1.5px solid #DCE3F0', fontSize: 12, marginBottom: 8, outline: 'none', fontFamily: 'inherit', color: '#2B3A60' }}
       >
         {FILE_TYPES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
       </select>

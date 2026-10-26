@@ -137,3 +137,8 @@ export const recruitApi = {
   adminList:   (params?: object) => api.get('/recruitment/admin/applications/', { params }),
   adminReview: (id: number, data: object) => api.post(`/recruitment/admin/applications/${id}/review/`, data),
 }
+
+// Maudhui ya umma ya landing page (video + picha za simulation) — yanatoka backend
+export const publicApi = {
+  showcase: () => api.get('/public/showcase/'),
+}

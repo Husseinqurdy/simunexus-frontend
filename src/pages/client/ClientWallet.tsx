@@ -71,63 +71,63 @@ export default function ClientWallet() {
 
   if (isLoading) return (
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: 400, gap: 12 }}>
-      <div style={{ width: 36, height: 36, borderRadius: '50%', border: '3px solid #E2E8F0', borderTop: '3px solid #0EA5E9', animation: 'spin .8s linear infinite' }} />
+      <div style={{ width: 36, height: 36, borderRadius: '50%', border: '3px solid #DCE3F0', borderTop: '3px solid #0D52CE', animation: 'spin .8s linear infinite' }} />
       <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
     </div>
   )
 
   return (
-    <div style={{ fontFamily: "'DM Sans',sans-serif", maxWidth: 680, margin: '0 auto' }}>
+    <div style={{ fontFamily: 'inherit', maxWidth: 680, margin: '0 auto' }}>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@400;500;600&display=swap');
-        @keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+        
+        @keyframes fadeUp{from{opacity:0;transform:translateY(0)}to{opacity:1;transform:translateY(0)}}
         @keyframes spin{to{transform:rotate(360deg)}}
         .fu{animation:fadeUp .5s cubic-bezier(.22,.61,.36,1) both}
-        .tuinput{width:100%;background:#F8FAFC;border:1.5px solid #E2E8F0;border-radius:10px;padding:11px 14px;font-size:14px;color:#0F172A;font-family:'DM Sans',sans-serif;transition:all .2s;outline:none}
-        .tuinput:focus{border-color:#0EA5E9;background:#fff;box-shadow:0 0 0 4px rgba(14,165,233,.08)}
-        .tulabel{display:block;font-size:11.5px;font-weight:600;color:#64748B;letter-spacing:.04em;text-transform:uppercase;margin-bottom:6px}
-        .tubtn{width:100%;display:flex;align-items:center;justify-content:center;gap:8px;background:linear-gradient(120deg,#0EA5E9,#7C3AED);color:#fff;font-family:'Syne',sans-serif;font-weight:700;font-size:14.5px;padding:13px;border-radius:12px;border:none;cursor:pointer;transition:all .2s}
-        .tubtn:hover:not(:disabled){box-shadow:0 8px 22px rgba(124,58,237,.3);transform:translateY(-1px)}
+        .tuinput{width:100%;background:#F5F7FC;border:1.5px solid #DCE3F0;border-radius:10px;padding:11px 14px;font-size:14px;color:#0A1F4D;font-family: inherit;transition:all .2s;outline:none}
+        .tuinput:focus{border-color:#0D52CE;background:#fff;box-shadow:0 0 0 4px rgba(13,82,206,.08)}
+        .tulabel{display:block;font-size:12px;font-weight:600;color:#4E5E82;margin-bottom:6px}
+        .tubtn{width:100%;display:flex;align-items:center;justify-content:center;gap:8px;background:#0D52CE;color:#fff;font-family: inherit;font-weight:700;font-size:14px;padding:13px;border-radius:12px;border:none;cursor:pointer;transition:all .2s}
+        .tubtn:hover:not(:disabled){box-shadow:0 8px 22px rgba(46,77,167,.3);transform:translateY(0)}
         .tubtn:disabled{opacity:.6;cursor:not-allowed}
       `}</style>
 
       <div className="fu" style={{ marginBottom: 24 }}>
-        <h1 style={{ fontFamily: 'Syne,sans-serif', fontSize: 24, fontWeight: 800, color: '#0F172A', margin: 0 }}>My Wallet</h1>
-        <p style={{ color: '#94A3B8', fontSize: 13, margin: '4px 0 0' }}>Manage your balance and view transaction history.</p>
+        <h1 style={{ fontFamily: 'inherit', fontSize: 24, fontWeight: 700, color: '#0A1F4D', margin: 0 }}>My Wallet</h1>
+        <p style={{ color: '#667697', fontSize: 13, margin: '4px 0 0' }}>Manage your balance and view transaction history.</p>
       </div>
 
       {/* Balance hero card */}
-      <div className="fu" style={{ background: 'linear-gradient(135deg,#0B1C3D,#1A3A7A)', borderRadius: 24, padding: '32px 28px', marginBottom: 16, position: 'relative', overflow: 'hidden' }}>
-        <div style={{ position: 'absolute', top: -40, right: -40, width: 160, height: 160, borderRadius: '50%', background: 'rgba(124,58,237,.10)' }} />
-        <div style={{ position: 'absolute', bottom: -60, left: -20, width: 200, height: 200, borderRadius: '50%', background: 'rgba(14,165,233,.06)' }} />
+      <div className="fu" style={{ background: 'linear-gradient(135deg,#0A1F6B,#12348C)', borderRadius: 16, padding: '32px 28px', marginBottom: 16, position: 'relative', overflow: 'hidden' }}>
+        <div style={{ position: 'absolute', top: -40, right: -40, width: 160, height: 160, borderRadius: '50%', background: 'rgba(46,77,167,.10)' }} />
+        <div style={{ position: 'absolute', bottom: -60, left: -20, width: 200, height: 200, borderRadius: '50%', background: 'rgba(13,82,206,.06)' }} />
         <div style={{ position: 'relative' }}>
-          <p style={{ fontSize: 12, color: 'rgba(255,255,255,.5)', fontWeight: 600, letterSpacing: '.08em', textTransform: 'uppercase', margin: '0 0 8px' }}>Available Balance</p>
-          <p style={{ fontFamily: 'Syne,sans-serif', fontWeight: 800, fontSize: 40, color: '#fff', margin: '0 0 20px', lineHeight: 1 }}>
+          <p style={{ fontSize: 12, color: 'rgba(255,255,255,.5)', fontWeight: 600, margin: '0 0 8px' }}>Available Balance</p>
+          <p style={{ fontFamily: 'inherit', fontWeight: 700, fontSize: 36, color: '#fff', margin: '0 0 20px', lineHeight: 1 }}>
             {fmtTZS(parseFloat(wallet?.balance || '0'))}
           </p>
           <div style={{ display: 'flex', gap: 20 }}>
             <div>
-              <p style={{ fontSize: 11, color: 'rgba(255,255,255,.4)', margin: '0 0 3px', textTransform: 'uppercase', letterSpacing: '.06em' }}>Total Credited</p>
-              <p style={{ fontFamily: 'Syne,sans-serif', fontWeight: 700, fontSize: 16, color: '#4ADE80', margin: 0 }}>+{fmtTZS(totalCredit)}</p>
+              <p style={{ fontSize: 12, color: 'rgba(255,255,255,.4)', margin: '0 0 3px',}}>Total Credited</p>
+              <p style={{ fontFamily: 'inherit', fontWeight: 700, fontSize: 16, color: '#5BC08C', margin: 0 }}>+{fmtTZS(totalCredit)}</p>
             </div>
             <div style={{ width: 1, background: 'rgba(255,255,255,.1)' }} />
             <div>
-              <p style={{ fontSize: 11, color: 'rgba(255,255,255,.4)', margin: '0 0 3px', textTransform: 'uppercase', letterSpacing: '.06em' }}>Total Spent</p>
-              <p style={{ fontFamily: 'Syne,sans-serif', fontWeight: 700, fontSize: 16, color: '#F87171', margin: 0 }}>-{fmtTZS(totalDebit)}</p>
+              <p style={{ fontSize: 12, color: 'rgba(255,255,255,.4)', margin: '0 0 3px',}}>Total Spent</p>
+              <p style={{ fontFamily: 'inherit', fontWeight: 700, fontSize: 16, color: '#E27A7A', margin: 0 }}>-{fmtTZS(totalDebit)}</p>
             </div>
           </div>
         </div>
       </div>
 
       {/* Top-up */}
-      <div className="fu" style={{ background: '#fff', borderRadius: 20, border: '1px solid #F1F5F9', padding: '22px 24px', marginBottom: 16 }}>
+      <div className="fu" style={{ background: '#fff', borderRadius: 16, border: '1px solid #EBEFF8', padding: '22px 24px', marginBottom: 16 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 18 }}>
-          <div style={{ width: 36, height: 36, borderRadius: 10, background: '#F0F9FF', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-            <Icon name="phone" size={18} color="#0EA5E9" />
+          <div style={{ width: 36, height: 36, borderRadius: 10, background: '#EAF1FD', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+            <Icon name="phone" size={18} color="#0D52CE" />
           </div>
           <div>
-            <h2 style={{ fontFamily: 'Syne,sans-serif', fontSize: 15.5, fontWeight: 700, color: '#0F172A', margin: 0 }}>Top Up Your Wallet</h2>
-            <p style={{ fontSize: 12, color: '#94A3B8', margin: '2px 0 0' }}>You'll choose M-Pesa, Tigo Pesa, Airtel Money, HaloPesa, or card on the next page.</p>
+            <h2 style={{ fontFamily: 'inherit', fontSize: 16, fontWeight: 700, color: '#0A1F4D', margin: 0 }}>Top Up Your Wallet</h2>
+            <p style={{ fontSize: 12, color: '#667697', margin: '2px 0 0' }}>You'll choose M-Pesa, Tigo Pesa, Airtel Money, HaloPesa, or card on the next page.</p>
           </div>
         </div>
 
@@ -148,15 +148,15 @@ export default function ClientWallet() {
       </div>
 
       {/* Manual top-up info (bank transfer, etc.) */}
-      <div className="fu" style={{ background: '#F0F9FF', border: '1px solid #BAE6FD', borderRadius: 16, padding: '16px 20px', marginBottom: 20 }}>
+      <div className="fu" style={{ background: '#EAF1FD', border: '1px solid #C4DBF1', borderRadius: 12, padding: '16px 20px', marginBottom: 20 }}>
         <div style={{ display: 'flex', gap: 12, alignItems: 'flex-start' }}>
-          <Icon name="info" size={20} color="#0369A1" />
+          <Icon name="info" size={20} color="#0A42A8" />
           <div>
-            <p style={{ fontFamily: 'Syne,sans-serif', fontWeight: 700, fontSize: 14, color: '#0369A1', margin: '0 0 4px' }}>Prefer a Bank Transfer?</p>
-            <p style={{ fontSize: 13, color: '#0284C7', margin: '0 0 8px', lineHeight: 1.6 }}>
+            <p style={{ fontFamily: 'inherit', fontWeight: 700, fontSize: 14, color: '#0A42A8', margin: '0 0 4px' }}>Prefer a Bank Transfer?</p>
+            <p style={{ fontSize: 13, color: '#0A42A8', margin: '0 0 8px', lineHeight: 1.6 }}>
               Contact our team to top up via bank transfer or another method not listed above.
             </p>
-            <a href="mailto:support@simunexus.com" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: '#0EA5E9', color: '#fff', fontFamily: 'Syne,sans-serif', fontWeight: 700, fontSize: 12, padding: '8px 16px', borderRadius: 8, textDecoration: 'none' }}>
+            <a href="mailto:support@simunexus.com" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: '#0D52CE', color: '#fff', fontFamily: 'inherit', fontWeight: 700, fontSize: 12, padding: '8px 16px', borderRadius: 8, textDecoration: 'none' }}>
               Contact Support →
             </a>
           </div>
@@ -169,52 +169,52 @@ export default function ClientWallet() {
           { icon: 'card' as IconName, title: 'Pay 50% Advance', desc: 'Start your project with just 50% upfront. Pay the rest on delivery.' },
           { icon: 'cash' as IconName, title: 'Full Payment Discount', desc: 'Pay in full upfront and get the best pricing from our experts.' },
         ].map(({ icon, title, desc }) => (
-          <div key={title} style={{ background: '#fff', borderRadius: 16, padding: '16px', border: '1px solid #F1F5F9' }}>
-            <div style={{ width: 34, height: 34, borderRadius: 9, background: '#F0F9FF', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <Icon name={icon} size={17} color="#0EA5E9" />
+          <div key={title} style={{ background: '#fff', borderRadius: 12, padding: '16px', border: '1px solid #EBEFF8' }}>
+            <div style={{ width: 34, height: 34, borderRadius: 8, background: '#EAF1FD', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <Icon name={icon} size={17} color="#0D52CE" />
             </div>
-            <p style={{ fontFamily: 'Syne,sans-serif', fontWeight: 700, fontSize: 13, color: '#0F172A', margin: '8px 0 4px' }}>{title}</p>
-            <p style={{ fontSize: 12, color: '#94A3B8', margin: 0, lineHeight: 1.5 }}>{desc}</p>
+            <p style={{ fontFamily: 'inherit', fontWeight: 700, fontSize: 13, color: '#0A1F4D', margin: '8px 0 4px' }}>{title}</p>
+            <p style={{ fontSize: 12, color: '#667697', margin: 0, lineHeight: 1.5 }}>{desc}</p>
           </div>
         ))}
       </div>
 
       {/* Transaction history */}
-      <div className="fu" style={{ background: '#fff', borderRadius: 20, border: '1px solid #F1F5F9', overflow: 'hidden' }}>
-        <div style={{ padding: '18px 22px', borderBottom: '1px solid #F8FAFC', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <h2 style={{ fontFamily: 'Syne,sans-serif', fontSize: 16, fontWeight: 700, color: '#0F172A', margin: 0 }}>Transaction History</h2>
-          <span style={{ fontSize: 12, color: '#94A3B8' }}>{transactions.length} transactions</span>
+      <div className="fu" style={{ background: '#fff', borderRadius: 16, border: '1px solid #EBEFF8', overflow: 'hidden' }}>
+        <div style={{ padding: '18px 22px', borderBottom: '1px solid #F5F7FC', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <h2 style={{ fontFamily: 'inherit', fontSize: 16, fontWeight: 700, color: '#0A1F4D', margin: 0 }}>Transaction History</h2>
+          <span style={{ fontSize: 12, color: '#667697' }}>{transactions.length} transactions</span>
         </div>
         {transactions.length === 0 ? (
           <div style={{ textAlign: 'center', padding: '52px 24px' }}>
-            <div style={{ width: 56, height: 56, borderRadius: '50%', background: '#F8FAFC', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 14px' }}>
-              <Icon name="wallet" size={26} color="#CBD5E1" />
+            <div style={{ width: 56, height: 56, borderRadius: '50%', background: '#F5F7FC', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 14px' }}>
+              <Icon name="wallet" size={26} color="#C3CEE2" />
             </div>
-            <p style={{ fontFamily: 'Syne,sans-serif', fontSize: 16, fontWeight: 700, color: '#0F172A', margin: '0 0 6px' }}>No transactions yet</p>
-            <p style={{ fontSize: 13, color: '#94A3B8', margin: 0 }}>Your payment history will appear here.</p>
+            <p style={{ fontFamily: 'inherit', fontSize: 16, fontWeight: 700, color: '#0A1F4D', margin: '0 0 6px' }}>No transactions yet</p>
+            <p style={{ fontSize: 13, color: '#667697', margin: 0 }}>Your payment history will appear here.</p>
           </div>
         ) : (
           <div>
             {transactions.map((t: any, i: number) => (
-              <div key={t.id} style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '14px 22px', borderBottom: i < transactions.length - 1 ? '1px solid #F8FAFC' : 'none', transition: 'background .15s' }}
-                onMouseEnter={e => (e.currentTarget as HTMLDivElement).style.background = '#F8FAFC'}
+              <div key={t.id} style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '14px 22px', borderBottom: i < transactions.length - 1 ? '1px solid #F5F7FC' : 'none', transition: 'background .15s' }}
+                onMouseEnter={e => (e.currentTarget as HTMLDivElement).style.background = '#F5F7FC'}
                 onMouseLeave={e => (e.currentTarget as HTMLDivElement).style.background = 'transparent'}>
-                <div style={{ width: 40, height: 40, borderRadius: 12, background: t.type === 'credit' ? '#F0FDF4' : '#FFF1F2', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                  <Icon name={t.type === 'credit' ? 'arrow-up' : 'arrow-down'} size={17} color={t.type === 'credit' ? '#16A34A' : '#DC2626'} />
+                <div style={{ width: 40, height: 40, borderRadius: 12, background: t.type === 'credit' ? '#EDF8F1' : '#FDEDED', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                  <Icon name={t.type === 'credit' ? 'arrow-up' : 'arrow-down'} size={17} color={t.type === 'credit' ? '#1B9B63' : '#B92D2D'} />
                 </div>
                 <div style={{ flex: 1, minWidth: 0 }}>
-                  <p style={{ fontFamily: 'Syne,sans-serif', fontWeight: 700, fontSize: 14, color: '#0F172A', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  <p style={{ fontFamily: 'inherit', fontWeight: 700, fontSize: 14, color: '#0A1F4D', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                     {t.description || (t.type === 'credit' ? 'Wallet credit' : 'Payment')}
                   </p>
-                  <p style={{ fontSize: 11, color: '#94A3B8', margin: '2px 0 0' }}>
+                  <p style={{ fontSize: 12, color: '#667697', margin: '2px 0 0' }}>
                     {formatDistanceToNow(new Date(t.created_at), { addSuffix: true })}
                   </p>
                 </div>
                 <div style={{ textAlign: 'right', flexShrink: 0 }}>
-                  <p style={{ fontFamily: 'Syne,sans-serif', fontWeight: 800, fontSize: 15, color: t.type === 'credit' ? '#10B981' : '#EF4444', margin: 0 }}>
+                  <p style={{ fontFamily: 'inherit', fontWeight: 700, fontSize: 15, color: t.type === 'credit' ? '#1B9B63' : '#D03A3A', margin: 0 }}>
                     {t.type === 'credit' ? '+' : '-'}{fmtTZS(parseFloat(t.amount))}
                   </p>
-                  <p style={{ fontSize: 11, color: '#94A3B8', margin: '2px 0 0' }}>
+                  <p style={{ fontSize: 12, color: '#667697', margin: '2px 0 0' }}>
                     {format(new Date(t.created_at), 'MMM d, yyyy')}
                   </p>
                 </div>

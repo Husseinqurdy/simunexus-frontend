@@ -31,9 +31,9 @@ function StatCard({ label, value, color, icon, delay = 0 }: {
         <div style={{ width: 40, height: 40, borderRadius: 12, background: color + '12', display: 'flex', alignItems: 'center', justifyContent: 'center', color }}>
           {icon}
         </div>
-        <span style={{ fontSize: 10, fontWeight: 700, color: '#CBD5E1', textTransform: 'uppercase', letterSpacing: '0.07em', textAlign: 'right' }}>{label}</span>
+        <span style={{ fontSize: 12, fontWeight: 700, color: '#C3CEE2', textAlign: 'right' }}>{label}</span>
       </div>
-      <p style={{ fontSize: 26, fontWeight: 800, color, margin: 0, fontFamily: 'Syne,sans-serif', lineHeight: 1, letterSpacing: '-0.02em' }}>{value}</p>
+      <p style={{ fontSize: 24, fontWeight: 700, color, margin: 0, fontFamily: 'inherit', lineHeight: 1, letterSpacing: '-0.02em' }}>{value}</p>
     </div>
   )
 }
@@ -44,16 +44,16 @@ function CommissionRing({ expert, developer }: { expert: number; developer: numb
   const circ = 2 * Math.PI * r
 
   const segments = [
-    { pct: expert,   color: '#0EA5E9', label: 'Expert'   },
-    { pct: developer,color: '#F59E0B', label: 'Developer' },
-    { pct: platform, color: '#10B981', label: 'Platform'  },
+    { pct: expert,   color: '#0D52CE', label: 'Expert'   },
+    { pct: developer,color: '#9A5B00', label: 'Developer' },
+    { pct: platform, color: '#137A4E', label: 'Platform'  },
   ]
 
   let offset = 0
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: 28, flexWrap: 'wrap' }}>
       <svg width="128" height="128" viewBox="0 0 128 128">
-        <circle cx={cx} cy={cy} r={r} fill="none" stroke="#F1F5F9" strokeWidth="14" />
+        <circle cx={cx} cy={cy} r={r} fill="none" stroke="#EBEFF8" strokeWidth="14" />
         {segments.map(({ pct, color }) => {
           const dash = (pct / 100) * circ
           const el = (
@@ -68,15 +68,15 @@ function CommissionRing({ expert, developer }: { expert: number; developer: numb
           offset += dash
           return el
         })}
-        <text x={cx} y={cy - 6} textAnchor="middle" fontSize="11" fill="#94A3B8" fontFamily="DM Sans">Split</text>
-        <text x={cx} y={cy + 10} textAnchor="middle" fontSize="12" fill="#0F172A" fontFamily="Syne" fontWeight="800">100%</text>
+        <text x={cx} y={cy - 6} textAnchor="middle" fontSize="11" fill="#667697" fontFamily="Inter">Split</text>
+        <text x={cx} y={cy + 10} textAnchor="middle" fontSize="12" fill="#0A1F4D" fontFamily="Inter" fontWeight="700">100%</text>
       </svg>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
         {segments.map(({ pct, color, label }) => (
           <div key={label} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
             <span style={{ width: 10, height: 10, borderRadius: '50%', background: color, flexShrink: 0 }} />
-            <span style={{ fontSize: 13, color: '#374151', fontWeight: 500 }}>{label}</span>
-            <span style={{ fontSize: 14, fontWeight: 800, color, fontFamily: 'Syne,sans-serif', marginLeft: 'auto' }}>{pct}%</span>
+            <span style={{ fontSize: 13, color: '#2B3A60', fontWeight: 500 }}>{label}</span>
+            <span style={{ fontSize: 14, fontWeight: 700, color, fontFamily: 'inherit', marginLeft: 'auto' }}>{pct}%</span>
           </div>
         ))}
       </div>
@@ -135,10 +135,10 @@ export default function DevSystemControl() {
   ]
 
   return (
-    <div style={{ fontFamily: "'DM Sans',sans-serif", maxWidth: 1000 }}>
+    <div style={{ fontFamily: 'inherit', maxWidth: 1000 }}>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&display=swap');
-        @keyframes fadeUp  { from{opacity:0;transform:translateY(12px)} to{opacity:1;transform:translateY(0)} }
+        
+        @keyframes fadeUp  { from{opacity:0;transform:translateY(0)} to{opacity:1;transform:translateY(0)} }
         @keyframes fadeIn  { from{opacity:0} to{opacity:1} }
         @keyframes spin    { to{transform:rotate(360deg)} }
 
@@ -147,33 +147,33 @@ export default function DevSystemControl() {
 
         .sc {
           background:#fff; border-radius:14px; padding:18px 20px;
-          border:1px solid #F1F5F9; box-shadow:0 1px 4px rgba(0,0,0,.05);
+          border:1px solid #EBEFF8; box-shadow:0 1px 4px rgba(0,0,0,.05);
           animation:fadeUp .4s ease both;
           transition:box-shadow .2s,transform .2s;
         }
-        .sc:hover { box-shadow:0 6px 20px rgba(11,28,61,.08); transform:translateY(-2px); }
+        .sc:hover { box-shadow:0 6px 20px rgba(10,31,107,.08); transform:translateY(0); }
 
         .tab-btn {
           display:inline-flex; align-items:center; gap:7px;
           padding:9px 16px; border-radius:10px; font-size:13px; font-weight:600;
           cursor:pointer; border:none; transition:all .2s;
-          font-family:'DM Sans',sans-serif;
+          font-family: inherit;
         }
 
         .inp {
           width:100%; padding:9px 12px; border-radius:10px;
-          border:1.5px solid #E2E8F0; font-size:13px; outline:none;
-          font-family:inherit; color:#0F172A; box-sizing:border-box;
+          border:1.5px solid #DCE3F0; font-size:13px; outline:none;
+          font-family:inherit; color:#0A1F4D; box-sizing:border-box;
           transition:border-color .2s;
         }
-        .inp:focus { border-color:#0EA5E9; }
+        .inp:focus { border-color:#0D52CE; }
 
         .user-row {
           display:flex; align-items:center; justify-content:space-between;
           padding:11px 16px; border-radius:10px; gap:10px;
           transition:background .15s; animation:fadeIn .35s ease both;
         }
-        .user-row:hover { background:#F8FAFC; }
+        .user-row:hover { background:#F5F7FC; }
 
         .action-btn {
           display:inline-flex; align-items:center; gap:6px;
@@ -181,7 +181,7 @@ export default function DevSystemControl() {
           font-size:13px; font-weight:700; font-family:inherit;
           transition:opacity .2s,transform .1s;
         }
-        .action-btn:hover  { opacity:.88; transform:translateY(-1px); }
+        .action-btn:hover  { opacity:.88; transform:translateY(0); }
         .action-btn:active { transform:translateY(0); }
 
         @media(max-width:640px) {
@@ -192,17 +192,17 @@ export default function DevSystemControl() {
 
       {/* ── Header ── */}
       <div className="fu" style={{ marginBottom: 24 }}>
-        <p style={{ fontSize: 11, fontWeight: 700, color: '#94A3B8', textTransform: 'uppercase', letterSpacing: '0.08em', margin: '0 0 3px' }}>Developer Portal</p>
-        <h1 style={{ fontFamily: 'Syne,sans-serif', fontSize: 24, fontWeight: 800, color: '#0B1C3D', margin: 0, letterSpacing: '-0.02em' }}>System Control</h1>
-        <p style={{ color: '#94A3B8', fontSize: 13, margin: '4px 0 0' }}>Full system oversight and configuration.</p>
+        <p style={{ fontSize: 12, fontWeight: 700, color: '#667697', margin: '0 0 3px' }}>Developer Portal</p>
+        <h1 style={{ fontFamily: 'inherit', fontSize: 24, fontWeight: 700, color: '#0A1F6B', margin: 0, letterSpacing: '-0.02em' }}>System Control</h1>
+        <p style={{ color: '#667697', fontSize: 13, margin: '4px 0 0' }}>Full system oversight and configuration.</p>
       </div>
 
       {/* ── Tabs ── */}
-      <div className="tabs-row fu" style={{ display: 'flex', gap: 6, marginBottom: 24, borderBottom: '1px solid #F1F5F9', paddingBottom: 0, animationDelay: '40ms', flexWrap: 'wrap' }}>
+      <div className="tabs-row fu" style={{ display: 'flex', gap: 6, marginBottom: 24, borderBottom: '1px solid #EBEFF8', paddingBottom: 0, animationDelay: '40ms', flexWrap: 'wrap' }}>
         {TABS.map(t => (
           <button key={t.value} className="tab-btn" onClick={() => setTab(t.value)}
-            style={{ background: tab === t.value ? '#0B1C3D' : 'transparent', color: tab === t.value ? '#fff' : '#94A3B8', borderBottom: tab === t.value ? '2px solid #0B1C3D' : '2px solid transparent', borderRadius: '10px 10px 0 0', paddingBottom: 11 }}>
-            <span style={{ color: tab === t.value ? '#38BDF8' : 'inherit' }}>{t.icon}</span> {t.label}
+            style={{ background: tab === t.value ? '#0A1F6B' : 'transparent', color: tab === t.value ? '#fff' : '#667697', borderBottom: tab === t.value ? '2px solid #0A1F6B' : '2px solid transparent', borderRadius: '10px 10px 0 0', paddingBottom: 11 }}>
+            <span style={{ color: tab === t.value ? '#8DB8F7' : 'inherit' }}>{t.icon}</span> {t.label}
           </button>
         ))}
       </div>
@@ -212,26 +212,26 @@ export default function DevSystemControl() {
         <div className="fi">
           {sumLoading ? (
             <div style={{ display: 'flex', justifyContent: 'center', padding: 48 }}>
-              <div style={{ width: 28, height: 28, borderRadius: '50%', border: '3px solid #E2E8F0', borderTop: '3px solid #0EA5E9', animation: 'spin .7s linear infinite' }} />
+              <div style={{ width: 28, height: 28, borderRadius: '50%', border: '3px solid #DCE3F0', borderTop: '3px solid #0D52CE', animation: 'spin .7s linear infinite' }} />
             </div>
           ) : (
             <>
               <div className="stat-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 12, marginBottom: 20 }}>
-                <StatCard label="Total Clients"  value={summary?.total_clients  || 0} color="#0B1C3D" icon={Ic.users}    delay={0}   />
-                <StatCard label="Total Experts"  value={summary?.total_experts  || 0} color="#0EA5E9" icon={Ic.expert}   delay={60}  />
-                <StatCard label="Online Now"     value={summary?.online_users   || 0} color="#10B981" icon={Ic.online}   delay={120} />
-                <StatCard label="Total Revenue"  value={`TSh ${Number(financial?.total_revenue || 0).toLocaleString()}`} color="#7C3AED" icon={Ic.revenue} delay={180} />
+                <StatCard label="Total Clients"  value={summary?.total_clients  || 0} color="#0A1F6B" icon={Ic.users}    delay={0}   />
+                <StatCard label="Total Experts"  value={summary?.total_experts  || 0} color="#0D52CE" icon={Ic.expert}   delay={60}  />
+                <StatCard label="Online Now"     value={summary?.online_users   || 0} color="#1B9B63" icon={Ic.online}   delay={120} />
+                <StatCard label="Total Revenue"  value={`TSh ${Number(financial?.total_revenue || 0).toLocaleString()}`} color="#2E4DA7" icon={Ic.revenue} delay={180} />
               </div>
               <div className="stat-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 12, marginBottom: 20 }}>
-                <StatCard label="Platform Profit" value={`TSh ${Number(financial?.total_platform_profit || 0).toLocaleString()}`} color="#10B981" icon={Ic.platform} delay={80}  />
-                <StatCard label="Paid to Experts"  value={`TSh ${Number(financial?.total_expert_paid    || 0).toLocaleString()}`} color="#0EA5E9" icon={Ic.expert}   delay={120} />
-                <StatCard label="Projects Done"    value={financial?.completed_projects || 0}                                     color="#F59E0B" icon={Ic.projects} delay={160} />
+                <StatCard label="Platform Profit" value={`TSh ${Number(financial?.total_platform_profit || 0).toLocaleString()}`} color="#1B9B63" icon={Ic.platform} delay={80}  />
+                <StatCard label="Paid to Experts"  value={`TSh ${Number(financial?.total_expert_paid    || 0).toLocaleString()}`} color="#0D52CE" icon={Ic.expert}   delay={120} />
+                <StatCard label="Projects Done"    value={financial?.completed_projects || 0}                                     color="#E5A00D" icon={Ic.projects} delay={160} />
               </div>
 
               {/* DB & system info */}
               <div className="sc fu" style={{ animationDelay: '200ms' }}>
-                <p style={{ fontFamily: 'Syne,sans-serif', fontWeight: 700, fontSize: 14, color: '#0F172A', margin: '0 0 16px', display: 'flex', alignItems: 'center', gap: 8 }}>
-                  <span style={{ color: '#7C3AED' }}>{Ic.db}</span> System Info
+                <p style={{ fontFamily: 'inherit', fontWeight: 700, fontSize: 14, color: '#0A1F4D', margin: '0 0 16px', display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <span style={{ color: '#2E4DA7' }}>{Ic.db}</span> System Info
                 </p>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2,1fr)', gap: 8 }}>
                   {[
@@ -244,9 +244,9 @@ export default function DevSystemControl() {
                     ['Payments',     'AzamPay + PesaPal'],
                     ['API Version',  'v1'],
                   ].map(([k, v]) => (
-                    <div key={k} style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 12px', background: '#F8FAFC', borderRadius: 8, fontSize: 13 }}>
-                      <span style={{ color: '#94A3B8', fontWeight: 500 }}>{k}</span>
-                      <span style={{ color: '#0F172A', fontWeight: 700 }}>{v}</span>
+                    <div key={k} style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 12px', background: '#F5F7FC', borderRadius: 8, fontSize: 13 }}>
+                      <span style={{ color: '#667697', fontWeight: 500 }}>{k}</span>
+                      <span style={{ color: '#0A1F4D', fontWeight: 700 }}>{v}</span>
                     </div>
                   ))}
                 </div>
@@ -261,9 +261,9 @@ export default function DevSystemControl() {
         <div className="fi">
           <div className="sc" style={{ marginBottom: 20 }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
-              <p style={{ fontFamily: 'Syne,sans-serif', fontWeight: 700, fontSize: 15, color: '#0F172A', margin: 0 }}>Commission Split Configuration</p>
+              <p style={{ fontFamily: 'inherit', fontWeight: 700, fontSize: 15, color: '#0A1F4D', margin: 0 }}>Commission Split Configuration</p>
               <button className="action-btn" onClick={() => setEditRates(!editRates)}
-                style={{ background: editRates ? '#F1F5F9' : '#EFF6FF', color: editRates ? '#64748B' : '#0EA5E9' }}>
+                style={{ background: editRates ? '#EBEFF8' : '#EAF1FD', color: editRates ? '#4E5E82' : '#0D52CE' }}>
                 {Ic.edit} {editRates ? 'Cancel' : 'Edit Rates'}
               </button>
             </div>
@@ -271,45 +271,45 @@ export default function DevSystemControl() {
             <CommissionRing expert={expertRate} developer={devRate} />
 
             {editRates && (
-              <div style={{ marginTop: 24, borderTop: '1px solid #F1F5F9', paddingTop: 20 }}>
+              <div style={{ marginTop: 24, borderTop: '1px solid #EBEFF8', paddingTop: 20 }}>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 16 }}>
                   <div>
-                    <label style={{ display: 'block', fontSize: 11, fontWeight: 700, color: '#0EA5E9', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 8 }}>
+                    <label style={{ display: 'block', fontSize: 12, fontWeight: 700, color: '#0D52CE', marginBottom: 8 }}>
                       Expert Rate (%)
                     </label>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                       <input type="range" min="30" max="80" value={expertRate} onChange={e => setExpertRate(Number(e.target.value))}
-                        style={{ flex: 1, accentColor: '#0EA5E9' }} />
-                      <span style={{ fontSize: 18, fontWeight: 800, color: '#0EA5E9', fontFamily: 'Syne,sans-serif', minWidth: 44, textAlign: 'right' }}>{expertRate}%</span>
+                        style={{ flex: 1, accentColor: '#0D52CE' }} />
+                      <span style={{ fontSize: 18, fontWeight: 700, color: '#0D52CE', fontFamily: 'inherit', minWidth: 44, textAlign: 'right' }}>{expertRate}%</span>
                     </div>
                   </div>
                   <div>
-                    <label style={{ display: 'block', fontSize: 11, fontWeight: 700, color: '#F59E0B', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 8 }}>
+                    <label style={{ display: 'block', fontSize: 12, fontWeight: 700, color: '#9A5B00', marginBottom: 8 }}>
                       Developer Rate (%)
                     </label>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                       <input type="range" min="0" max="20" value={devRate} onChange={e => setDevRate(Number(e.target.value))}
-                        style={{ flex: 1, accentColor: '#F59E0B' }} />
-                      <span style={{ fontSize: 18, fontWeight: 800, color: '#F59E0B', fontFamily: 'Syne,sans-serif', minWidth: 44, textAlign: 'right' }}>{devRate}%</span>
+                        style={{ flex: 1, accentColor: '#E5A00D' }} />
+                      <span style={{ fontSize: 18, fontWeight: 700, color: '#9A5B00', fontFamily: 'inherit', minWidth: 44, textAlign: 'right' }}>{devRate}%</span>
                     </div>
                   </div>
                 </div>
 
-                <div style={{ background: '#F0FDF4', border: '1px solid #BBF7D0', borderRadius: 10, padding: '10px 14px', marginBottom: 16, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <span style={{ fontSize: 13, color: '#064E3B', fontWeight: 600 }}>Platform (auto-calculated)</span>
-                  <span style={{ fontSize: 18, fontWeight: 800, color: '#10B981', fontFamily: 'Syne,sans-serif' }}>{platform}%</span>
+                <div style={{ background: '#EDF8F1', border: '1px solid #BFE5CF', borderRadius: 10, padding: '10px 14px', marginBottom: 16, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <span style={{ fontSize: 13, color: '#0E5C3A', fontWeight: 600 }}>Platform (auto-calculated)</span>
+                  <span style={{ fontSize: 18, fontWeight: 700, color: '#137A4E', fontFamily: 'inherit' }}>{platform}%</span>
                 </div>
 
                 {platform < 0 ? (
-                  <div style={{ background: '#FFF1F2', border: '1px solid #FECDD3', borderRadius: 10, padding: '10px 14px', marginBottom: 14 }}>
-                    <p style={{ fontSize: 13, color: '#E11D48', fontWeight: 700, margin: 0 }}>
-                      ⚠ Total exceeds 100%. Reduce expert or developer rate.
+                  <div style={{ background: '#FDEDED', border: '1px solid #F3C7C7', borderRadius: 10, padding: '10px 14px', marginBottom: 14 }}>
+                    <p style={{ fontSize: 13, color: '#B92D2D', fontWeight: 700, margin: 0 }}>
+                      Total exceeds 100%. Reduce expert or developer rate.
                     </p>
                   </div>
                 ) : (
                   <button className="action-btn"
                     onClick={() => { toast.success(`Rates saved: Expert ${expertRate}%, Developer ${devRate}%, Platform ${platform}%`); setEditRates(false) }}
-                    style={{ width: '100%', justifyContent: 'center', background: '#0EA5E9', color: '#fff' }}
+                    style={{ width: '100%', justifyContent: 'center', background: '#0D52CE', color: '#fff' }}
                     disabled={platform < 0}
                   >
                     {Ic.check} Save Commission Rates
@@ -322,17 +322,17 @@ export default function DevSystemControl() {
           {/* Summary cards */}
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 12 }}>
             {[
-              { label: 'Expert Share',    value: `${expertRate}%`,  color: '#0EA5E9', icon: Ic.expert,   desc: 'Per completed project' },
-              { label: 'Developer Share', value: `${devRate}%`,     color: '#F59E0B', icon: Ic.dev,      desc: 'Fixed platform developer' },
-              { label: 'Platform Share',  value: `${platform}%`,    color: '#10B981', icon: Ic.platform, desc: 'System operating margin' },
+              { label: 'Expert Share',    value: `${expertRate}%`,  color: '#0D52CE', icon: Ic.expert,   desc: 'Per completed project' },
+              { label: 'Developer Share', value: `${devRate}%`,     color: '#9A5B00', icon: Ic.dev,      desc: 'Fixed platform developer' },
+              { label: 'Platform Share',  value: `${platform}%`,    color: '#137A4E', icon: Ic.platform, desc: 'System operating margin' },
             ].map(({ label, value, color, icon, desc }) => (
               <div key={label} className="sc fu">
                 <div style={{ width: 42, height: 42, borderRadius: 12, background: color + '12', display: 'flex', alignItems: 'center', justifyContent: 'center', color, marginBottom: 12 }}>
                   {icon}
                 </div>
-                <p style={{ fontSize: 28, fontWeight: 800, color, margin: '0 0 4px', fontFamily: 'Syne,sans-serif', lineHeight: 1 }}>{value}</p>
-                <p style={{ fontSize: 13, fontWeight: 700, color: '#374151', margin: '0 0 3px' }}>{label}</p>
-                <p style={{ fontSize: 12, color: '#94A3B8', margin: 0 }}>{desc}</p>
+                <p style={{ fontSize: 28, fontWeight: 700, color, margin: '0 0 4px', fontFamily: 'inherit', lineHeight: 1 }}>{value}</p>
+                <p style={{ fontSize: 13, fontWeight: 700, color: '#2B3A60', margin: '0 0 3px' }}>{label}</p>
+                <p style={{ fontSize: 12, color: '#667697', margin: 0 }}>{desc}</p>
               </div>
             ))}
           </div>
@@ -344,46 +344,46 @@ export default function DevSystemControl() {
         <div className="fi">
           <div className="sc">
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
-              <p style={{ fontFamily: 'Syne,sans-serif', fontWeight: 700, fontSize: 15, color: '#0F172A', margin: 0 }}>All Users</p>
-              <span style={{ fontSize: 12, color: '#94A3B8' }}>{users.length} total</span>
+              <p style={{ fontFamily: 'inherit', fontWeight: 700, fontSize: 15, color: '#0A1F4D', margin: 0 }}>All Users</p>
+              <span style={{ fontSize: 12, color: '#667697' }}>{users.length} total</span>
             </div>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
               {users.length === 0 ? (
-                <div style={{ textAlign: 'center', padding: '32px 0', color: '#94A3B8', fontSize: 13 }}>Loading users...</div>
+                <div style={{ textAlign: 'center', padding: '32px 0', color: '#667697', fontSize: 13 }}>Loading users...</div>
               ) : users.map((u: any, i: number) => {
                 const ROLE_CFG: Record<string, { color: string; bg: string }> = {
-                  client:    { color: '#2563EB', bg: '#EFF6FF' },
-                  expert:    { color: '#059669', bg: '#F0FDF4' },
-                  admin:     { color: '#7C3AED', bg: '#F5F3FF' },
-                  developer: { color: '#D97706', bg: '#FFFBEB' },
+                  client:    { color: '#0D52CE', bg: '#EAF1FD' },
+                  expert:    { color: '#137A4E', bg: '#EDF8F1' },
+                  admin:     { color: '#2E4DA7', bg: '#EEF2FB' },
+                  developer: { color: '#B85F00', bg: '#FFF8E6' },
                 }
                 const rc = ROLE_CFG[u.role] || ROLE_CFG.client
                 return (
                   <div key={u.id} className="user-row" style={{ animationDelay: `${i * 30}ms` }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                      <div style={{ width: 34, height: 34, borderRadius: '50%', background: rc.bg, color: rc.color, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: 13, flexShrink: 0 }}>
+                      <div style={{ width: 34, height: 34, borderRadius: '50%', background: rc.bg, color: rc.color, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: 13, flexShrink: 0 }}>
                         {(u.first_name?.[0] || u.email[0]).toUpperCase()}
                       </div>
                       <div style={{ minWidth: 0 }}>
-                        <p style={{ fontSize: 13, fontWeight: 700, color: '#0F172A', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        <p style={{ fontSize: 13, fontWeight: 700, color: '#0A1F4D', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                           {u.first_name} {u.last_name} {!u.first_name && !u.last_name ? u.email : ''}
                         </p>
-                        <p style={{ fontSize: 11, color: '#94A3B8', margin: '1px 0 0', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{u.email}</p>
+                        <p style={{ fontSize: 12, color: '#667697', margin: '1px 0 0', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{u.email}</p>
                       </div>
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0 }}>
-                      <span style={{ padding: '3px 9px', borderRadius: 999, fontSize: 11, fontWeight: 700, background: rc.bg, color: rc.color, border: `1px solid ${rc.color}20` }}>
+                      <span style={{ padding: '3px 9px', borderRadius: 999, fontSize: 12, fontWeight: 700, background: rc.bg, color: rc.color, border: `1px solid ${rc.color}20` }}>
                         {u.role}
                       </span>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
-                        <span style={{ width: 7, height: 7, borderRadius: '50%', background: u.is_online ? '#10B981' : '#CBD5E1' }} />
-                        <span style={{ fontSize: 11, color: u.is_active ? '#64748B' : '#EF4444', fontWeight: u.is_active ? 400 : 700 }}>
+                        <span style={{ width: 7, height: 7, borderRadius: '50%', background: u.is_online ? '#1B9B63' : '#C3CEE2' }} />
+                        <span style={{ fontSize: 12, color: u.is_active ? '#4E5E82' : '#D03A3A', fontWeight: u.is_active ? 400 : 700 }}>
                           {!u.is_active ? 'Banned' : u.is_online ? 'Online' : 'Offline'}
                         </span>
                       </div>
                       <button className="action-btn" onClick={() => banMutation.mutate(u.id)}
-                        style={{ background: u.is_active ? '#FFF1F2' : '#F0FDF4', color: u.is_active ? '#E11D48' : '#059669', padding: '5px 10px', fontSize: 12 }}>
+                        style={{ background: u.is_active ? '#FDEDED' : '#EDF8F1', color: u.is_active ? '#B92D2D' : '#137A4E', padding: '5px 10px', fontSize: 12 }}>
                         {u.is_active ? <>{Ic.ban} Ban</> : <>{Ic.check} Unban</>}
                       </button>
                     </div>
@@ -402,10 +402,10 @@ export default function DevSystemControl() {
           {/* Test email */}
           <div className="sc">
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16 }}>
-              <div style={{ color: '#0EA5E9' }}>{Ic.email}</div>
-              <p style={{ fontFamily: 'Syne,sans-serif', fontWeight: 700, fontSize: 15, color: '#0F172A', margin: 0 }}>Send Test Email</p>
+              <div style={{ color: '#0D52CE' }}>{Ic.email}</div>
+              <p style={{ fontFamily: 'inherit', fontWeight: 700, fontSize: 15, color: '#0A1F4D', margin: 0 }}>Send Test Email</p>
             </div>
-            <p style={{ fontSize: 13, color: '#64748B', margin: '0 0 14px', lineHeight: 1.6 }}>
+            <p style={{ fontSize: 13, color: '#4E5E82', margin: '0 0 14px', lineHeight: 1.6 }}>
               Send a test email to verify that the email system is working correctly.
             </p>
             <div style={{ display: 'flex', gap: 10 }}>
@@ -414,7 +414,7 @@ export default function DevSystemControl() {
               <button className="action-btn"
                 onClick={() => emailAddr && testEmailMutation.mutate(emailAddr)}
                 disabled={!emailAddr || testEmailMutation.isPending}
-                style={{ background: '#0EA5E9', color: '#fff', flexShrink: 0 }}>
+                style={{ background: '#0D52CE', color: '#fff', flexShrink: 0 }}>
                 {testEmailMutation.isPending
                   ? <span style={{ width: 14, height: 14, border: '2px solid rgba(255,255,255,.4)', borderTop: '2px solid #fff', borderRadius: '50%', display: 'inline-block', animation: 'spin .7s linear infinite' }} />
                   : <>{Ic.email} Send</>
@@ -426,10 +426,10 @@ export default function DevSystemControl() {
           {/* Resend password link */}
           <div className="sc">
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16 }}>
-              <div style={{ color: '#7C3AED' }}>{Ic.refresh}</div>
-              <p style={{ fontFamily: 'Syne,sans-serif', fontWeight: 700, fontSize: 15, color: '#0F172A', margin: 0 }}>Resend Password Link</p>
+              <div style={{ color: '#2E4DA7' }}>{Ic.refresh}</div>
+              <p style={{ fontFamily: 'inherit', fontWeight: 700, fontSize: 15, color: '#0A1F4D', margin: 0 }}>Resend Password Link</p>
             </div>
-            <p style={{ fontSize: 13, color: '#64748B', margin: '0 0 14px', lineHeight: 1.6 }}>
+            <p style={{ fontSize: 13, color: '#4E5E82', margin: '0 0 14px', lineHeight: 1.6 }}>
               Resend a set-password email to a user who hasn't set their password yet.
             </p>
             <div style={{ display: 'flex', gap: 10 }}>
@@ -438,7 +438,7 @@ export default function DevSystemControl() {
               <button className="action-btn"
                 onClick={() => resendEmail && resendLinkMutation.mutate(resendEmail)}
                 disabled={!resendEmail || resendLinkMutation.isPending}
-                style={{ background: '#7C3AED', color: '#fff', flexShrink: 0 }}>
+                style={{ background: '#2E4DA7', color: '#fff', flexShrink: 0 }}>
                 {resendLinkMutation.isPending
                   ? <span style={{ width: 14, height: 14, border: '2px solid rgba(255,255,255,.4)', borderTop: '2px solid #fff', borderRadius: '50%', display: 'inline-block', animation: 'spin .7s linear infinite' }} />
                   : <>{Ic.refresh} Resend</>
@@ -449,7 +449,7 @@ export default function DevSystemControl() {
 
           {/* Email config info */}
           <div className="sc">
-            <p style={{ fontFamily: 'Syne,sans-serif', fontWeight: 700, fontSize: 15, color: '#0F172A', margin: '0 0 14px' }}>Email Configuration</p>
+            <p style={{ fontFamily: 'inherit', fontWeight: 700, fontSize: 15, color: '#0A1F4D', margin: '0 0 14px' }}>Email Configuration</p>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
               {[
                 ['Provider',   'Private Email (SMTP)'],
@@ -458,9 +458,9 @@ export default function DevSystemControl() {
                 ['From',       'support@simunexus.com'],
                 ['Status',     'Active'],
               ].map(([k, v]) => (
-                <div key={k} style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 12px', background: '#F8FAFC', borderRadius: 8, fontSize: 13 }}>
-                  <span style={{ color: '#94A3B8', fontWeight: 500 }}>{k}</span>
-                  <span style={{ color: k === 'Status' ? '#10B981' : '#0F172A', fontWeight: 700 }}>{v}</span>
+                <div key={k} style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 12px', background: '#F5F7FC', borderRadius: 8, fontSize: 13 }}>
+                  <span style={{ color: '#667697', fontWeight: 500 }}>{k}</span>
+                  <span style={{ color: k === 'Status' ? '#1B9B63' : '#0A1F4D', fontWeight: 700 }}>{v}</span>
                 </div>
               ))}
             </div>
