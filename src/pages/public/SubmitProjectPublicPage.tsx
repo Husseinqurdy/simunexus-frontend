@@ -1,409 +1,313 @@
-import { Check, Paperclip } from 'lucide-react'
-import PublicTopbar from '@/components/layout/PublicTopbar'
-import { useState, useRef } from 'react'
+import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useForm } from 'react-hook-form'
 import { useMutation } from '@tanstack/react-query'
-import { authApi } from '@/api/client'
 import toast from 'react-hot-toast'
-import { authStyles, GSHLogo } from '../auth/_shared'
+import { ArrowLeft, ArrowRight, Check, CheckCircle2, Loader2, Lock, Mail, Phone, User as UserIcon, X } from 'lucide-react'
+import PublicTopbar from '@/components/layout/PublicTopbar'
+import { FileDropzone, KindIcon, guessKind } from '@/components/shared/Files'
+import { authApi } from '@/api/client'
+import { errorMessage, formatBytes } from '@/lib/format'
+import { gxStyles, PasswordField, PasswordStrength, TextField } from '../auth/_shared'
 
 const SOFTWARE = [
-  { value: 'matlab',   label: 'MATLAB / Simulink', icon: 'M'  },
-  { value: 'proteus',  label: 'Proteus',            icon: 'P'  },
-  { value: 'ansys',    label: 'ANSYS',              icon: 'A'  },
-  { value: 'labview',  label: 'LabVIEW',            icon: 'L'  },
-  { value: 'multisim', label: 'Multisim',           icon: 'Ms' },
-  { value: 'pscad',    label: 'PSCAD',              icon: 'Ps' },
-  { value: 'etap',     label: 'ETAP',               icon: 'E'  },
-  { value: 'hfss',     label: 'HFSS',               icon: 'H'  },
-  { value: 'cst',      label: 'CST Studio',         icon: 'C'  },
-  { value: 'other',    label: 'Other',              icon: '?'  },
+  { value: 'matlab', label: 'MATLAB / Simulink' }, { value: 'proteus', label: 'Proteus' },
+  { value: 'ansys', label: 'ANSYS' }, { value: 'labview', label: 'LabVIEW' },
+  { value: 'multisim', label: 'Multisim' }, { value: 'pscad', label: 'PSCAD' },
+  { value: 'etap', label: 'ETAP' }, { value: 'hfss', label: 'HFSS' },
+  { value: 'cst', label: 'CST Studio' }, { value: 'other', label: 'Other' },
 ]
 
 const DELIVERY = [
-  { value: 'standard', label: 'Standard', desc: 'Flexible deadline',   color: '#4E5E82', badge: 'Best price' },
-  { value: 'urgent',   label: 'Urgent',   desc: '24 hours delivery',   color: '#E5A00D', badge: '2× price'  },
-  { value: 'express',  label: 'Express',  desc: '6–12 hours delivery', color: '#D03A3A', badge: '3× price'  },
+  { value: 'standard', label: 'Standard', desc: 'Flexible deadline', badge: 'Best price' },
+  { value: 'urgent', label: 'Urgent', desc: '24 hours delivery', badge: '2× price' },
+  { value: 'express', label: 'Express', desc: '6–12 hours delivery', badge: '3× price' },
 ]
 
-type FormData = {
-  first_name: string
-  last_name: string
-  email: string
-  phone: string
-  title: string
-  description: string
-  software_version: string
-  deadline: string
-  is_nda: boolean
-  include_explanation: boolean
-  payment_type: string
+type Form = {
+  first_name: string; last_name: string; username: string; email: string; phone: string
+  password: string; confirm_password: string
+  title: string; description: string; software_version: string; deadline: string
+  is_nda: boolean; include_explanation: boolean; payment_type: 'full' | 'partial'
 }
 
-export default function SubmitProjectPublicPage() {
-  const [step, setStep]             = useState(1)
-  const [done, setDone]             = useState(false)
-  const [selectedSw, setSelectedSw] = useState('')
-  const [selectedDel, setSelectedDel] = useState('standard')
-  const [swError, setSwError]       = useState(false)
-  const [attachedFiles, setAttachedFiles] = useState<File[]>([])
-  const fileInputRef = useRef<HTMLInputElement>(null)
+const STEP_FIELDS: Record<number, (keyof Form)[]> = {
+  1: ['first_name', 'username', 'email', 'phone', 'password', 'confirm_password'],
+  2: ['title', 'description', 'deadline'],
+}
+const ACCOUNT_FIELDS = ['username', 'email', 'password', 'confirm_password', 'first_name', 'last_name', 'phone']
+const PROJECT_FIELDS = ['title', 'description', 'deadline', 'software', 'software_version']
 
-  const { register, handleSubmit, watch, formState: { errors }, setValue, trigger } = useForm<FormData>({
-    defaultValues: { payment_type: 'full', is_nda: false, include_explanation: false }
+const card: React.CSSProperties = { background: '#fff', border: '1px solid #DCE3F0', borderRadius: 12, padding: 'clamp(20px,4vw,32px)' }
+const label: React.CSSProperties = { display: 'block', fontSize: 13, fontWeight: 600, color: '#2B3A60', marginBottom: 8 }
+
+export default function SubmitProjectPublicPage() {
+  const [step, setStep] = useState(1)
+  const [done, setDone] = useState<null | { username: string; project_title: string; files_saved: number; files_failed: number }>(null)
+  const [sw, setSw] = useState('')
+  const [swError, setSwError] = useState(false)
+  const [delivery, setDelivery] = useState('standard')
+  const [files, setFiles] = useState<File[]>([])
+  const [progress, setProgress] = useState(0)
+
+  const { register, handleSubmit, watch, setValue, setError, trigger, formState: { errors } } = useForm<Form>({
+    defaultValues: { payment_type: 'full', is_nda: false, include_explanation: false },
   })
+  const pw = watch('password', '')
+  const payment = watch('payment_type')
 
   const mutation = useMutation({
-    mutationFn: async (data: FormData) => {
+    mutationFn: async (d: Form) => {
       const fd = new FormData()
-      // Contact info
-      fd.append('email',      data.email)
-      fd.append('first_name', data.first_name || '')
-      fd.append('last_name',  data.last_name  || '')
-      fd.append('phone',      data.phone      || '')
-      // Project info
-      fd.append('title',               data.title)
-      fd.append('description',          data.description)
-      fd.append('software',             selectedSw)
-      fd.append('software_version',     data.software_version || '')
-      fd.append('deadline',             data.deadline)
-      fd.append('delivery_type',        selectedDel)
-      fd.append('payment_type',         data.payment_type)
-      fd.append('is_nda',               String(data.is_nda))
-      fd.append('include_explanation',  String(data.include_explanation))
-      // Files
-      attachedFiles.forEach(f => fd.append('files', f))
-      const res = await authApi.submitWithAccount(fd)
-      return res.data
+      ;(['first_name', 'last_name', 'username', 'email', 'phone', 'password', 'confirm_password', 'title', 'description',
+        'software_version', 'deadline', 'payment_type'] as (keyof Form)[]).forEach(k => fd.append(k, String(d[k] ?? '')))
+      fd.append('software', sw)
+      fd.append('delivery_type', delivery)
+      fd.append('is_nda', String(!!d.is_nda))
+      fd.append('include_explanation', String(!!d.include_explanation))
+      files.forEach(f => fd.append('files', f))
+      setProgress(0)
+      return (await authApi.submitWithAccount(fd, setProgress)).data
     },
-    onSuccess: (res) => {
-      setDone(true)
-      toast.success(res.account_created
-        ? 'Project submitted! Check your email to set your password.'
-        : 'Project submitted! Login to track it.')
-    },
+    onSuccess: (res) => setDone({ username: res.username, project_title: res.project_title, files_saved: res.files_saved || 0, files_failed: res.files_failed || 0 }),
     onError: (e: any) => {
-      toast.error(e.response?.data?.error || e.response?.data?.detail || 'Submission failed. Please try again.')
+      const data = e?.response?.data
+      if (data && typeof data === 'object' && !data.error && !data.detail) {
+        let toStep = 0
+        Object.entries(data).forEach(([field, msgs]) => {
+          const msg = Array.isArray(msgs) ? String(msgs[0]) : String(msgs)
+          if (ACCOUNT_FIELDS.includes(field)) { setError(field as keyof Form, { message: msg }); toStep = 1 }
+          else if (PROJECT_FIELDS.includes(field)) { setError(field as keyof Form, { message: msg }); if (!toStep) toStep = 2 }
+        })
+        if (toStep) setStep(toStep)
+        toast.error('Please fix the highlighted fields.')
+      } else toast.error(errorMessage(e, 'Submission failed. Please try again.'))
     },
   })
 
-  const goNext = async () => {
-    let fields: (keyof FormData)[] = []
-    if (step === 1) fields = ['first_name', 'email', 'phone', 'title', 'description']
-    if (step === 2) {
-      if (!selectedSw) { setSwError(true); return }
-      setSwError(false)
-      fields = ['deadline']
-    }
-    const valid = await trigger(fields)
-    if (valid) setStep(s => s + 1)
+  const next = async () => {
+    if (step === 2 && !sw) { setSwError(true); return }
+    setSwError(false)
+    if (await trigger(STEP_FIELDS[step])) { setStep(s => s + 1); window.scrollTo({ top: 0 }) }
   }
 
-  // ── Success screen ──
+  /* ───────────── Mafanikio ───────────── */
   if (done) return (
-    <div style={{ minHeight: '100vh', background: '#F5F7FC', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
-      <style>{authStyles}</style>
-      <div  style={{ background: '#FFFFFF', border: '1px solid #DCE3F0', borderRadius: 16, padding: '56px 40px', maxWidth: 480, width: '100%', textAlign: 'center' }}>
-        <div style={{ width: 80, height: 80, background: 'rgba(27,155,99,.1)', border: '1px solid rgba(27,155,99,.2)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 24px' }}>
-          <svg width="36" height="36" fill="none" viewBox="0 0 24 24" stroke="#1B9B63" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" /></svg>
-        </div>
-        <h2 className="dp" style={{ color: '#0A1F4D', fontSize: 28, fontWeight: 700, margin: '0 0 12px' }}>Project Submitted!</h2>
-        <p style={{ color: '#4E5E82', fontSize: 14, lineHeight: 1.7, margin: '0 0 32px' }}>
-          We've received your project and are reviewing it now.<br />
-          Check your email — we've sent you a link to set your password and access your dashboard.
-        </p>
-        <div style={{ display: 'flex', gap: 12, justifyContent: 'center' }}>
-          <Link to="/login" style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: '#0D52CE', color: '#fff', fontFamily: 'inherit', fontWeight: 700, fontSize: 14, padding: '12px 24px', borderRadius: 12, textDecoration: 'none' }}>
-            Go to Login →
-          </Link>
-          <Link to="/" style={{ display: 'inline-flex', alignItems: 'center', background: '#FFFFFF', color: '#4E5E82', fontSize: 14, padding: '12px 20px', borderRadius: 12, textDecoration: 'none', border: '1px solid #DCE3F0' }}>
-            Home
-          </Link>
+    <div style={{ minHeight: '100vh', background: '#F5F7FC' }}>
+      <style>{gxStyles}</style>
+      <PublicTopbar />
+      <div style={{ maxWidth: 520, margin: '0 auto', padding: 'clamp(28px,8vw,64px) 20px' }}>
+        <div style={{ ...card, textAlign: 'center' }}>
+          <div style={{ width: 64, height: 64, borderRadius: '50%', background: '#EDF8F1', color: '#137A4E', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px' }}>
+            <CheckCircle2 size={34} />
+          </div>
+          <h1 style={{ fontSize: 24, fontWeight: 700, color: '#0A1F4D', margin: '0 0 8px' }}>Project submitted</h1>
+          <p style={{ fontSize: 14, color: '#4E5E82', lineHeight: 1.7, margin: '0 0 6px' }}>
+            “{done.project_title}” has been received and our team is reviewing it.
+          </p>
+          <p style={{ fontSize: 14, color: '#4E5E82', lineHeight: 1.7, margin: '0 0 20px' }}>
+            Your account <strong style={{ color: '#0A1F4D' }}>{done.username}</strong> is ready. Sign in to track progress, chat and download your results.
+          </p>
+          {done.files_saved > 0 && <p style={{ fontSize: 13, color: '#137A4E', margin: '0 0 12px' }}>{done.files_saved} file(s) attached.</p>}
+          {done.files_failed > 0 && <p style={{ fontSize: 13, color: '#B92D2D', margin: '0 0 12px' }}>{done.files_failed} file(s) could not be saved. Add them again after signing in.</p>}
+          <Link to="/login" className="gx-btn" style={{ marginBottom: 10 }}>Go to sign in <ArrowRight size={16} /></Link>
+          <Link to="/" className="gx-btn gx-btn-outline">Back to home</Link>
         </div>
       </div>
     </div>
   )
 
-  return (
-    <div style={{ minHeight: '100vh', background: '#F5F7FC', padding: '0 0 48px' }}>
-      <style>{authStyles}</style>
-      <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+  const field = (name: keyof Form) => errors[name]?.message as string | undefined
 
+  return (
+    <div style={{ minHeight: '100vh', background: '#F5F7FC', paddingBottom: 48 }}>
+      <style>{gxStyles}</style>
       <PublicTopbar />
 
-      <div style={{ maxWidth: 680, margin: '48px auto 0', padding: '0 24px' }}>
-
-        {/* Header */}
-        <div style={{ textAlign: 'center', marginBottom: 40 }}>
-          <h1 className="dp" style={{ color: '#0A1F4D', fontSize: 'clamp(24px,6vw,32px)', fontWeight: 700, margin: '0 0 10px' }}>Submit Your Project</h1>
-          <p style={{ color: '#4E5E82', fontSize: 15 }}>No account needed — we'll set everything up for you automatically.</p>
+      <div style={{ maxWidth: 680, margin: '0 auto', padding: 'clamp(24px,5vw,44px) clamp(16px,4vw,24px) 0' }}>
+        <div style={{ textAlign: 'center', marginBottom: 28 }}>
+          <h1 style={{ fontSize: 'clamp(24px,6vw,32px)', fontWeight: 700, color: '#0A1F4D', margin: '0 0 8px' }}>Submit your project</h1>
+          <p style={{ fontSize: 15, color: '#4E5E82', margin: 0 }}>Create your account and describe your project in one go.</p>
         </div>
 
-        {/* Progress steps */}
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 40 }}>
-          {['Your Info', 'Project Details', 'Delivery & Payment'].map((label, i) => {
-            const n = i + 1
-            const isActive = step === n
-            const isDone = step > n
+        {/* Hatua */}
+        <ol style={{ listStyle: 'none', display: 'flex', justifyContent: 'center', gap: 'clamp(6px,3vw,24px)', margin: '0 0 24px', padding: 0 }}>
+          {['Account', 'Project', 'Files & delivery'].map((l, i) => {
+            const n = i + 1, active = step === n, past = step > n
             return (
-              <div key={i} style={{ display: 'flex', alignItems: 'center' }}>
-                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                  <div style={{ width: 32, height: 32, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: 13, transition: 'all .3s', background: isDone ? '#1B9B63' : isActive ? '#0D52CE' : '#EBEFF8', border: `2px solid ${isDone ? '#1B9B63' : isActive ? '#0D52CE' : 'rgba(255,255,255,.1)'}`, color: isDone || isActive ? '#fff' : '#4E5E82' }}>
-                    {isDone ? <Check size={14} strokeWidth={3} /> : n}
-                  </div>
-                  <span style={{ fontSize: 12, color: isActive ? '#0D52CE' : isDone ? '#1B9B63' : '#2B3A60', marginTop: 6, whiteSpace: 'nowrap', fontWeight: isActive ? 600 : 400 }}>{label}</span>
-                </div>
-                {i < 2 && <div style={{ width: 60, height: 1, background: step > n + 1 ? '#1B9B63' : step > n ? '#0D52CE' : '#EBEFF8', margin: '0 8px', marginBottom: 20, flexShrink: 0 }} />}
-              </div>
+              <li key={l} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <span style={{ width: 28, height: 28, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 700, background: past ? '#137A4E' : active ? '#0D52CE' : '#EBEFF8', color: past || active ? '#fff' : '#4E5E82' }}>
+                  {past ? <Check size={14} strokeWidth={3} /> : n}
+                </span>
+                <span style={{ fontSize: 13, fontWeight: active ? 600 : 500, color: active ? '#0D52CE' : '#4E5E82' }} className="sp-step-label">{l}</span>
+              </li>
             )
           })}
-        </div>
+        </ol>
 
-        {/* Form card */}
-        <form onSubmit={handleSubmit(d => mutation.mutate({ ...d, software: selectedSw, delivery_type: selectedDel } as any))}>
-          <div style={{ background: '#FFFFFF', border: '1px solid #DCE3F0', borderRadius: 16, padding: '36px 32px' }}>
-
-            {/* ── STEP 1: Your Info + Project basics ── */}
+        <form onSubmit={handleSubmit(d => mutation.mutate(d))} noValidate>
+          <div style={card}>
+            {/* ── Hatua 1: Akaunti ── */}
             {step === 1 && (
               <div>
-                <h2 className="dp" style={{ color: '#0A1F4D', fontSize: 20, fontWeight: 700, marginBottom: 24 }}>Your Information</h2>
-
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14, marginBottom: 14 }}>
-                  <div className="afield">
-                    <label>First Name</label>
-                    <input {...register('first_name')} placeholder="John" />
-                  </div>
-                  <div className="afield">
-                    <label>Last Name</label>
-                    <input {...register('last_name')} placeholder="Doe" />
-                  </div>
+                <h2 style={{ fontSize: 18, fontWeight: 600, color: '#0A1F4D', margin: '0 0 4px' }}>Your account</h2>
+                <p style={{ fontSize: 14, color: '#4E5E82', margin: '0 0 20px' }}>You will use these details to sign in and follow your project.</p>
+                <div className="gx-row">
+                  <TextField label="First name" placeholder="John" error={field('first_name')} {...register('first_name', { required: 'First name is required' })} />
+                  <TextField label="Last name" placeholder="Doe" {...register('last_name')} />
                 </div>
-
-                <div className="afield" style={{ marginBottom: 14 }}>
-                  <label>Email Address *</label>
-                  <div style={{ position: 'relative' }}>
-                    <span style={{ position: 'absolute', left: 13, top: '50%', transform: 'translateY(-50%)', color: '#4E5E82' }}>
-                      <svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.8"><path strokeLinecap="round" strokeLinejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75" /></svg>
-                    </span>
-                    <input {...register('email', { required: 'Email required', pattern: { value: /^\S+@\S+$/, message: 'Invalid email' } })} type="email" placeholder="you@example.com" style={{ paddingLeft: 38 }} />
-                  </div>
-                  {errors.email && <p className="err">{String(errors.email.message)}</p>}
-                </div>
-
-                <div className="afield" style={{ marginBottom: 14 }}>
-                  <label>Phone / WhatsApp *</label>
-                  <div style={{ position: 'relative' }}>
-                    <span style={{ position: 'absolute', left: 13, top: '50%', transform: 'translateY(-50%)', color: '#4E5E82' }}>
-                      <svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.8"><path strokeLinecap="round" strokeLinejoin="round" d="M2.25 6.75c0 8.284 6.716 15 15 15h2.25a2.25 2.25 0 002.25-2.25v-1.372c0-.516-.351-.966-.852-1.091l-4.423-1.106c-.44-.11-.902.055-1.173.417l-.97 1.293c-.282.376-.769.542-1.21.38a12.035 12.035 0 01-7.143-7.143c-.162-.441.004-.928.38-1.21l1.293-.97c.363-.271.527-.734.417-1.173L6.963 3.102a1.125 1.125 0 00-1.091-.852H4.5A2.25 2.25 0 002.25 4.5v2.25z" /></svg>
-                    </span>
-                    <input {...register('phone', { required: 'Phone required' })} placeholder="+255 7XX XXX XXX" style={{ paddingLeft: 38 }} />
-                  </div>
-                  {errors.phone && <p className="err">{String(errors.phone.message)}</p>}
-                </div>
-
-                <div className="afield" style={{ marginBottom: 14 }}>
-                  <label>Project Title *</label>
-                  <input {...register('title', { required: 'Title required' })} placeholder="e.g. DC Motor Speed Control Simulation" />
-                  {errors.title && <p className="err">{String(errors.title.message)}</p>}
-                </div>
-
-                <div className="afield" style={{ marginBottom: 0 }}>
-                  <label>Project Description *</label>
-                  <textarea {...register('description', { required: 'Description required', minLength: { value: 20, message: 'Min 20 characters' } })} rows={4} placeholder="Describe exactly what simulation you need, specific requirements, expected outputs, etc." style={{ resize: 'vertical' }} />
-                  {errors.description && <p className="err">{String(errors.description.message)}</p>}
-                </div>
-
-                <div style={{ background: 'rgba(13,82,206,.06)', border: '1px solid rgba(13,82,206,.15)', borderRadius: 10, padding: '10px 14px', marginTop: 16, fontSize: 12, color: '#0A42A8' }}>
-                  We'll create your account automatically and send a <strong>set password link</strong> to your email.
-                </div>
+                <TextField label="Username" placeholder="e.g. john_doe" autoComplete="username" icon={<UserIcon size={16} />} error={field('username')}
+                  {...register('username', { required: 'Username is required', minLength: { value: 3, message: 'At least 3 characters' }, pattern: { value: /^[A-Za-z0-9_.-]+$/, message: 'Letters, numbers, dot, dash and underscore only' } })} />
+                <TextField label="Email address" type="email" placeholder="you@example.com" autoComplete="email" icon={<Mail size={16} />} error={field('email')}
+                  {...register('email', { required: 'Email is required', pattern: { value: /^\S+@\S+\.\S+$/, message: 'Enter a valid email' } })} />
+                <TextField label="Phone / WhatsApp" placeholder="+255 7XX XXX XXX" autoComplete="tel" icon={<Phone size={16} />} error={field('phone')}
+                  {...register('phone', { required: 'Phone number is required' })} />
+                <PasswordField label="Password" placeholder="At least 8 characters" autoComplete="new-password" icon={<Lock size={16} />} error={field('password')}
+                  {...register('password', { required: 'Password is required', minLength: { value: 8, message: 'At least 8 characters' } })} />
+                <PasswordStrength value={pw} />
+                <PasswordField label="Confirm password" placeholder="Re-enter your password" autoComplete="new-password" icon={<Lock size={16} />} error={field('confirm_password')}
+                  {...register('confirm_password', { required: 'Please confirm your password', validate: v => v === pw || 'Passwords do not match' })} />
+                <p style={{ fontSize: 13, color: '#667697', margin: '4px 0 0' }}>
+                  Already have an account? <Link to="/login" className="gx-link">Sign in</Link> and submit from your dashboard.
+                </p>
               </div>
             )}
 
-            {/* ── STEP 2: Project Details ── */}
+            {/* ── Hatua 2: Mradi ── */}
             {step === 2 && (
               <div>
-                <h2 className="dp" style={{ color: '#0A1F4D', fontSize: 20, fontWeight: 700, marginBottom: 24 }}>Project Details</h2>
-
-                {/* Software */}
-                <div style={{ marginBottom: 20 }}>
-                  <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: swError ? '#D03A3A' : '#4E5E82', marginBottom: 12 }}>
-                    Simulation Software * {swError && <span style={{ textTransform: 'none', fontWeight: 700 }}>— Please select one</span>}
-                  </label>
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5,1fr)', gap: 8 }}>
-                    {SOFTWARE.map(sw => (
-                      <button key={sw.value} type="button" onClick={() => { setSelectedSw(sw.value); setSwError(false) }} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, padding: '12px 8px', borderRadius: 12, border: `1.5px solid ${selectedSw === sw.value ? '#0D52CE' : swError ? 'rgba(208,58,58,.4)' : '#DCE3F0'}`, background: selectedSw === sw.value ? 'rgba(13,82,206,.08)' : 'rgba(255,255,255,.02)', cursor: 'pointer', transition: 'all .2s' }}>
-                        <div style={{ width: 32, height: 32, borderRadius: 8, background: selectedSw === sw.value ? '#0D52CE' : '#EBEFF8', display: 'flex', alignItems: 'center', justifyContent: 'center', color: selectedSw === sw.value ? '#fff' : '#4E5E82', fontWeight: 700, fontSize: 12, fontFamily: 'inherit' }}>{sw.icon}</div>
-                        <span style={{ fontSize: 12, color: selectedSw === sw.value ? '#8DB8F7' : '#4E5E82', fontWeight: 600, textAlign: 'center', lineHeight: 1.2 }}>{sw.label}</span>
-                      </button>
-                    ))}
-                  </div>
+                <h2 style={{ fontSize: 18, fontWeight: 600, color: '#0A1F4D', margin: '0 0 20px' }}>Project details</h2>
+                <TextField label="Project title" placeholder="e.g. DC motor speed control simulation" error={field('title')}
+                  {...register('title', { required: 'Title is required' })} />
+                <div className="gx-field">
+                  <label className="gx-label">Description</label>
+                  <textarea className={`gx-input${errors.description ? ' invalid' : ''}`} rows={4} style={{ height: 'auto', padding: '10px 14px', resize: 'vertical' }}
+                    placeholder="Describe what you need: inputs, expected outputs, standards, parameters…"
+                    {...register('description', { required: 'Description is required', minLength: { value: 20, message: 'Please write at least 20 characters' } })} />
+                  {errors.description && <p className="gx-err">{field('description')}</p>}
                 </div>
 
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14, marginBottom: 14 }}>
-                  <div className="afield">
-                    <label>Software Version</label>
-                    <input {...register('software_version')} placeholder="e.g. R2024a, v8.0" />
-                  </div>
-                  <div className="afield">
-                    <label>Deadline *</label>
-                    <input {...register('deadline', { required: 'Deadline required' })} type="datetime-local" min={new Date(Date.now() + 3600000).toISOString().slice(0, 16)} />
-                    {errors.deadline && <p className="err">{String(errors.deadline.message)}</p>}
-                  </div>
+                <span style={label}>Simulation software {swError && <span style={{ color: '#B92D2D', fontWeight: 600 }}>— please choose one</span>}</span>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(130px, 1fr))', gap: 8, marginBottom: 18 }}>
+                  {SOFTWARE.map(s => (
+                    <button key={s.value} type="button" onClick={() => { setSw(s.value); setSwError(false) }}
+                      style={{ padding: '10px 12px', borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', textAlign: 'left',
+                        border: `1.5px solid ${sw === s.value ? '#0D52CE' : '#DCE3F0'}`, background: sw === s.value ? '#EAF1FD' : '#fff', color: sw === s.value ? '#0A42A8' : '#2B3A60' }}>
+                      {s.label}
+                    </button>
+                  ))}
                 </div>
 
-                {/* File attachment */}
-                <div style={{ marginBottom: 14 }}>
-                  <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#4E5E82', marginBottom: 12 }}>
-                    Attach Files <span style={{ color: '#2B3A60', fontWeight: 400, textTransform: 'none' }}>(optional)</span>
-                  </label>
-                  <label
-                    htmlFor="fileup"
-                    style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '14px 16px', border: '1.5px dashed #DCE3F0', borderRadius: 12, cursor: 'pointer', transition: 'all .2s' }}
-                    onMouseEnter={e => (e.currentTarget.style.borderColor = '#0D52CE')}
-                    onMouseLeave={e => (e.currentTarget.style.borderColor = '#DCE3F0')}
-                  >
-                    <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="#4E5E82" strokeWidth="1.5"><path strokeLinecap="round" strokeLinejoin="round" d="M18.375 12.739l-7.693 7.693a4.5 4.5 0 01-6.364-6.364l10.94-10.94A3 3 0 1119.5 7.372L8.552 18.32m.009-.01l-.01.01m5.699-9.941l-7.81 7.81a1.5 1.5 0 002.112 2.13" /></svg>
-                    <div style={{ flex: 1 }}>
-                      <p style={{ color: '#4E5E82', fontSize: 13, margin: 0, fontWeight: 500 }}>
-                        {attachedFiles.length > 0 ? `${attachedFiles.length} file(s) selected` : 'Click to attach files'}
-                      </p>
-                      <p style={{ color: '#2B3A60', fontSize: 12, margin: 0 }}>PDF, MATLAB files, schematics, specs...</p>
-                    </div>
-                    {attachedFiles.length > 0 && (
-                      <button type="button" onClick={e => { e.preventDefault(); setAttachedFiles([]); if (fileInputRef.current) fileInputRef.current.value = '' }}
-                        style={{ background: 'rgba(208,58,58,.1)', border: 'none', borderRadius: 6, color: '#D03A3A', fontSize: 12, fontWeight: 700, padding: '3px 8px', cursor: 'pointer' }}>
-                        Clear
-                      </button>
-                    )}
-                    <input
-                      id="fileup"
-                      ref={fileInputRef}
-                      type="file"
-                      multiple
-                      style={{ display: 'none' }}
-                      onChange={e => setAttachedFiles(Array.from(e.target.files || []))}
-                    />
-                  </label>
-                  {/* File list */}
-                  {attachedFiles.length > 0 && (
-                    <div style={{ marginTop: 8, display: 'flex', flexDirection: 'column', gap: 4 }}>
-                      {attachedFiles.map((f, i) => (
-                        <div key={i} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '6px 10px', background: '#FFFFFF', borderRadius: 8, border: '1px solid #DCE3F0' }}>
-                          <span style={{ fontSize: 12, color: '#4E5E82', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '80%' }}>{f.name}</span>
-                          <span style={{ fontSize: 12, color: '#667697', flexShrink: 0, marginLeft: 8 }}>{(f.size / 1024).toFixed(1)} KB</span>
-                        </div>
-                      ))}
-                    </div>
-                  )}
+                <div className="gx-row">
+                  <TextField label={<>Software version <span className="opt">(optional)</span></>} placeholder="e.g. R2024a" {...register('software_version')} />
+                  <TextField label="Deadline" type="datetime-local" error={field('deadline')} min={new Date(Date.now() + 3600000).toISOString().slice(0, 16)}
+                    {...register('deadline', { required: 'Deadline is required' })} />
                 </div>
-
-                <div style={{ display: 'flex', gap: 20 }}>
-                  <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', fontSize: 13, color: '#4E5E82' }}>
-                    <input {...register('is_nda')} type="checkbox" style={{ accentColor: '#0D52CE' }} />
-                    NDA / Confidential
+                <div style={{ display: 'flex', gap: 20, flexWrap: 'wrap' }}>
+                  <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 14, color: '#2B3A60', cursor: 'pointer' }}>
+                    <input type="checkbox" style={{ accentColor: '#0D52CE', width: 16, height: 16 }} {...register('is_nda')} /> NDA / confidential
                   </label>
-                  <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', fontSize: 13, color: '#4E5E82' }}>
-                    <input {...register('include_explanation')} type="checkbox" style={{ accentColor: '#0D52CE' }} />
-                    Include explanation
+                  <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 14, color: '#2B3A60', cursor: 'pointer' }}>
+                    <input type="checkbox" style={{ accentColor: '#0D52CE', width: 16, height: 16 }} {...register('include_explanation')} /> Include explanation
                   </label>
                 </div>
               </div>
             )}
 
-            {/* ── STEP 3: Delivery & Payment ── */}
+            {/* ── Hatua 3: Faili, delivery, malipo ── */}
             {step === 3 && (
               <div>
-                <h2 className="dp" style={{ color: '#0A1F4D', fontSize: 20, fontWeight: 700, marginBottom: 8 }}>Delivery & Payment</h2>
-                <div style={{ background: 'rgba(13,82,206,.06)', border: '1px solid rgba(13,82,206,.15)', borderRadius: 12, padding: '10px 14px', marginBottom: 24, fontSize: 12, color: '#0A42A8' }}>
-                  <strong>Tip:</strong> Longer deadline = lower cost. Express delivery = 3× standard price.
-                </div>
+                <h2 style={{ fontSize: 18, fontWeight: 600, color: '#0A1F4D', margin: '0 0 20px' }}>Files & delivery</h2>
 
-                <div style={{ marginBottom: 24 }}>
-                  <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#4E5E82', marginBottom: 12 }}>Delivery Type</label>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                    {DELIVERY.map(d => (
-                      <button key={d.value} type="button" onClick={() => setSelectedDel(d.value)} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 18px', borderRadius: 12, border: `1.5px solid ${selectedDel === d.value ? d.color : '#4E5E82'}`, background: selectedDel === d.value ? d.color + '12' : 'rgba(255,255,255,.02)', cursor: 'pointer', transition: 'all .2s', textAlign: 'left' }}>
-                        <div>
-                          <p style={{ color: '#0A1F4D', fontWeight: 700, fontSize: 14, margin: 0, fontFamily: 'inherit' }}>{d.label}</p>
-                          <p style={{ color: '#4E5E82', fontSize: 12, margin: 0 }}>{d.desc}</p>
-                        </div>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                          <span style={{ padding: '4px 10px', borderRadius: 999, background: d.color + '20', color: d.color, fontSize: 12, fontWeight: 700, border: `1px solid ${d.color}30` }}>{d.badge}</span>
-                          {selectedDel === d.value && <span style={{ width: 20, height: 20, borderRadius: '50%', background: d.color, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: 12, fontWeight: 700 }}><Check size={11} strokeWidth={3} /></span>}
-                        </div>
-                      </button>
+                <span style={label}>Attach files <span style={{ fontWeight: 400, color: '#667697' }}>(optional)</span></span>
+                <FileDropzone onFiles={f => setFiles(prev => [...prev, ...f])} disabled={mutation.isPending} />
+                {files.length > 0 && (
+                  <ul style={{ listStyle: 'none', margin: '10px 0 0', padding: 0, display: 'flex', flexDirection: 'column', gap: 6 }}>
+                    {files.map((f, i) => (
+                      <li key={i} style={{ display: 'flex', alignItems: 'center', gap: 10, border: '1px solid #DCE3F0', borderRadius: 8, padding: '8px 10px' }}>
+                        <span style={{ color: '#0D52CE', display: 'flex' }}><KindIcon kind={guessKind(f.name, f.type)} size={16} /></span>
+                        <span style={{ flex: 1, minWidth: 0, fontSize: 13, color: '#0A1F4D', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{f.name}</span>
+                        <span style={{ fontSize: 12, color: '#667697' }}>{formatBytes(f.size)}</span>
+                        {!mutation.isPending && (
+                          <button type="button" aria-label={`Remove ${f.name}`} onClick={() => setFiles(p => p.filter((_, j) => j !== i))}
+                            style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#667697', display: 'flex' }}><X size={15} /></button>
+                        )}
+                      </li>
                     ))}
-                  </div>
+                  </ul>
+                )}
+
+                <span style={{ ...label, marginTop: 22 }}>Delivery type</span>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 20 }}>
+                  {DELIVERY.map(d => (
+                    <button key={d.value} type="button" onClick={() => setDelivery(d.value)}
+                      style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, padding: '12px 14px', borderRadius: 8, cursor: 'pointer', textAlign: 'left', fontFamily: 'inherit',
+                        border: `1.5px solid ${delivery === d.value ? '#0D52CE' : '#DCE3F0'}`, background: delivery === d.value ? '#EAF1FD' : '#fff' }}>
+                      <span>
+                        <span style={{ display: 'block', fontSize: 14, fontWeight: 600, color: '#0A1F4D' }}>{d.label}</span>
+                        <span style={{ display: 'block', fontSize: 13, color: '#4E5E82' }}>{d.desc}</span>
+                      </span>
+                      <span style={{ fontSize: 12, fontWeight: 600, color: '#0A42A8', background: '#EAF1FD', borderRadius: 999, padding: '3px 10px', whiteSpace: 'nowrap' }}>{d.badge}</span>
+                    </button>
+                  ))}
                 </div>
 
-                <div style={{ marginBottom: 28 }}>
-                  <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#4E5E82', marginBottom: 12 }}>Payment Preference</label>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
-                    {[
-                      { value: 'full',    label: 'Full Payment', desc: 'Pay everything upfront'      },
-                      { value: 'partial', label: '50/50 Split',  desc: '50% now, 50% on delivery'   },
-                    ].map(p => {
-                      const sel = watch('payment_type') === p.value
-                      return (
-                        <button key={p.value} type="button" onClick={() => setValue('payment_type', p.value)} style={{ padding: '14px', borderRadius: 12, border: `1.5px solid ${sel ? '#0D52CE' : '#DCE3F0'}`, background: sel ? 'rgba(13,82,206,.08)' : 'rgba(255,255,255,.02)', cursor: 'pointer', textAlign: 'left', transition: 'all .2s', position: 'relative' }}>
-                          {sel && <span style={{ position: 'absolute', top: 8, right: 8, width: 18, height: 18, borderRadius: '50%', background: '#0D52CE', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: 12, fontWeight: 700 }}><Check size={11} strokeWidth={3} /></span>}
-                          <p style={{ color: '#0A1F4D', fontWeight: 700, fontSize: 13, margin: '0 0 3px', fontFamily: 'inherit' }}>{p.label}</p>
-                          <p style={{ color: '#4E5E82', fontSize: 12, margin: 0 }}>{p.desc}</p>
-                        </button>
-                      )
-                    })}
-                  </div>
+                <span style={label}>Payment preference</span>
+                <div className="gx-row" style={{ marginBottom: 20 }}>
+                  {([['full', 'Full payment', 'Pay everything upfront'], ['partial', '50 / 50 split', '50% now, 50% on delivery']] as const).map(([v, t, desc]) => (
+                    <button key={v} type="button" onClick={() => setValue('payment_type', v)}
+                      style={{ padding: '12px 14px', borderRadius: 8, cursor: 'pointer', textAlign: 'left', fontFamily: 'inherit',
+                        border: `1.5px solid ${payment === v ? '#0D52CE' : '#DCE3F0'}`, background: payment === v ? '#EAF1FD' : '#fff' }}>
+                      <span style={{ display: 'block', fontSize: 14, fontWeight: 600, color: '#0A1F4D' }}>{t}</span>
+                      <span style={{ display: 'block', fontSize: 13, color: '#4E5E82' }}>{desc}</span>
+                    </button>
+                  ))}
                 </div>
 
-                {/* Summary */}
-                <div style={{ background: '#FFFFFF', border: '1px solid #DCE3F0', borderRadius: 12, padding: '18px 20px' }}>
-                  <p style={{ color: '#4E5E82', fontSize: 12, fontWeight: 600, margin: '0 0 12px' }}>Order Summary</p>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                    {[
-                      ['Software', selectedSw ? SOFTWARE.find(s => s.value === selectedSw)?.label : '—'],
-                      ['Delivery', DELIVERY.find(d => d.value === selectedDel)?.label || 'Standard'],
-                      ['Payment',  watch('payment_type') === 'partial' ? '50% advance + 50% on delivery' : 'Full payment'],
-                      ['NDA',      watch('is_nda') ? 'Yes — confidential' : 'No'],
-                      ...(attachedFiles.length > 0 ? [['Files', `${attachedFiles.length} file(s) attached`]] : []),
-                    ].map(([k, v]) => (
-                      <div key={String(k)} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13 }}>
-                        <span style={{ color: '#4E5E82' }}>{k}</span>
-                        <span style={{ color: '#0A1F4D', fontWeight: 500 }}>{v}</span>
-                      </div>
-                    ))}
-                  </div>
+                <div style={{ background: '#F5F7FC', border: '1px solid #DCE3F0', borderRadius: 8, padding: '14px 16px', fontSize: 13 }}>
+                  {[
+                    ['Account', watch('username')],
+                    ['Software', SOFTWARE.find(s => s.value === sw)?.label || '—'],
+                    ['Delivery', DELIVERY.find(d => d.value === delivery)?.label],
+                    ['Files', files.length ? `${files.length} file(s), ${formatBytes(files.reduce((a, f) => a + f.size, 0))}` : 'None'],
+                  ].map(([k, v]) => (
+                    <div key={k} style={{ display: 'flex', justifyContent: 'space-between', gap: 12, padding: '3px 0' }}>
+                      <span style={{ color: '#4E5E82' }}>{k}</span><span style={{ color: '#0A1F4D', fontWeight: 500, textAlign: 'right' }}>{v}</span>
+                    </div>
+                  ))}
                 </div>
+
+                {mutation.isPending && files.length > 0 && (
+                  <div style={{ marginTop: 16 }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, color: '#4E5E82', marginBottom: 6 }}>
+                      <span>{progress < 100 ? 'Uploading files…' : 'Finishing…'}</span><span>{progress}%</span>
+                    </div>
+                    <div style={{ height: 6, background: '#DCE3F0', borderRadius: 6, overflow: 'hidden' }}>
+                      <div style={{ width: `${progress}%`, height: '100%', background: '#0D52CE', transition: 'width .2s' }} />
+                    </div>
+                  </div>
+                )}
               </div>
             )}
           </div>
 
-          {/* Navigation buttons */}
-          <div style={{ display: 'flex', gap: 12, marginTop: 20 }}>
+          <div style={{ display: 'flex', gap: 12, marginTop: 16 }}>
             {step > 1 && (
-              <button type="button" onClick={() => setStep(s => s - 1)} style={{ flex: 1, padding: '14px', borderRadius: 12, background: '#FFFFFF', border: '1px solid #DCE3F0', color: '#4E5E82', fontSize: 14, fontWeight: 600, cursor: 'pointer' }}>
-                ← Back
+              <button type="button" className="gx-btn gx-btn-outline" style={{ flex: 1 }} disabled={mutation.isPending} onClick={() => setStep(s => s - 1)}>
+                <ArrowLeft size={16} /> Back
               </button>
             )}
             {step < 3 ? (
-              <button type="button" onClick={goNext} style={{ flex: 2, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, padding: '14px', borderRadius: 12, background: '#0D52CE', color: '#fff', fontFamily: 'inherit', fontWeight: 700, fontSize: 15, border: 'none', cursor: 'pointer' }}>
-                Continue <svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5"><path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" /></svg>
-              </button>
+              <button type="button" className="gx-btn" style={{ flex: 2 }} onClick={next}>Continue <ArrowRight size={16} /></button>
             ) : (
-              <button type="submit" disabled={mutation.isPending || !selectedSw} style={{ flex: 2, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, padding: '14px', borderRadius: 12, background: mutation.isPending || !selectedSw ? 'rgba(27,155,99,.4)' : '#1B9B63', color: '#0A1F4D', fontFamily: 'inherit', fontWeight: 700, fontSize: 15, border: 'none', cursor: mutation.isPending || !selectedSw ? 'not-allowed' : 'pointer' }}>
-                {mutation.isPending
-                  ? <><span style={{ width: 15, height: 15, border: '2px solid #DCE3F0', borderTop: '2px solid #fff', borderRadius: '50%', display: 'inline-block', animation: 'spin .7s linear infinite' }} /> Submitting...</>
-                  : <>Submit Project </>
-                }
+              <button type="submit" className="gx-btn" style={{ flex: 2 }} disabled={mutation.isPending || !sw}>
+                {mutation.isPending ? <><Loader2 size={16} className="spin" /> Submitting…</> : <>Create account & submit</>}
               </button>
             )}
           </div>
         </form>
-
-        <p style={{ textAlign: 'center', color: '#12245A', fontSize: 12, marginTop: 24 }}>
-          Already have an account? <Link to="/login" style={{ color: '#0D52CE', textDecoration: 'none', fontWeight: 600 }}>Login here</Link>
-        </p>
       </div>
+      <style>{`@media (max-width: 480px) { .sp-step-label { display: none } }`}</style>
     </div>
   )
 }

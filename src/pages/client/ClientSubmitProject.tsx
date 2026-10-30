@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom'
 import { useForm } from 'react-hook-form'
 import { useMutation } from '@tanstack/react-query'
 import { projectApi } from '@/api/client'
+import { FileDropzone, UploadQueueList, useUploadQueue } from '@/components/shared/Files'
 import { useAuthStore } from '@/store/authStore'
 import toast from 'react-hot-toast'
 
@@ -61,6 +62,8 @@ export default function ClientSubmitProject() {
   const [selectedSw, setSelectedSw]   = useState('')
   const [selectedDel, setSelectedDel] = useState('standard')
   const [swError, setSwError]         = useState(false)
+  const queue = useUploadQueue()
+  const [uploading, setUploading] = useState(false)
 
   const { register, watch, setValue, trigger, getValues, formState: { errors } } = useForm<FormData>({
     defaultValues: { payment_type: 'full', is_nda: false, include_explanation: false },
@@ -78,9 +81,22 @@ export default function ClientSubmitProject() {
       is_nda:              data.is_nda,
       include_explanation: data.include_explanation,
     }),
-    onSuccess: () => {
-      toast.success("Project submitted! We'll review it and set a price shortly.")
-      navigate('/client/projects')
+    onSuccess: async (res: any) => {
+      const projectId = res?.data?.id
+      if (projectId && queue.pending > 0) {
+        setUploading(true)
+        const { ok, failed } = await queue.run(projectId, 'client_upload')
+        setUploading(false)
+        if (failed) {
+          toast.error(`${failed} file(s) failed to upload. Open the project to retry.`)
+          navigate(`/client/projects/${projectId}`)
+          return
+        }
+        if (ok) toast.success(`Project submitted with ${ok} file(s).`)
+      } else {
+        toast.success("Project submitted! We'll review it and set a price shortly.")
+      }
+      navigate(projectId ? `/client/projects/${projectId}` : '/client/projects')
     },
     onError: (e: any) => {
       toast.error(e.response?.data?.error || e.response?.data?.detail || 'Submission failed.')
@@ -228,15 +244,9 @@ export default function ClientSubmitProject() {
             </div>
 
             <div style={{ marginBottom: 16 }}>
-              <label style={label}>Attach Files <span style={{ color: '#667697', fontWeight: 400, textTransform: 'none' }}>(optional)</span></label>
-              <label htmlFor="fileup" style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '14px 16px', border: '1.5px dashed #DCE3F0', borderRadius: 12, cursor: 'pointer', background: '#F8FAFD' }}>
-                <Paperclip size={20} color="#667697" />
-                <div>
-                  <p style={{ color: '#3A4A70', fontSize: 13, margin: 0, fontWeight: 500 }}>Click to attach files</p>
-                  <p style={{ color: '#667697', fontSize: 12, margin: 0 }}>PDF, MATLAB files, schematics...</p>
-                </div>
-                <input id="fileup" type="file" multiple style={{ display: 'none' }} />
-              </label>
+              <label style={label}>Attach Files <span style={{ color: '#667697', fontWeight: 400 }}>(optional, any type, any size)</span></label>
+              <FileDropzone onFiles={queue.add} disabled={mutation.isPending || uploading} compact />
+              <UploadQueueList items={queue.items} onRemove={queue.remove} busy={uploading} />
             </div>
 
             <div style={{ display: 'flex', gap: 20 }}>
@@ -331,9 +341,9 @@ export default function ClientSubmitProject() {
         {step === 1 && <button type="button" onClick={goStep2} style={nextBtn}>Continue →</button>}
         {step === 2 && <button type="button" onClick={goStep3} style={nextBtn}>Continue →</button>}
         {step === 3 && (
-          <button type="button" onClick={handleSubmit} disabled={mutation.isPending}
-            style={{ ...nextBtn, background: mutation.isPending ? '#7CCBA2' : '#1B9B63', cursor: mutation.isPending ? 'not-allowed' : 'pointer' }}>
-            {mutation.isPending
+          <button type="button" onClick={handleSubmit} disabled={mutation.isPending || uploading}
+            style={{ ...nextBtn, background: mutation.isPending || uploading ? '#7CCBA2' : '#1B9B63', cursor: mutation.isPending || uploading ? 'not-allowed' : 'pointer' }}>
+            {mutation.isPending || uploading
               ? <><span style={{ width: 14, height: 14, border: '2px solid rgba(255,255,255,.4)', borderTop: '2px solid #fff', borderRadius: '50%', display: 'inline-block', animation: 'spin .7s linear infinite', marginRight: 8 }} />Submitting...</>
               : 'Submit Project'
             }

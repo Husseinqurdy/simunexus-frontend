@@ -1,3 +1,4 @@
+import { useSystemHealth, HealthGrid, CountsRows } from '@/components/shared/SystemHealth'
 import { useQuery } from '@tanstack/react-query'
 import { authApi, paymentApi } from '@/api/client'
 import { StatCard, LoadingSpinner, PageHeader, Card, SectionTitle, Table, Tr, Td } from '@/components/shared'
@@ -5,6 +6,7 @@ import { useAuthStore } from '@/store/authStore'
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, AreaChart, Area } from 'recharts'
 
 export default function DevDashboard() {
+  const health = useSystemHealth()
   const { user } = useAuthStore()
   const devProfile = user?.developer_profile
 
@@ -43,12 +45,12 @@ export default function DevDashboard() {
         </div>
         <div style={{ display: 'flex', gap: 16 }}>
           <div style={{ textAlign: 'center' }}>
-            <p style={{ color: '#F5BA2E', fontFamily: 'inherit', fontWeight: 700, fontSize: 24, margin: 0 }}>${wallet?.wallet?.balance || '0.00'}</p>
+            <p style={{ color: '#F5BA2E', fontFamily: 'inherit', fontWeight: 700, fontSize: 24, margin: 0 }}>TSh {Number(wallet?.wallet?.balance || 0).toLocaleString()}</p>
             <p style={{ color: 'rgba(255,255,255,.4)', fontSize: 12, margin: 0 }}>Wallet Balance</p>
           </div>
           <div style={{ width: 1, background: 'rgba(255,255,255,.1)' }} />
           <div style={{ textAlign: 'center' }}>
-            <p style={{ color: '#1B9B63', fontFamily: 'inherit', fontWeight: 700, fontSize: 24, margin: 0 }}>${devProfile?.total_earned || '0.00'}</p>
+            <p style={{ color: '#1B9B63', fontFamily: 'inherit', fontWeight: 700, fontSize: 24, margin: 0 }}>TSh {Number(devProfile?.total_earned || 0).toLocaleString()}</p>
             <p style={{ color: 'rgba(255,255,255,.4)', fontSize: 12, margin: 0 }}>Total Earned</p>
           </div>
         </div>
@@ -56,9 +58,9 @@ export default function DevDashboard() {
 
       {/* Platform stats */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 16, marginBottom: 16 }}>
-        <StatCard label="Total Revenue" value={`$${financial?.total_revenue || 0}`} color="#2E4DA7" />
-        <StatCard label="Platform Profit" value={`$${financial?.total_platform_profit || 0}`} color="#1B9B63" />
-        <StatCard label="Expert Payouts" value={`$${financial?.total_expert_paid || 0}`} color="#0D52CE" />
+        <StatCard label="Total Revenue" value={`TSh ${Number(financial?.total_revenue || 0).toLocaleString()}`} color="#2E4DA7" />
+        <StatCard label="Platform Profit" value={`TSh ${Number(financial?.total_platform_profit || 0).toLocaleString()}`} color="#1B9B63" />
+        <StatCard label="Expert Payouts" value={`TSh ${Number(financial?.total_expert_paid || 0).toLocaleString()}`} color="#0D52CE" />
         <StatCard label="Projects Done" value={financial?.completed_projects || 0} color="#E5A00D" />
       </div>
 
@@ -88,7 +90,7 @@ export default function DevDashboard() {
               <CartesianGrid strokeDasharray="3 3" stroke="#EBEFF8" />
               <XAxis dataKey="name" tick={{ fontSize: 12, fill: '#667697' }} axisLine={false} tickLine={false} />
               <YAxis tick={{ fontSize: 12, fill: '#667697' }} axisLine={false} tickLine={false} />
-              <Tooltip formatter={(v: number) => [`$${v.toFixed(2)}`, '']} contentStyle={{ borderRadius: 12, border: '1px solid #EBEFF8', fontSize: 12 }} />
+              <Tooltip formatter={(v: number) => [`TSh ${Number(v).toLocaleString()}`, '']} contentStyle={{ borderRadius: 12, border: '1px solid #EBEFF8', fontSize: 12 }} />
               <Area type="monotone" dataKey="Revenue" stroke="#0A1F6B" strokeWidth={2.5} fill="url(#revGrad)" dot={false} />
               <Area type="monotone" dataKey="MyEarning" stroke="#3F5FB8" strokeWidth={2.5} fill="url(#devGrad)" dot={false} />
             </AreaChart>
@@ -104,23 +106,11 @@ export default function DevDashboard() {
         </Card>
       )}
 
-      {/* System health */}
+      {/* System health (live kutoka seva) */}
       <Card>
         <SectionTitle>System Health</SectionTitle>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 12 }}>
-          {[
-            { label: 'Backend API', status: 'Online', color: '#1B9B63' },
-            { label: 'PostgreSQL', status: 'Connected', color: '#1B9B63' },
-            { label: 'Redis Cache', status: 'Connected', color: '#1B9B63' },
-            { label: 'WebSocket', status: 'Active', color: '#0D52CE' },
-          ].map(({ label, status, color }) => (
-            <div key={label} style={{ background: '#F5F7FC', borderRadius: 12, padding: '16px', textAlign: 'center' }}>
-              <div style={{ width: 8, height: 8, background: color, borderRadius: '50%', margin: '0 auto 10px', boxShadow: `0 0 0 3px ${color}25` }} />
-              <p style={{ fontFamily: 'inherit', fontWeight: 700, fontSize: 12, color: '#0A1F4D', margin: '0 0 2px' }}>{label}</p>
-              <p style={{ fontSize: 12, color, fontWeight: 700, margin: 0 }}>{status}</p>
-            </div>
-          ))}
-        </div>
+        <HealthGrid data={health.data} isLoading={health.isLoading} isError={health.isError} />
+        <div style={{ marginTop: 16 }}><CountsRows data={health.data} /></div>
       </Card>
     </div>
   )

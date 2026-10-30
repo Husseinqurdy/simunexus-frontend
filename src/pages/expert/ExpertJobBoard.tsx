@@ -1,306 +1,169 @@
 import { useState } from 'react'
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { projectApi } from '@/api/client'
-import { useNavigate } from 'react-router-dom'
-import { formatDistanceToNow } from 'date-fns'
+import { Link } from 'react-router-dom'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import toast from 'react-hot-toast'
-import type { Project } from '@/types'
-import {
-  Search, Inbox, Lock, Zap, Clock3, CheckCircle2,
-  ArrowUpDown, X, Info, Loader2, ChevronDown
-} from 'lucide-react'
+import { Briefcase, CalendarClock, ChevronLeft, ChevronRight, FileText, Loader2, Lock, Search, Sparkles, X } from 'lucide-react'
+import { projectApi } from '@/api/client'
+import { errorMessage } from '@/lib/format'
+import type { JobBoardProject } from '@/types'
 
-const formatTSH = (value: number | string | undefined | null) => {
-  const n = Number(value || 0)
-  return `TSH ${n.toLocaleString('en-US')}`
-}
-
-const DELIVERY_CFG: Record<string, { label: string; color: string; bg: string }> = {
-  standard: { label: 'Standard', color: '#4E5E82', bg: '#F5F7FC' },
-  urgent:   { label: 'Urgent 24h', color: '#B85F00', bg: '#FFF8E6' },
-  express:  { label: 'Express 6-12h', color: '#B92D2D', bg: '#FDEDED' },
-}
-
-const SOFTWARE_OPTIONS = ['', 'matlab', 'ansys', 'abaqus', 'comsol', 'solidworks', 'other']
-const DELIVERY_OPTIONS = ['', 'standard', 'urgent', 'express']
-
-const SORT_OPTIONS = [
-  { value: '-created_at', label: 'Newest first' },
-  { value: '-client_price', label: 'Highest paying' },
-  { value: 'client_price', label: 'Lowest paying' },
-  { value: 'deadline', label: 'Deadline: soonest' },
-  { value: '-deadline', label: 'Deadline: furthest' },
+// Lazima ziwe sawa na SOFTWARE_CHOICES za backend (chaguo lisilo halali linatoa kosa 400)
+const SOFTWARE = [
+  ['matlab', 'MATLAB / Simulink'], ['proteus', 'Proteus'], ['ansys', 'ANSYS'], ['labview', 'LabVIEW'], ['multisim', 'Multisim'],
+  ['pscad', 'PSCAD'], ['etap', 'ETAP'], ['hfss', 'HFSS'], ['cst', 'CST Studio'], ['other', 'Other'],
 ]
+const SW_LABEL = Object.fromEntries(SOFTWARE)
+const DELIVERY: Record<string, string> = { standard: 'Standard', urgent: 'Urgent (24h)', express: 'Express (6–12h)' }
+const PAY: Record<string, [string, string, string]> = { paid: ['Client paid in full', '#EDF8F1', '#137A4E'], advance: ['Advance paid', '#FFF8E6', '#9A5B00'], unpaid: ['Not yet paid', '#EBEFF8', '#4E5E82'] }
+const PAGE_SIZE = 9
+const money = (v: string | null) => (v ? `TSh ${Number(v).toLocaleString()}` : '—')
 
-const PAGE_SIZE = 10
+const sel: React.CSSProperties = { height: 40, border: '1px solid #C3CEE2', borderRadius: 8, padding: '0 10px', fontSize: 14, background: '#fff', fontFamily: 'inherit', minWidth: 0 }
+const btn = (primary = true): React.CSSProperties => ({ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 6, height: 38, padding: '0 14px', borderRadius: 8, fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', border: primary ? 'none' : '1px solid #C3CEE2', background: primary ? '#0D52CE' : '#fff', color: primary ? '#fff' : '#0A1F6B' })
+
+function deadlineText(iso: string) {
+  const ms = new Date(iso).getTime() - Date.now()
+  if (ms <= 0) return 'Overdue'
+  const h = Math.floor(ms / 3600000)
+  return h < 48 ? `${h}h left` : `${Math.floor(h / 24)} days left`
+}
 
 export default function ExpertJobBoard() {
+  const qc = useQueryClient()
   const [search, setSearch] = useState('')
   const [software, setSoftware] = useState('')
   const [delivery, setDelivery] = useState('')
-  const [ordering, setOrdering] = useState('-created_at')
+  const [matching, setMatching] = useState(false)
+  const [ordering, setOrdering] = useState('deadline')
   const [page, setPage] = useState(1)
-  const [confirmProject, setConfirmProject] = useState<Project | null>(null)
-  const navigate = useNavigate()
-  const qc = useQueryClient()
+  const [open, setOpen] = useState<JobBoardProject | null>(null)
 
-  const { data, isLoading, isFetching } = useQuery({
-    queryKey: ['job-board', software, delivery, search, ordering, page],
+  const q = useQuery({
+    queryKey: ['job-board', search, software, delivery, matching, ordering, page],
     queryFn: () => projectApi.jobBoard({
-      ...(software && { software }),
-      ...(delivery && { delivery_type: delivery }),
-      ...(search && { search }),
-      ordering,
-      page,
-      page_size: PAGE_SIZE,
+      search: search || undefined, software: software || undefined, delivery_type: delivery || undefined,
+      matching: matching ? 1 : undefined, ordering, page, page_size: PAGE_SIZE,
     }).then(r => r.data),
-    refetchInterval: 15000,
+    placeholderData: prev => prev, refetchInterval: 30000,
   })
+  const jobs: JobBoardProject[] = q.data?.results || []
+  const total: number = q.data?.count || 0
+  const pages = Math.max(1, Math.ceil(total / PAGE_SIZE))
+  const set = <T,>(fn: (v: T) => void) => (v: T) => { fn(v); setPage(1) }
 
-  const claimMutation = useMutation({
+  const claim = useMutation({
     mutationFn: (id: number) => projectApi.claim(id),
-    onSuccess: (_, id) => {
-      toast.success('Project claimed! It\'s now in My Projects.')
-      qc.invalidateQueries({ queryKey: ['job-board'] })
-      setConfirmProject(null)
-      navigate(`/expert/projects/${id}`)
+    onSuccess: (r) => {
+      toast.success('Project claimed! It is now in My Projects.')
+      setOpen(null); qc.invalidateQueries({ queryKey: ['job-board'] }); qc.invalidateQueries({ queryKey: ['expert-projects'] })
+      void r
     },
-    onError: (e: any) => {
-      toast.error(e.response?.data?.error || 'Could not claim this project — it may already be taken.')
-      // Refresh immediately so the list reflects reality (avoids stale race-condition state).
-      qc.invalidateQueries({ queryKey: ['job-board'] })
-      setConfirmProject(null)
-    },
+    onError: (e: any) => { toast.error(errorMessage(e, 'Could not claim this project.')); qc.invalidateQueries({ queryKey: ['job-board'] }); setOpen(null) },
   })
-
-  const jobs: Project[] = data?.results || []
-  const hasNext = !!data?.next
-  const hasPrev = !!data?.previous
-  const totalCount = data?.count ?? jobs.length
-
-  const resetFilters = (fn: () => void) => {
-    fn()
-    setPage(1)
-  }
 
   return (
-    <div style={{ fontFamily: 'inherit' }} className="jb-page">
-      <style>{`
-        
-        @keyframes spin{to{transform:rotate(360deg)}}
-        @keyframes fadeUp{from{opacity:0;transform:translateY(0)}to{opacity:1;transform:translateY(0)}}
-        @keyframes modalIn{from{opacity:0;transform:scale(.96) translateY(0)}to{opacity:1;transform:scale(1) translateY(0)}}
-        .fu{animation:fadeUp .4s ease both}
-        .spin{animation:spin .8s linear infinite}
-        .jb-search-input { transition: border-color .15s ease, box-shadow .15s ease; }
-        .jb-search-input:focus { border-color: #0D52CE; box-shadow: 0 0 0 3px rgba(13,82,206,.12); }
-        .jb-select { transition: border-color .15s ease; }
-        .jb-card { transition: box-shadow 0.2s ease, transform 0.2s ease; }
-        .jb-claim-btn { transition: transform 0.15s ease, opacity 0.15s ease, box-shadow 0.2s ease; }
-        .jb-claim-btn:hover { transform: translateY(0); opacity: 0.94; box-shadow: 0 6px 16px rgba(13,82,206,.25); }
-        .jb-claim-btn:active { transform: translateY(0); }
-        .jb-claim-btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; box-shadow: none; }
-        .jb-page-btn { transition: background .15s ease, color .15s ease, opacity .15s ease; }
-        .jb-page-btn:disabled { opacity: 0.4; cursor: not-allowed; }
-        .jb-nda-tip { position: relative; display: inline-flex; }
-        .jb-nda-tip .jb-tip-bubble {
-          position: absolute; bottom: calc(100% + 6px); left: 50%; transform: translateX(-50%);
-          background: #0A1F4D; color: #fff; font-size: 12px; padding: 6px 10px; border-radius: 8px;
-          white-space: nowrap; opacity: 0; pointer-events: none; transition: opacity .15s ease;
-          z-index: 5;
-        }
-        .jb-nda-tip:hover .jb-tip-bubble { opacity: 1; }
-        .jb-modal-overlay { position: fixed; inset: 0; background: rgba(10,31,107,0.45); display: flex; align-items: center; justify-content: center; z-index: 1000; padding: 16px; }
-        .jb-modal { background: #fff; border-radius: 18px; width: 100%; max-width: 420px; padding: 24px; animation: modalIn .18s ease-out; }
-
-        .jb-filters { display: flex; gap: 10px; flex-wrap: wrap; }
-        .jb-cardbody { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
-        .jb-priceblock { display: flex; flex-direction: column; align-items: flex-end; gap: 10px; flex-shrink: 0; }
-
-        @media (max-width: 640px) {
-          .jb-page { font-size: 13px; }
-          .jb-cardbody { flex-direction: column; }
-          .jb-priceblock { align-items: stretch; width: 100%; flex-direction: row; justify-content: space-between; }
-          .jb-claim-btn { flex: 1; }
-          .jb-select { flex: 1; min-width: 130px; }
-        }
-      `}</style>
-
-      {/* Header */}
-      <div className="fu" style={{ marginBottom: 24 }}>
-        <h1 style={{ fontFamily: 'inherit', fontSize: 24, fontWeight: 700, color: '#0A1F4D', margin: 0 }}>Job Board</h1>
-        <p style={{ color: '#667697', fontSize: 13, margin: '4px 0 0' }}>{totalCount} open projects waiting to be claimed</p>
+    <div style={{ maxWidth: 1100, margin: '0 auto' }}>
+      <div style={{ marginBottom: 18 }}>
+        <h1 style={{ fontSize: 24, fontWeight: 700, color: '#0A1F4D', margin: '0 0 4px' }}>Job board</h1>
+        <p style={{ fontSize: 14, color: '#4E5E82', margin: 0 }}>Open projects you can claim. {total ? `${total} available.` : ''}</p>
       </div>
 
-      {/* Filters */}
-      <div className="fu jb-filters" style={{ marginBottom: 12 }}>
-        <div style={{ position: 'relative', flex: 1, minWidth: 200 }}>
-          <Search size={15} strokeWidth={2} style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: '#667697' }} />
-          <input
-            className="jb-search-input"
-            value={search}
-            onChange={e => resetFilters(() => setSearch(e.target.value))}
-            placeholder="Search open projects..."
-            style={{ width: '100%', padding: '10px 14px 10px 36px', border: '1.5px solid #DCE3F0', borderRadius: 10, fontSize: 13, outline: 'none', background: '#fff', fontFamily: 'inherit', boxSizing: 'border-box' }}
-          />
+      <div style={{ background: '#fff', border: '1px solid #DCE3F0', borderRadius: 12, padding: 14, display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center', marginBottom: 18 }}>
+        <div style={{ position: 'relative', flex: '1 1 220px', minWidth: 0 }}>
+          <Search size={16} color="#667697" style={{ position: 'absolute', left: 12, top: 12 }} />
+          <input style={{ ...sel, width: '100%', paddingLeft: 36, boxSizing: 'border-box' }} placeholder="Search projects…" value={search} onChange={e => set(setSearch)(e.target.value)} />
         </div>
-        <select className="jb-select" value={software} onChange={e => resetFilters(() => setSoftware(e.target.value))} style={{ padding: '10px 14px', border: '1.5px solid #DCE3F0', borderRadius: 10, fontSize: 13, background: '#fff', cursor: 'pointer', fontFamily: 'inherit', outline: 'none' }}>
-          <option value="">All Software</option>
-          {SOFTWARE_OPTIONS.filter(Boolean).map(s => <option key={s} value={s}>{s.toUpperCase()}</option>)}
+        <select style={sel} value={software} onChange={e => set(setSoftware)(e.target.value)} aria-label="Software">
+          <option value="">All software</option>{SOFTWARE.map(([v, l]) => <option key={v} value={v}>{l}</option>)}
         </select>
-        <select className="jb-select" value={delivery} onChange={e => resetFilters(() => setDelivery(e.target.value))} style={{ padding: '10px 14px', border: '1.5px solid #DCE3F0', borderRadius: 10, fontSize: 13, background: '#fff', cursor: 'pointer', fontFamily: 'inherit', outline: 'none' }}>
-          <option value="">All Delivery Types</option>
-          {DELIVERY_OPTIONS.filter(Boolean).map(d => <option key={d} value={d}>{DELIVERY_CFG[d]?.label || d}</option>)}
+        <select style={sel} value={delivery} onChange={e => set(setDelivery)(e.target.value)} aria-label="Delivery">
+          <option value="">Any delivery</option>{Object.entries(DELIVERY).map(([v, l]) => <option key={v} value={v}>{l}</option>)}
         </select>
+        <select style={sel} value={ordering} onChange={e => set(setOrdering)(e.target.value)} aria-label="Sort">
+          <option value="deadline">Deadline: soonest</option><option value="-client_price">Price: high to low</option><option value="-created_at">Newest first</option>
+        </select>
+        <label style={{ display: 'inline-flex', alignItems: 'center', gap: 8, fontSize: 14, fontWeight: 600, color: '#0A1F6B', cursor: 'pointer' }}>
+          <input type="checkbox" checked={matching} onChange={e => set(setMatching)(e.target.checked)} style={{ accentColor: '#0D52CE', width: 16, height: 16 }} /> Matching my skills
+        </label>
       </div>
 
-      {/* Sort row */}
-      <div className="fu" style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 20 }}>
-        <ArrowUpDown size={14} style={{ color: '#667697', flexShrink: 0 }} />
-        <select
-          className="jb-select"
-          value={ordering}
-          onChange={e => resetFilters(() => setOrdering(e.target.value))}
-          style={{ padding: '7px 12px', border: '1.5px solid #DCE3F0', borderRadius: 8, fontSize: 13, background: '#fff', cursor: 'pointer', fontFamily: 'inherit', outline: 'none', color: '#3A4A70' }}
-        >
-          {SORT_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
-        </select>
-        {isFetching && !isLoading && <Loader2 size={13} className="spin" style={{ color: '#C3CEE2' }} />}
-      </div>
-
-      {/* Jobs */}
-      {isLoading ? (
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: 64, gap: 12 }}>
-          <Loader2 size={30} className="spin" style={{ color: '#0D52CE' }} />
-          <p style={{ color: '#667697', fontSize: 13 }}>Loading open projects...</p>
+      {q.isLoading ? (
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: 16 }}>
+          {[0, 1, 2].map(i => <div key={i} style={{ height: 220, borderRadius: 12, background: '#EBEFF8' }} />)}
+        </div>
+      ) : q.isError ? (
+        <div style={{ background: '#FDEDED', border: '1px solid #F3C7C7', color: '#B92D2D', borderRadius: 12, padding: 20, fontSize: 14 }}>
+          Could not load jobs. {errorMessage(q.error, '')} <button style={{ ...btn(false), marginLeft: 8 }} onClick={() => q.refetch()}>Retry</button>
         </div>
       ) : jobs.length === 0 ? (
-        <div className="fu" style={{ background: '#fff', borderRadius: 16, border: '1px solid #EBEFF8', padding: '64px 24px', textAlign: 'center' }}>
-          <div style={{ width: 64, height: 64, borderRadius: 12, background: '#EBEFF8', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px', color: '#667697' }}>
-            <Inbox size={30} strokeWidth={1.8} />
-          </div>
-          <p style={{ fontFamily: 'inherit', fontSize: 18, fontWeight: 700, color: '#0A1F4D', margin: '0 0 8px' }}>
-            {search || software || delivery ? 'No matching projects' : 'No open projects right now'}
-          </p>
-          <p style={{ fontSize: 13, color: '#667697', margin: 0 }}>
-            {search || software || delivery ? 'Try a different filter.' : 'Check back soon — new projects appear here as clients submit them.'}
-          </p>
+        <div style={{ background: '#fff', border: '1px solid #DCE3F0', borderRadius: 12, padding: '48px 20px', textAlign: 'center' }}>
+          <Briefcase size={34} color="#8D9BB8" />
+          <p style={{ fontSize: 16, fontWeight: 600, color: '#0A1F4D', margin: '12px 0 4px' }}>No open jobs match your filters</p>
+          <p style={{ fontSize: 14, color: '#4E5E82', margin: 0 }}>New projects appear here once the admin has priced them. This page refreshes automatically.</p>
         </div>
       ) : (
-        <>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-            {jobs.map((p, i) => {
-              const dcfg = DELIVERY_CFG[p.delivery_type] || DELIVERY_CFG.standard
-              return (
-                <div key={p.id} className="fu jb-card"
-                  style={{ background: '#fff', borderRadius: 12, border: '1px solid #EBEFF8', padding: '20px 24px', animationDelay: `${i * 0.04}s` }}
-                  onMouseEnter={e => { (e.currentTarget as HTMLDivElement).style.boxShadow = '0 1px 3px rgba(10,31,107,.08)'; (e.currentTarget as HTMLDivElement).style.transform = 'translateY(0)' }}
-                  onMouseLeave={e => { (e.currentTarget as HTMLDivElement).style.boxShadow = '0 1px 3px rgba(10,31,107,.08)'; (e.currentTarget as HTMLDivElement).style.transform = 'translateY(0)' }}
-                >
-                  <div className="jb-cardbody">
-                    <div style={{ flex: 1, minWidth: 220 }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8, flexWrap: 'wrap' }}>
-                        <span style={{ fontFamily: 'inherit', fontWeight: 700, fontSize: 16, color: '#0A1F4D' }}>{p.title}</span>
-                        {p.is_nda && (
-                          <span className="jb-nda-tip">
-                            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 12, background: '#EEF2FB', color: '#2E4DA7', padding: '2px 8px', borderRadius: 999, fontWeight: 700, cursor: 'help' }}>
-                              <Lock size={11} strokeWidth={2.4} /> NDA
-                              <Info size={11} strokeWidth={2.4} />
-                            </span>
-                            <span className="jb-tip-bubble">Confidentiality agreement required to view full details</span>
-                          </span>
-                        )}
-                        <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 12, background: dcfg.bg, color: dcfg.color, padding: '2px 8px', borderRadius: 999, fontWeight: 700 }}>
-                          {p.delivery_type !== 'standard' && <Zap size={11} strokeWidth={2.6} />}
-                          {dcfg.label}
-                        </span>
-                      </div>
-                      <p style={{ fontSize: 13, color: '#4E5E82', lineHeight: 1.6, margin: '0 0 12px', maxWidth: 640 }}>
-                        {p.description?.length > 160 ? p.description.slice(0, 160) + '…' : p.description}
-                      </p>
-                      <div style={{ display: 'flex', gap: 14, flexWrap: 'wrap', alignItems: 'center' }}>
-                        <span style={{ fontSize: 12, background: '#EAF1FD', color: '#0D52CE', padding: '3px 10px', borderRadius: 999, fontWeight: 700 }}>{p.software?.toUpperCase()}</span>
-                        <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 12, color: '#667697' }}>
-                          <Clock3 size={12} strokeWidth={2.2} /> Deadline {formatDistanceToNow(new Date(p.deadline), { addSuffix: true })}
-                        </span>
-                        {p.include_explanation && (
-                          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 12, color: '#2E4DA7', fontWeight: 600 }}>
-                            <CheckCircle2 size={12} strokeWidth={2.4} /> Explanation required
-                          </span>
-                        )}
-                      </div>
-                    </div>
-
-                    <div className="jb-priceblock">
-                      <p style={{ fontFamily: 'inherit', fontWeight: 700, fontSize: 20, color: '#137A4E', margin: 0 }}>{formatTSH(p.client_price)}</p>
-                      <button
-                        className="jb-claim-btn"
-                        onClick={() => setConfirmProject(p)}
-                        style={{ background: '#0D52CE', color: '#fff', fontFamily: 'inherit', fontWeight: 700, fontSize: 13, padding: '10px 22px', borderRadius: 10, border: 'none', cursor: 'pointer', whiteSpace: 'nowrap' }}
-                      >
-                        Claim Project
-                      </button>
-                    </div>
-                  </div>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: 16, opacity: q.isFetching ? .75 : 1, transition: 'opacity .15s' }}>
+          {jobs.map(p => {
+            const [payText, payBg, payFg] = PAY[p.payment_status]
+            return (
+              <article key={p.id} style={{ background: '#fff', border: '1px solid #DCE3F0', borderRadius: 12, padding: 18, display: 'flex', flexDirection: 'column', gap: 10 }}>
+                <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                  <span style={{ fontSize: 12, fontWeight: 600, background: '#EAF1FD', color: '#0A42A8', borderRadius: 999, padding: '3px 10px' }}>{SW_LABEL[p.software] || p.software}</span>
+                  <span style={{ fontSize: 12, fontWeight: 600, background: '#EBEFF8', color: '#3A4A70', borderRadius: 999, padding: '3px 10px' }}>{DELIVERY[p.delivery_type] || p.delivery_type}</span>
+                  {p.matches_skills && <span style={{ fontSize: 12, fontWeight: 600, background: '#EDF8F1', color: '#137A4E', borderRadius: 999, padding: '3px 10px', display: 'inline-flex', gap: 4, alignItems: 'center' }}><Sparkles size={12} /> Matches you</span>}
+                  {p.is_nda && <span style={{ fontSize: 12, fontWeight: 600, background: '#FFF3E6', color: '#B85F00', borderRadius: 999, padding: '3px 10px', display: 'inline-flex', gap: 4, alignItems: 'center' }}><Lock size={12} /> NDA</span>}
                 </div>
-              )
-            })}
-          </div>
-
-          {/* Pagination */}
-          {(hasNext || hasPrev) && (
-            <div className="fu" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 12, marginTop: 24 }}>
-              <button
-                className="jb-page-btn"
-                onClick={() => setPage(p => Math.max(1, p - 1))}
-                disabled={!hasPrev || isFetching}
-                style={{ padding: '8px 16px', borderRadius: 10, border: '1.5px solid #DCE3F0', background: '#fff', color: '#3A4A70', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}
-              >
-                Previous
-              </button>
-              <span style={{ fontSize: 13, color: '#667697', fontWeight: 600 }}>Page {page}</span>
-              <button
-                className="jb-page-btn"
-                onClick={() => setPage(p => p + 1)}
-                disabled={!hasNext || isFetching}
-                style={{ padding: '8px 16px', borderRadius: 10, border: '1.5px solid #DCE3F0', background: '#fff', color: '#3A4A70', fontSize: 13, fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}
-              >
-                Next <ChevronDown size={14} style={{ transform: 'rotate(-90deg)' }} />
-              </button>
-            </div>
-          )}
-        </>
+                <h3 style={{ fontSize: 16, fontWeight: 600, color: '#0A1F4D', margin: 0, lineHeight: 1.35 }}>{p.title}</h3>
+                <p style={{ fontSize: 14, color: '#4E5E82', lineHeight: 1.6, margin: 0, display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{p.description}</p>
+                <div style={{ display: 'flex', gap: 14, flexWrap: 'wrap', fontSize: 13, color: '#4E5E82' }}>
+                  <span style={{ display: 'inline-flex', gap: 5, alignItems: 'center' }}><CalendarClock size={14} /> {deadlineText(p.deadline)}</span>
+                  {p.files_count > 0 && <span style={{ display: 'inline-flex', gap: 5, alignItems: 'center' }}><FileText size={14} /> {p.files_count} file(s)</span>}
+                  <span style={{ fontSize: 12, fontWeight: 600, background: payBg, color: payFg, borderRadius: 999, padding: '2px 9px' }}>{payText}</span>
+                </div>
+                <div style={{ marginTop: 'auto', display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', gap: 10, paddingTop: 8, borderTop: '1px solid #EBEFF8' }}>
+                  <div>
+                    <div style={{ fontSize: 12, color: '#667697' }}>Your earning</div>
+                    <div style={{ fontSize: 20, fontWeight: 700, color: '#137A4E' }}>{money(p.expert_earning)}</div>
+                  </div>
+                  <button style={btn()} onClick={() => setOpen(p)}>View & claim</button>
+                </div>
+              </article>
+            )
+          })}
+        </div>
       )}
 
-      {/* Claim confirmation modal */}
-      {confirmProject && (
-        <div className="jb-modal-overlay" onClick={() => !claimMutation.isPending && setConfirmProject(null)}>
-          <div className="jb-modal" onClick={e => e.stopPropagation()}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 12 }}>
-              <p style={{ fontFamily: 'inherit', fontWeight: 700, fontSize: 16, color: '#0A1F4D', margin: 0 }}>Claim this project?</p>
-              <button onClick={() => setConfirmProject(null)} disabled={claimMutation.isPending}
-                style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#667697', display: 'flex' }}>
-                <X size={18} />
-              </button>
+      {pages > 1 && (
+        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 12, marginTop: 20 }}>
+          <button style={btn(false)} disabled={page <= 1} onClick={() => setPage(p => p - 1)} aria-label="Previous page"><ChevronLeft size={16} /></button>
+          <span style={{ fontSize: 14, color: '#4E5E82' }}>Page {page} of {pages}</span>
+          <button style={btn(false)} disabled={page >= pages} onClick={() => setPage(p => p + 1)} aria-label="Next page"><ChevronRight size={16} /></button>
+        </div>
+      )}
+
+      {open && (
+        <div role="dialog" aria-modal="true" onClick={() => !claim.isPending && setOpen(null)} style={{ position: 'fixed', inset: 0, zIndex: 300, background: 'rgba(7,22,80,.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
+          <div onClick={e => e.stopPropagation()} style={{ background: '#fff', borderRadius: 12, padding: 'clamp(18px,4vw,28px)', width: 'min(620px, 100%)', maxHeight: '90vh', overflow: 'auto' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12 }}>
+              <h2 style={{ fontSize: 20, fontWeight: 700, color: '#0A1F4D', margin: '0 0 12px' }}>{open.title}</h2>
+              <button onClick={() => setOpen(null)} aria-label="Close" style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#667697', display: 'flex', height: 28 }}><X size={20} /></button>
             </div>
-            <p style={{ fontSize: 14, color: '#4E5E82', lineHeight: 1.6, margin: '0 0 16px' }}>
-              You're about to claim <strong style={{ color: '#0A1F4D' }}>{confirmProject.title}</strong> for{' '}
-              <strong style={{ color: '#137A4E' }}>{formatTSH(confirmProject.client_price)}</strong>. Once claimed, it's locked to you and removed from the job board for other experts.
+            <p style={{ fontSize: 14, color: '#2B3A60', lineHeight: 1.75, whiteSpace: 'pre-wrap', margin: '0 0 16px' }}>{open.description}</p>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(170px, 1fr))', gap: 8, marginBottom: 16, fontSize: 13 }}>
+              {[
+                ['Software', `${SW_LABEL[open.software] || open.software}${open.software_version ? ` (${open.software_version})` : ''}`],
+                ['Delivery', DELIVERY[open.delivery_type]], ['Deadline', new Date(open.deadline).toLocaleString()],
+                ['Client price', money(open.client_price)], ['Your earning', money(open.expert_earning)],
+                ['Explanation', open.include_explanation ? 'Required' : 'Not required'], ['Payment', PAY[open.payment_status][0]],
+              ].map(([k, v]) => <div key={k} style={{ background: '#F5F7FC', borderRadius: 8, padding: '8px 12px' }}><div style={{ color: '#667697' }}>{k}</div><div style={{ fontWeight: 600, color: '#0A1F4D' }}>{v}</div></div>)}
+            </div>
+            <p style={{ fontSize: 13, color: '#4E5E82', margin: '0 0 16px' }}>
+              By claiming, this project is assigned to you and you commit to delivering by the deadline. Input files appear in <Link to="/expert/projects" style={{ color: '#0D52CE', fontWeight: 600 }}>My Projects</Link> after you claim.
             </p>
-            <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
-              <button
-                onClick={() => claimMutation.mutate(confirmProject.id)}
-                disabled={claimMutation.isPending}
-                style={{ padding: '10px 20px', borderRadius: 10, background: '#0D52CE', color: '#fff', border: 'none', cursor: 'pointer', fontSize: 13, fontWeight: 700, display: 'flex', alignItems: 'center', gap: 6 }}
-              >
-                {claimMutation.isPending ? <><Loader2 size={14} className="spin" /> Claiming…</> : 'Yes, Claim It'}
-              </button>
-              <button
-                onClick={() => setConfirmProject(null)}
-                disabled={claimMutation.isPending}
-                style={{ padding: '10px 18px', borderRadius: 10, background: '#EBEFF8', color: '#4E5E82', border: 'none', cursor: 'pointer', fontSize: 13, fontWeight: 600 }}
-              >
-                Cancel
+            <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end', flexWrap: 'wrap' }}>
+              <button style={btn(false)} disabled={claim.isPending} onClick={() => setOpen(null)}>Cancel</button>
+              <button style={{ ...btn(), opacity: claim.isPending ? .7 : 1 }} disabled={claim.isPending} onClick={() => claim.mutate(open.id)}>
+                {claim.isPending ? <><Loader2 size={15} className="spin" /> Claiming…</> : 'Claim this project'}
               </button>
             </div>
           </div>

@@ -1,3 +1,5 @@
+import { FilePreviewModal } from '@/components/shared/Files'
+import { formatBytes } from '@/lib/format'
 import { ClipboardList, GraduationCap } from 'lucide-react'
 import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
@@ -21,6 +23,7 @@ export default function AdminRecruitment() {
   const qc = useQueryClient()
   const [statusFilter, setStatusFilter] = useState('')
   const [selected, setSelected] = useState<any | null>(null)
+  const [previewFile, setPreviewFile] = useState<any | null>(null)
   const [adminNotes, setAdminNotes] = useState('')
 
   const { data, isLoading } = useQuery({
@@ -190,17 +193,35 @@ export default function AdminRecruitment() {
                 </div>
               )}
 
-              {selected.test_submission && (
-                <div style={{ marginTop: 14, padding: '12px 14px', background: '#EEF2FB', border: '1px solid #C9D4F0', borderRadius: 10 }}>
-                  <p style={{ fontSize: 12, fontWeight: 700, color: '#2E4DA7', margin: '0 0 8px' }}>Test Submission</p>
-                  <a href={selected.test_submission.file} target="_blank" rel="noreferrer"
-                    style={{ fontSize: 12, color: '#2E4DA7', fontWeight: 600, textDecoration: 'none' }}>
-                    Download Test File →
-                  </a>
-                  {selected.test_submission.notes && (
-                    <p style={{ fontSize: 12, color: '#2E4DA7', margin: '6px 0 0', lineHeight: 1.5 }}>{selected.test_submission.notes}</p>
-                  )}
+              {selected.test_questions?.length > 0 && (
+                <div style={{ marginTop: 14, padding: '12px 14px', background: '#F5F7FC', border: '1px solid #DCE3F0', borderRadius: 10 }}>
+                  <p style={{ fontSize: 13, fontWeight: 600, color: '#0A1F4D', margin: '0 0 8px' }}>Question given to the applicant</p>
+                  {selected.test_questions.map((q: any) => (
+                    <div key={q.id} style={{ marginBottom: 8 }}>
+                      <span style={{ fontSize: 12, fontWeight: 600, background: '#EAF1FD', color: '#0A42A8', borderRadius: 999, padding: '2px 9px' }}>{q.tool_name}</span>
+                      <p style={{ fontSize: 13, color: '#2B3A60', lineHeight: 1.6, margin: '6px 0 0', whiteSpace: 'pre-wrap' }}>{q.question_text}</p>
+                    </div>
+                  ))}
                 </div>
+              )}
+
+              {selected.test_submission ? (
+                <div style={{ marginTop: 14, padding: '12px 14px', background: '#EAF1FD', border: '1px solid #C4DBF1', borderRadius: 10 }}>
+                  <p style={{ fontSize: 13, fontWeight: 600, color: '#0A42A8', margin: '0 0 8px', display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
+                    Test submission
+                    {selected.test_submission.is_late && <span style={{ fontSize: 12, background: '#FDEDED', color: '#B92D2D', borderRadius: 999, padding: '2px 9px' }}>Submitted late</span>}
+                  </p>
+                  <div style={{ fontSize: 13, color: '#0A1F4D', wordBreak: 'break-word' }}>{selected.test_submission.file_name} <span style={{ color: '#667697' }}>· {formatBytes(selected.test_submission.file_size)}</span></div>
+                  <div style={{ display: 'flex', gap: 8, marginTop: 10, flexWrap: 'wrap' }}>
+                    {selected.test_submission.preview !== 'other' && (
+                      <button onClick={() => setPreviewFile(selected.test_submission)} style={{ height: 34, padding: '0 12px', borderRadius: 8, border: '1px solid #C3CEE2', background: '#fff', color: '#0A1F6B', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>Preview</button>
+                    )}
+                    <a href={selected.test_submission.url} target="_blank" rel="noopener noreferrer" style={{ height: 34, display: 'inline-flex', alignItems: 'center', padding: '0 12px', borderRadius: 8, background: '#0D52CE', color: '#fff', fontSize: 13, fontWeight: 600, textDecoration: 'none' }}>Download</a>
+                  </div>
+                  {selected.test_submission.notes && <p style={{ fontSize: 13, color: '#2B3A60', margin: '10px 0 0', lineHeight: 1.6 }}><strong>Notes:</strong> {selected.test_submission.notes}</p>}
+                </div>
+              ) : selected.status === 'submitted' && (
+                <p style={{ fontSize: 13, color: '#B92D2D', marginTop: 12 }}>No file was attached to this submission.</p>
               )}
             </Card>
 
@@ -250,6 +271,7 @@ export default function AdminRecruitment() {
           </div>
         )}
       </div>
+      {previewFile && <FilePreviewModal name={previewFile.file_name} url={previewFile.url} kind={previewFile.preview} onClose={() => setPreviewFile(null)} />}
     </div>
   )
 }

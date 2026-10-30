@@ -76,11 +76,16 @@ function navLinks(role: string) {
     { to: '/admin/users', label: 'Users', icon: 'users' },
     { to: '/admin/financials', label: 'Financials', icon: 'financial' },
     { to: '/admin/recruitment', label: 'Recruitment', icon: 'recruit' },
+    { to: '/admin/test-bank', label: 'Test Bank', icon: 'settings' },
+    { to: '/admin/landing-media', label: 'Landing Media', icon: 'projects' },
     { to: '/admin/chat', label: 'Messages', icon: 'chat' },
   ]
   if (role === 'developer') return [
     { to: '/developer', label: 'Dev Dashboard', icon: 'dashboard', end: true },
     { to: '/admin', label: 'Admin View', icon: 'settings' },
+    { to: '/admin/recruitment', label: 'Recruitment', icon: 'recruit' },
+    { to: '/admin/test-bank', label: 'Test Bank', icon: 'settings' },
+    { to: '/admin/landing-media', label: 'Landing Media', icon: 'projects' },
     { to: '/developer/commissions', label: 'Commissions', icon: 'financial' },
     { to: '/developer/system', label: 'System', icon: 'settings' },
   ]
@@ -92,7 +97,7 @@ const ROLE_COLOR: Record<string, string> = { client: '#F0A04B', expert: '#F0A04B
 const ROLE_BG: Record<string, string> = { client: 'rgba(255,255,255,.10)', expert: 'rgba(255,255,255,.10)', admin: 'rgba(255,255,255,.10)', developer: 'rgba(255,255,255,.10)' }
 
 export default function DashboardLayout() {
-  const { user, logout, refreshToken } = useAuthStore()
+  const { user, logout, refreshToken, updateUser } = useAuthStore()
   const navigate = useNavigate()
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [collapsed, setCollapsed] = useState(false)
@@ -114,6 +119,18 @@ export default function DashboardLayout() {
     logout()
     navigate('/login')
   }
+
+  // Sasisha taarifa za mtumiaji kutoka seva mara moja kwa kila kikao: profile %, role mpya (mf. expert aliyepitishwa)
+  useEffect(() => {
+    authApi.me().then(r => {
+      const fresh = r.data
+      if (user && fresh.role !== user.role) {
+        updateUser(fresh)
+        window.location.replace({ client: '/client', expert: '/expert', admin: '/admin', developer: '/developer' }[fresh.role as string] || '/')
+      } else updateUser(fresh)
+    }).catch(() => {})
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   // Close sidebar on route change (mobile)
   useEffect(() => { setSidebarOpen(false) }, [])

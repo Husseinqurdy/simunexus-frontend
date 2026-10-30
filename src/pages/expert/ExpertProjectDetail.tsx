@@ -9,6 +9,7 @@ import {
 import { format, formatDistanceToNow, isValid } from 'date-fns'
 import toast from 'react-hot-toast'
 import type { Project, User, ProjectFile } from '@/types'
+import { ProjectFilesPanel } from '@/components/shared/Files'
 import {
   ArrowLeft,
   Lock,
@@ -44,6 +45,11 @@ function InfoRow({ label, value }: { label: string; value: React.ReactNode }) {
 
 // Statuses where the expert is expected to actively be working / can submit
 const ACTIONABLE_STATUSES = ['assigned', 'in_progress', 'revision']
+const UPLOAD_TYPES = [
+  { value: 'expert_final', label: 'Final deliverable (shown to client when completed)' },
+  { value: 'expert_partial', label: 'Work in progress (internal, not shown to client)' },
+  { value: 'explanation', label: 'Explanation / report' },
+]
 
 export default function ExpertProjectDetail() {
   const { id } = useParams<{ id: string }>()
@@ -82,8 +88,7 @@ export default function ExpertProjectDetail() {
 
   const clientUser = project.client as User
   const files = project.files || []
-  const clientFiles = files.filter((f: ProjectFile) => f.file_type === 'client_upload')
-  const myFiles = files.filter((f: ProjectFile) => ['expert_final', 'explanation'].includes(f.file_type))
+    const myFiles = files.filter((f: ProjectFile) => f.file_type === 'expert_final')
   const latestProgress = project.progress_updates?.[0]
   const canWork = ACTIONABLE_STATUSES.includes(project.status)
   const canSubmitForQC = project.status === 'in_progress' || project.status === 'revision'
@@ -227,31 +232,16 @@ export default function ExpertProjectDetail() {
             </Card>
           )}
 
-          {/* Client uploaded files */}
-          {clientFiles.length > 0 && (
-            <Card className="epd-card-anim">
-              <SectionTitle>Client Files</SectionTitle>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                {clientFiles.map(f => (
-                  <div key={f.id} className="epd-file-row" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 14px', background: '#F5F7FC', borderRadius: 10, border: '1px solid #EBEFF8' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                      <div style={{ width: 34, height: 34, borderRadius: 8, background: '#EAF1FD', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                        <Paperclip size={16} strokeWidth={2} color="#0D52CE" />
-                      </div>
-                      <div>
-                        <p style={{ fontSize: 13, fontWeight: 600, margin: 0, color: '#0A1F4D' }}>{f.original_name}</p>
-                        <p style={{ fontSize: 12, color: '#667697', margin: '2px 0 0' }}>{(f.file_size / 1024).toFixed(1)} KB</p>
-                      </div>
-                    </div>
-                    <a href={f.file} target="_blank" rel="noreferrer" className="epd-btn"
-                      style={{ padding: '5px 12px', borderRadius: 8, background: '#EAF1FD', color: '#0D52CE', fontSize: 12, fontWeight: 700, textDecoration: 'none' }}>
-                      Download
-                    </a>
-                  </div>
-                ))}
-              </div>
-            </Card>
-          )}
+          {/* Project files: client inputs + my uploads (preview, download, upload) */}
+          <ProjectFilesPanel
+            projectId={Number(id)}
+            files={files}
+            title="Project files"
+            emptyText="The client has not attached any files."
+            uploadTypes={canWork ? UPLOAD_TYPES : []}
+            canDelete={f => canWork && f.file_type !== 'client_upload'}
+            onChanged={invalidate}
+          />
 
           {/* Review (read-only, once completed) */}
           {project.review && (
@@ -268,29 +258,6 @@ export default function ExpertProjectDetail() {
 
         {/* ===== RIGHT SIDEBAR ===== */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-
-          {/* My deliverables */}
-          <Card className="epd-card-anim">
-            <SectionTitle>Upload Deliverable</SectionTitle>
-            <UploadFileBox projectId={Number(id)} onSuccess={invalidate} />
-          </Card>
-
-          {myFiles.length > 0 && (
-            <Card className="epd-card-anim">
-              <SectionTitle>My Uploaded Files</SectionTitle>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                {myFiles.map(f => (
-                  <div key={f.id} className="epd-file-row" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 14px', background: '#F5F7FC', borderRadius: 10, border: '1px solid #EBEFF8' }}>
-                    <div>
-                      <p style={{ fontFamily: 'inherit', fontWeight: 600, fontSize: 13, color: '#0A1F4D', margin: 0 }}>{f.original_name}</p>
-                      <p style={{ fontSize: 12, color: '#667697', margin: '2px 0 0' }}>{f.file_type === 'explanation' ? 'Explanation' : 'Final deliverable'} · {(f.file_size / 1024).toFixed(1)} KB</p>
-                    </div>
-                    <a href={f.file} target="_blank" rel="noreferrer" style={{ color: '#0D52CE', fontSize: 12, fontWeight: 600, textDecoration: 'none' }}>View</a>
-                  </div>
-                ))}
-              </div>
-            </Card>
-          )}
 
           {/* Submit for QC */}
           {canSubmitForQC && (
@@ -390,59 +357,6 @@ function ProgressUpdateForm({ projectId, onSuccess }: { projectId: number; onSuc
         disabled={!timeRemaining || addProgressMutation.isPending}
       >
         <Send size={13} strokeWidth={2.2} /> {addProgressMutation.isPending ? 'Posting…' : 'Post Update'}
-      </Btn>
-    </div>
-  )
-}
-
-function UploadFileBox({ projectId, onSuccess }: { projectId: number; onSuccess: () => void }) {
-  const [fileType, setFileType] = useState('expert_final')
-  const [selectedFile, setSelectedFile] = useState<File | null>(null)
-
-  const uploadMutation = useMutation({
-    mutationFn: () => {
-      if (!selectedFile) throw new Error('No file selected')
-      const fd = new FormData()
-      fd.append('file', selectedFile)
-      fd.append('file_type', fileType)
-      return projectApi.uploadFile(projectId, fd)
-    },
-    onSuccess: () => {
-      toast.success('File uploaded!')
-      setSelectedFile(null)
-      onSuccess()
-    },
-    onError: () => toast.error('Upload failed.'),
-  })
-
-  const FILE_TYPES = [
-    { value: 'expert_final', label: 'Final Deliverable' },
-    { value: 'explanation', label: 'Explanation' },
-  ]
-
-  return (
-    <div>
-      <select
-        value={fileType}
-        onChange={e => setFileType(e.target.value)}
-        style={{ width: '100%', padding: '8px 10px', borderRadius: 8, border: '1.5px solid #DCE3F0', fontSize: 12, marginBottom: 8, outline: 'none', fontFamily: 'inherit', color: '#2B3A60' }}
-      >
-        {FILE_TYPES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
-      </select>
-      <input
-        type="file"
-        onChange={e => setSelectedFile(e.target.files?.[0] || null)}
-        style={{ fontSize: 12, width: '100%', marginBottom: 8 }}
-      />
-      <Btn
-        variant="accent"
-        size="sm"
-        className="epd-btn"
-        style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}
-        onClick={() => uploadMutation.mutate()}
-        disabled={!selectedFile || uploadMutation.isPending}
-      >
-        <Upload size={14} strokeWidth={2.2} /> {uploadMutation.isPending ? 'Uploading…' : 'Upload'}
       </Btn>
     </div>
   )

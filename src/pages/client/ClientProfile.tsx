@@ -4,6 +4,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { authApi } from '@/api/client'
 import { useAuthStore } from '@/store/authStore'
 import toast from 'react-hot-toast'
+import { errorMessage } from '@/lib/format'
 
 const COUNTRIES = ['Tanzania','Kenya','Uganda','Rwanda','Ethiopia','Nigeria','Ghana','South Africa','Egypt','Morocco','United States','United Kingdom','Canada','Germany','France','India','China','Australia','Other']
 const PROGRAMS = ['Electrical Engineering','Electronic Engineering','Mechanical Engineering','Civil Engineering','Computer Engineering','Computer Science','Physics','Mathematics','Biomedical Engineering','Chemical Engineering','Industrial Engineering','Other']
@@ -41,12 +42,14 @@ export default function ClientProfile() {
 
   const userMutation = useMutation({
     mutationFn: async (data: any) => {
-      // Update user base info via me endpoint (PATCH)
-      const res = await authApi.me()
-      return res.data
+      await authApi.updateMe({
+        first_name: data.first_name?.trim(), last_name: data.last_name?.trim(),
+        phone: data.phone?.trim(), whatsapp: data.whatsapp?.trim(), country: data.country,
+      })
+      return (await authApi.me()).data   // ukamilifu unahesabiwa na seva
     },
     onSuccess: (data) => { updateUser(data); toast.success('Personal info updated!') },
-    onError: () => toast.error('Update failed.'),
+    onError: (e: any) => toast.error(errorMessage(e, 'Update failed.')),
   })
 
   const profileMutation = useMutation({
@@ -57,7 +60,7 @@ export default function ClientProfile() {
       toast.success('Academic info updated!')
       qc.invalidateQueries({ queryKey: ['client-projects'] })
     },
-    onError: () => toast.error('Update failed.'),
+    onError: (e: any) => toast.error(errorMessage(e, 'Update failed.')),
   })
 
   const pwMutation = useMutation({
@@ -67,18 +70,9 @@ export default function ClientProfile() {
     onError: (e: any) => toast.error(e.response?.data?.old_password?.[0] || 'Password change failed.'),
   })
 
-  const completeness = (() => {
-    let done = 0, total = 8
-    if (user?.first_name) done++
-    if (user?.last_name)  done++
-    if (user?.phone)      done++
-    if (user?.country)    done++
-    if (profile?.type)    done++
-    if (profile?.university) done++
-    if (profile?.program) done++
-    if (user?.email)      done++
-    return Math.round((done/total)*100)
-  })()
+  // Chanzo kimoja cha ukweli: seva (profile_completion + missing_profile_fields)
+  const completeness = user?.profile_completion ?? 0
+  const missing = user?.missing_profile_fields ?? []
 
   const tabStyle = (t: string) => ({
     padding:'10px 20px', borderRadius:10, fontSize:13, fontWeight:600, cursor:'pointer',
@@ -105,7 +99,7 @@ export default function ClientProfile() {
               {completeness===100 ? 'Profile Complete!' : `Profile ${completeness}% Complete`}
             </p>
             <p style={{ fontSize:12, color: completeness===100?'#137A4E':'#B85F00', margin:'3px 0 0' }}>
-              {completeness===100 ? 'You can download completed project files.' : 'Complete your profile to unlock file downloads.'}
+              {completeness===100 ? 'You can download completed project files.' : `Still missing: ${missing.join(', ')}. Complete them to unlock file downloads.`}
             </p>
           </div>
           <div style={{ width:52, height:52, borderRadius:'50%', background:'#fff', display:'flex', alignItems:'center', justifyContent:'center', boxShadow:'0 1px 3px rgba(10,31,107,.08)' }}>

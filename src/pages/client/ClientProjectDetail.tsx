@@ -1,4 +1,6 @@
 import { useParams, Link } from 'react-router-dom'
+import { ProjectFilesPanel } from '@/components/shared/Files'
+import { useAuthStore } from '@/store/authStore'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { projectApi, paymentApi } from '@/api/client'
 import { useForm } from 'react-hook-form'
@@ -44,6 +46,7 @@ export default function ClientProjectDetail() {
   const [coupon, setCoupon] = useState('')
   const [rating, setRating] = useState(0)
   const [hoveredStar, setHoveredStar] = useState(0)
+  const user = useAuthStore(s => s.user)
 
   const { data: project, isLoading } = useQuery({
     queryKey: ['client-project', id],
@@ -98,6 +101,7 @@ export default function ClientProjectDetail() {
   const files = project.files || []
   const deliverableFiles = files.filter((f: any) => ['expert_final','admin_delivery','explanation'].includes(f.file_type))
   const clientFiles = files.filter((f: any) => f.file_type === 'client_upload')
+  const canAddFiles = ['received', 'assigned', 'in_progress', 'revision', 'qc'].includes(project.status)
   const needsPay = project.client_price && !project.is_fully_paid && !['completed','cancelled'].includes(project.status)
 
   return (
@@ -277,28 +281,15 @@ export default function ClientProjectDetail() {
               <p style={{ fontSize:13, color:'#137A4E', margin:'2px 0 0' }}>Your simulation results are ready for download.</p>
             </div>
           </div>
-          {deliverableFiles.length > 0 ? (
-            <div style={{ display:'flex', flexDirection:'column', gap:8 }}>
-              {deliverableFiles.map((f: any) => (
-                <div key={f.id} className="cpd-file-row" style={{ display:'flex', alignItems:'center', justifyContent:'space-between', background:'#fff', borderRadius:12, padding:'12px 16px', border:'1px solid #BFE5CF' }}>
-                  <div style={{ display:'flex', alignItems:'center', gap:10 }}>
-                    {f.file_type === 'explanation'
-                      ? <BookOpen size={16} strokeWidth={2} color="#1B9B63" />
-                      : <FolderOpen size={16} strokeWidth={2} color="#1B9B63" />}
-                    <div>
-                      <p style={{ fontFamily: 'inherit', fontWeight:700, fontSize:14, color:'#0A1F4D', margin:0 }}>{f.original_name}</p>
-                      <p style={{ fontSize:12, color:'#667697', margin:'2px 0 0' }}>{f.file_type === 'explanation' ? 'Explanation file' : 'Simulation result'} · {Math.round(f.file_size/1024)}KB</p>
-                    </div>
-                  </div>
-                  <a href={f.file} download className="cpd-btn" style={{ display:'inline-flex', alignItems:'center', gap:6, background:'#1B9B63', color:'#fff', fontFamily: 'inherit', fontWeight:700, fontSize:13, padding:'9px 18px', borderRadius:10, textDecoration:'none' }}>
-                    <Download size={14} strokeWidth={2.2} /> Download
-                  </a>
-                </div>
-              ))}
+          {!user?.is_profile_complete && (
+            <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', gap:12, flexWrap:'wrap', background:'#FFF8E6', border:'1px solid #F8DC8A', borderRadius:10, padding:'12px 14px', marginBottom:12 }}>
+              <span style={{ fontSize:14, color:'#7A4A00' }}>Your profile is {user?.profile_completion ?? 0}% complete. Reach 100% to unlock downloads.</span>
+              <Link to="/client/profile" style={{ background:'#0D52CE', color:'#fff', fontSize:13, fontWeight:600, padding:'8px 14px', borderRadius:8, textDecoration:'none' }}>Complete profile</Link>
             </div>
-          ) : (
-            <p style={{ fontSize:13, color:'#137A4E', margin:0 }}>Files will appear here shortly.</p>
           )}
+          <ProjectFilesPanel projectId={Number(id)} files={deliverableFiles} title="Your results"
+            emptyText="Files will appear here shortly." profileLink="/client/profile"
+            onChanged={() => qc.invalidateQueries({ queryKey: ['client-project', id] })} />
         </div>
       )}
 
@@ -363,23 +354,13 @@ export default function ClientProjectDetail() {
         </div>
       )}
 
-      {/* Client uploaded files */}
-      {clientFiles.length > 0 && (
-        <div className="fu cpd-card-anim" style={{ background:'#fff', borderRadius:16, border:'1px solid #EBEFF8', padding:'24px 28px' }}>
-          <p style={{ fontFamily: 'inherit', fontWeight:700, fontSize:16, color:'#0A1F4D', margin:'0 0 12px' }}>Your Uploaded Files</p>
-          <div style={{ display:'flex', flexDirection:'column', gap:8 }}>
-            {clientFiles.map((f: any) => (
-              <div key={f.id} className="cpd-file-row" style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding:'10px 14px', background:'#F5F7FC', borderRadius:10, border:'1px solid #EBEFF8' }}>
-                <div>
-                  <p style={{ fontFamily: 'inherit', fontWeight:600, fontSize:13, color:'#0A1F4D', margin:0 }}>{f.original_name}</p>
-                  <p style={{ fontSize:12, color:'#667697', margin:'2px 0 0' }}>{Math.round(f.file_size/1024)}KB</p>
-                </div>
-                <a href={f.file} download style={{ color:'#0D52CE', fontSize:12, fontWeight:600, textDecoration:'none' }}>Download</a>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
+      <div className="fu cpd-card-anim">
+        <ProjectFilesPanel projectId={Number(id)} files={clientFiles} title="Your uploaded files"
+          emptyText="You have not uploaded any files yet."
+          uploadTypes={canAddFiles ? [{ value: 'client_upload', label: 'Project input files' }] : []}
+          canDelete={() => canAddFiles}
+          onChanged={() => qc.invalidateQueries({ queryKey: ['client-project', id] })} />
+      </div>
     </div>
   )
 }

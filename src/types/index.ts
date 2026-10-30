@@ -3,6 +3,9 @@ export type Role = 'developer' | 'admin' | 'expert' | 'client'
 export interface User {
   id: number
   email: string
+  username?: string
+  profile_completion?: number
+  missing_profile_fields?: string[]
   first_name: string
   last_name: string
   role: Role
@@ -65,13 +68,107 @@ export interface ProjectProgress {
   created_at: string
 }
 
+export type FileType = 'client_upload' | 'expert_partial' | 'expert_final' | 'admin_delivery' | 'explanation'
+export type PreviewKind = 'image' | 'video' | 'audio' | 'pdf' | 'text' | 'other'
+
 export interface ProjectFile {
   id: number
-  file: string
-  file_type: string
+  file_type: FileType | string
   original_name: string
   file_size: number
+  mime_type?: string
   created_at: string
+  uploaded_by_name?: string | null
+  /** Kiungo kilichosainiwa (kina muda). null = imefungwa. */
+  url: string | null
+  preview: PreviewKind
+  locked: boolean
+  lock_reason: 'PROFILE_INCOMPLETE' | 'NOT_COMPLETED' | 'HIDDEN' | null
+}
+
+export interface JobBoardProject {
+  id: number
+  title: string
+  description: string
+  software: SoftwareType
+  software_version: string
+  delivery_type: DeliveryType
+  deadline: string
+  client_price: string | null
+  expert_earning: string | null
+  matches_skills: boolean
+  payment_status: 'unpaid' | 'advance' | 'paid'
+  is_nda: boolean
+  include_explanation: boolean
+  files_count: number
+  created_at: string
+}
+
+export interface TestTool { id: number; name: string; description?: string; is_active?: boolean; question_count?: number; active_question_count?: number }
+
+export interface TestQuestion {
+  id: number; tool: number; tool_name: string; number: number | null; text: string
+  is_active: boolean; source: number | null; source_name: string | null; created_at: string
+}
+
+export interface QuestionUpload {
+  id: number; tool: number | null; tool_name: string | null; original_name: string
+  questions_created: number; questions_skipped: number; status: string; message: string
+  uploaded_by_name: string | null; created_at: string; url: string
+}
+
+export interface TestSubmission {
+  id: number; notes: string; submitted_at: string; is_late: boolean
+  file_name: string; file_size: number; url: string; preview: PreviewKind
+}
+
+export interface ExpertApplication {
+  id: number
+  applicant: number
+  applicant_name: string
+  applicant_email: string | null
+  skills: string[]
+  bio: string
+  experience_years: number
+  portfolio_url: string
+  status: 'pending' | 'testing' | 'submitted' | 'passed' | 'failed' | 'retry'
+  test_started_at: string | null
+  test_submitted_at: string | null
+  admin_notes: string
+  retry_count: number
+  created_at: string
+  test_questions: { id: number; tool_name: string; question_text: string }[]
+  test_submission: TestSubmission | null
+  test_deadline: string | null
+  test_duration_minutes: number
+  no_questions?: boolean
+}
+
+export interface ShowcaseItem {
+  id: number
+  kind: 'video' | 'image'
+  title: string
+  description: string
+  software: string
+  external_url: string
+  duration: string
+  order: number
+  is_published: boolean
+  file_url: string | null
+  thumbnail_url: string | null
+  file_size: number
+  created_at: string
+}
+
+export interface SystemHealth {
+  status: 'ok' | 'degraded'
+  checks: Record<'database' | 'cache' | 'websocket', { ok: boolean; latency_ms: number; detail?: string; error?: string }>
+  server: { environment: string; debug: boolean; python: string; django: string; platform: string; commit: string | null; time: string; timezone: string; uptime_seconds: number }
+  storage: { backend: string; path: string; disk_total: number; disk_used: number; disk_free: number; media_bytes: number; media_files: number; media_truncated: boolean; x_accel_redirect: boolean }
+  email: { backend: string; host: string; port: number; tls: boolean; ssl: boolean; from: string; user_configured: boolean; password_configured: boolean; is_console: boolean; tls_verify_disabled: boolean }
+  payments: { pesapal: { configured: boolean; sandbox: boolean; ipn_url_set: boolean; ipn_id_set: boolean; callback_url_set: boolean }; azampay: { configured: boolean; sandbox: boolean } }
+  config: { frontend_url: string; cors_origins: string[]; allowed_hosts: string[]; commission_defaults: { expert: number; developer: number; platform: number }; jwt_access_minutes: number; jwt_refresh_days: number; expert_test_minutes: number; expert_test_questions: number }
+  counts: { users: Record<string, number>; users_online: number; projects: Record<string, number>; applications_to_review: number; test_questions: number; showcase_items: number; unsettled_commissions: number; wallet_total: string }
 }
 
 export interface ProjectReview {

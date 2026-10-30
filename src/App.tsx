@@ -45,6 +45,8 @@ import AdminUsers from '@/pages/admin/AdminUsers'
 import AdminFinancials from '@/pages/admin/AdminFinancials'
 import AdminRecruitment from '@/pages/admin/AdminRecruitment'
 import AdminChat from '@/pages/admin/AdminChat'
+import AdminTestBank from '@/pages/admin/AdminTestBank'
+import AdminLandingMedia from '@/pages/admin/AdminLandingMedia'
 
 // Developer
 import DevDashboard from '@/pages/developer/DevDashboard'
@@ -165,6 +167,8 @@ export default function App() {
           <Route path="users" element={<AdminUsers />} />
           <Route path="financials" element={<AdminFinancials />} />
           <Route path="recruitment" element={<AdminRecruitment />} />
+          <Route path="test-bank" element={<AdminTestBank />} />
+          <Route path="landing-media" element={<AdminLandingMedia />} />
           <Route path="chat" element={<AdminChat />} />
         </Route>
 

@@ -9,6 +9,16 @@ import {
 import { format, formatDistanceToNow, isValid } from 'date-fns'
 import toast from 'react-hot-toast'
 import type { Project, User, ProjectProgress, ProjectFile } from '@/types'
+import { ProjectFilesPanel } from '@/components/shared/Files'
+import { errorMessage } from '@/lib/format'
+
+const ADMIN_UPLOAD_TYPES = [
+  { value: 'admin_delivery', label: 'Delivery file (shown to client when completed)' },
+  { value: 'expert_final', label: 'Final deliverable' },
+  { value: 'explanation', label: 'Explanation / report' },
+  { value: 'client_upload', label: 'Client input file' },
+  { value: 'expert_partial', label: 'Work in progress (internal)' },
+]
 import {
   Lock,
   AlertTriangle,
@@ -83,14 +93,23 @@ export default function AdminProjectDetail() {
   })
 
   const approveMutation = useMutation({
-    mutationFn: (payload: { action: string; reason?: string }) =>
+    mutationFn: (payload: { action: string; reason?: string; force?: boolean }) =>
       projectApi.approve(Number(id), payload),
-    onSuccess: (_: unknown, { action }: { action: string; reason?: string }) => {
+    onSuccess: (_: unknown, { action }: { action: string; reason?: string; force?: boolean }) => {
       toast.success(action === 'approve' ? 'Project approved & delivered to client!' : 'Revision requested.')
       invalidate()
       setShowRevisionBox(false)
     },
-    onError: () => toast.error('Action failed.'),
+    onError: (e: any, vars) => {
+      // Mteja hajalipa kikamilifu: msimamizi anaweza kuidhinisha kwa kulazimisha (force) baada ya uthibitisho
+      if (e?.response?.data?.code === 'NOT_FULLY_PAID' && vars.action === 'approve' && !vars.force) {
+        if (window.confirm('The client has NOT fully paid for this project.\n\nApproving now will still pay the expert\'s commission. Approve anyway?')) {
+          approveMutation.mutate({ ...vars, force: true })
+        }
+        return
+      }
+      toast.error(errorMessage(e, 'Action failed.'))
+    },
   })
 
   const assignMutation = useMutation({
@@ -294,32 +313,15 @@ export default function AdminProjectDetail() {
           )}
 
           {/* Files */}
-          {project.files && project.files.length > 0 && (
-            <Card>
-              <SectionTitle>Project Files</SectionTitle>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                {project.files.map((f: ProjectFile) => (
-                  <div key={f.id} className="file-row" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 14px', background: '#F5F7FC', borderRadius: 10, border: '1px solid #EBEFF8' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                      <div style={{ width: 34, height: 34, borderRadius: 8, background: '#EAF1FD', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                        <Paperclip size={16} strokeWidth={2} color="#0D52CE" />
-                      </div>
-                      <div>
-                        <p style={{ fontSize: 13, fontWeight: 600, margin: 0, color: '#0A1F4D' }}>{f.original_name}</p>
-                        <p style={{ fontSize: 12, color: '#667697', margin: '2px 0 0' }}>
-                          {f.file_type.replace(/_/g, ' ')} · {(f.file_size / 1024).toFixed(1)} KB
-                        </p>
-                      </div>
-                    </div>
-                    <a href={f.file} target="_blank" rel="noreferrer" className="detail-btn"
-                      style={{ padding: '5px 12px', borderRadius: 8, background: '#EAF1FD', color: '#0D52CE', fontSize: 12, fontWeight: 700, textDecoration: 'none' }}>
-                      Download
-                    </a>
-                  </div>
-                ))}
-              </div>
-            </Card>
-          )}
+          <ProjectFilesPanel
+            projectId={Number(id)}
+            files={project.files || []}
+            title="Project files"
+            emptyText="No files uploaded yet."
+            uploadTypes={ADMIN_UPLOAD_TYPES}
+            canDelete={() => true}
+            onChanged={invalidate}
+          />
 
           {/* Review */}
           {project.review && (
@@ -472,68 +474,8 @@ export default function AdminProjectDetail() {
             </Card>
           )}
 
-          {/* Upload File */}
-          <Card>
-            <SectionTitle>Upload File</SectionTitle>
-            <UploadFileBox projectId={Number(id)} onSuccess={invalidate} />
-          </Card>
-
         </div>
       </div>
-    </div>
-  )
-}
-
-function UploadFileBox({ projectId, onSuccess }: { projectId: number; onSuccess: () => void }) {
-  const [fileType, setFileType] = useState('admin_delivery')
-  const [selectedFile, setSelectedFile] = useState<File | null>(null)
-
-  const uploadMutation = useMutation({
-    mutationFn: () => {
-      if (!selectedFile) throw new Error('No file selected')
-      const fd = new FormData()
-      fd.append('file', selectedFile)
-      fd.append('file_type', fileType)
-      return projectApi.uploadFile(projectId, fd)
-    },
-    onSuccess: () => {
-      toast.success('File uploaded!')
-      setSelectedFile(null)
-      onSuccess()
-    },
-    onError: () => toast.error('Upload failed.'),
-  })
-
-  const FILE_TYPES = [
-    { value: 'admin_delivery', label: 'Delivery File' },
-    { value: 'explanation', label: 'Explanation' },
-    { value: 'expert_final', label: 'Expert Final' },
-  ]
-
-  return (
-    <div>
-      <select
-        value={fileType}
-        onChange={e => setFileType(e.target.value)}
-        style={{ width: '100%', padding: '8px 10px', borderRadius: 8, border: '1.5px solid #DCE3F0', fontSize: 12, marginBottom: 8, outline: 'none', fontFamily: 'inherit', color: '#2B3A60' }}
-      >
-        {FILE_TYPES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
-      </select>
-      <input
-        type="file"
-        onChange={e => setSelectedFile(e.target.files?.[0] || null)}
-        style={{ fontSize: 12, width: '100%', marginBottom: 8 }}
-      />
-      <Btn
-        variant="accent"
-        size="sm"
-        className="detail-btn"
-        style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}
-        onClick={() => uploadMutation.mutate()}
-        disabled={!selectedFile || uploadMutation.isPending}
-      >
-        <Upload size={14} strokeWidth={2.2} /> {uploadMutation.isPending ? 'Uploading…' : 'Upload'}
-      </Btn>
     </div>
   )
 }
