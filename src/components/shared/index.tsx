@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react'
 import type { ProjectStatus } from '@/types'
 import {
   Info,
@@ -47,21 +48,45 @@ interface StatCardProps {
   trend?: { value: number; label: string }
 }
 
+function useCountUp(target: number, ms = 900) {
+  const [v, setV] = useState(0)
+  useEffect(() => {
+    if (!Number.isFinite(target)) return
+    const reduce = typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
+    if (reduce || target === 0) { setV(target); return }
+    let raf = 0; const t0 = performance.now()
+    const tick = (now: number) => {
+      const p = Math.min(1, (now - t0) / ms)
+      setV(target * (1 - Math.pow(1 - p, 3)))
+      if (p < 1) raf = requestAnimationFrame(tick)
+    }
+    raf = requestAnimationFrame(tick)
+    return () => cancelAnimationFrame(raf)
+  }, [target, ms])
+  return v
+}
+
+function AnimatedValue({ value }: { value: string | number }) {
+  // Namba safi inapanda taratibu; maandishi kama "TSh 1,200" yanaonyeshwa kama yalivyo
+  const isNum = typeof value === 'number' && Number.isFinite(value)
+  const v = useCountUp(isNum ? (value as number) : 0)
+  if (!isNum) return <>{value}</>
+  const decimals = Number.isInteger(value) ? 0 : 2
+  return <>{v.toLocaleString(undefined, { maximumFractionDigits: decimals, minimumFractionDigits: decimals })}</>
+}
+
 export function StatCard({ label, value, icon, trend }: StatCardProps) {
   return (
-    <div style={{
-      background: '#fff', borderRadius: 12, padding: '18px 20px',
-      border: '1px solid #DCE3F0', boxShadow: '0 1px 3px rgba(10,31,107,.06)',
-    }}>
+    <div className="ui-stat" style={{ padding: '18px 20px' }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, marginBottom: 10 }}>
         <p style={{ fontSize: 13, fontWeight: 500, color: '#4E5E82', margin: 0 }}>{label}</p>
         {icon && (
-          <div style={{ width: 34, height: 34, borderRadius: 8, background: '#EAF1FD', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#0D52CE', flexShrink: 0 }}>
+          <div style={{ width: 38, height: 38, borderRadius: 10, background: '#EAF1FD', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#0D52CE', flexShrink: 0 }}>
             {icon}
           </div>
         )}
       </div>
-      <p style={{ fontSize: 24, fontWeight: 700, color: '#0A1F4D', margin: 0, lineHeight: 1.2 }}>{value}</p>
+      <p style={{ fontSize: 26, fontWeight: 700, color: '#0A1F4D', margin: 0, lineHeight: 1.2, fontVariantNumeric: 'tabular-nums' }}><AnimatedValue value={value} /></p>
       {trend && (
         <p style={{ fontSize: 12, color: trend.value >= 0 ? '#137A4E' : '#B92D2D', margin: '8px 0 0', fontWeight: 600 }}>
           {trend.value >= 0 ? '↑' : '↓'} {Math.abs(trend.value)}% {trend.label}
@@ -87,22 +112,15 @@ export function ProgressBar({ percentage, color = '#0D52CE', height = 6 }: { per
 
 // ── Loading Spinner ────────────────────────────────────────────────────────
 export function LoadingSpinner({ size = 'md', label }: { size?: 'sm' | 'md' | 'lg'; label?: string }) {
-  const dim = { sm: 20, md: 36, lg: 52 }[size]
+  const px = { sm: 18, md: 28, lg: 40 }[size]
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: size === 'sm' ? 12 : 48, gap: 12 }}>
-      <div style={{
-        width: dim, height: dim, borderRadius: '50%',
-        border: `${size === 'sm' ? 2 : 3}px solid #DCE3F0`,
-        borderTop: `${size === 'sm' ? 2 : 3}px solid #0D52CE`,
-        animation: 'spin .7s linear infinite',
-      }} />
-      {label && <p style={{ color: '#667697', fontSize: 13, margin: 0 }}>{label}</p>}
-      <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+    <div role="status" aria-live="polite" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 12, padding: size === 'sm' ? 8 : 40 }}>
+      <span className="ui-ring" style={{ width: px, height: px, borderWidth: size === 'sm' ? 2 : 3 }} />
+      {label && <span style={{ fontSize: 13, color: '#667697' }}>{label}</span>}
     </div>
   )
 }
 
-// ── Empty State ────────────────────────────────────────────────────────────
 export function EmptyState({ icon, title, body, action }: { icon?: React.ReactNode; title: string; body?: string; action?: React.ReactNode }) {
   return (
     <div style={{ textAlign: 'center', padding: '64px 24px', animation: 'fadeIn .3s ease' }}>
@@ -213,13 +231,10 @@ export function PageHeader({ title, subtitle, action }: { title: string; subtitl
 }
 
 // ── Card ───────────────────────────────────────────────────────────────────
-export function Card({ children, style, className }: { children: React.ReactNode; style?: React.CSSProperties; className?: string }) {
+export function Card({ children, style, className, onClick }: { children: React.ReactNode; style?: React.CSSProperties; className?: string; onClick?: () => void }) {
   return (
-    <div className={className} style={{
-      background: '#fff', borderRadius: 12, padding: '22px 24px',
-      border: '1px solid #DCE3F0', boxShadow: '0 1px 3px rgba(10,31,107,.06)',
-      ...style,
-    }}>
+    <div className={`ui-card${onClick ? ' interactive' : ''}${className ? ' ' + className : ''}`} onClick={onClick}
+      style={{ padding: '22px 24px', ...style }}>
       {children}
     </div>
   )
@@ -280,9 +295,8 @@ export function Table({ headers, children }: { headers: string[]; children: Reac
 
 export function Tr({ children, onClick, className }: { children: React.ReactNode; onClick?: () => void; className?: string }) {
   return (
-    <tr onClick={onClick} className={className} style={{ borderBottom: '1px solid #EBEFF8', cursor: onClick ? 'pointer' : 'default', transition: 'background .15s' }}
-      onMouseEnter={e => { if (onClick) (e.currentTarget as HTMLTableRowElement).style.background = '#F5F7FC' }}
-      onMouseLeave={e => { (e.currentTarget as HTMLTableRowElement).style.background = '' }}>
+    <tr onClick={onClick} className={`ui-tr${className ? ' ' + className : ''}`}
+      style={{ borderBottom: '1px solid #EBEFF8', cursor: onClick ? 'pointer' : 'default' }}>
       {children}
     </tr>
   )

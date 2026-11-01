@@ -1,271 +1,226 @@
-import { Outlet, NavLink, useNavigate } from 'react-router-dom'
+import { useEffect, useMemo, useRef, useState } from 'react'
+import { Link, NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom'
+import {
+  LayoutDashboard, FolderKanban, Briefcase, MessageSquare, Wallet, UserCircle, Users, BadgeDollarSign,
+  ClipboardCheck, ListChecks, Images, Settings, ShieldCheck, Percent, Server, LogOut, Menu, X, ChevronDown,
+  PanelLeftClose, PanelLeftOpen, Plus, Search, type LucideIcon,
+} from 'lucide-react'
 import { useAuthStore } from '@/store/authStore'
 import { authApi } from '@/api/client'
-import { useState, useEffect } from 'react'
 import NotificationBell from '@/components/shared/NotificationBell'
+import { GSHLogo } from '@/pages/auth/_shared'
 
-// ── GSH Logo (real brand icon, smooth fade + scale-in on load) ─────────────
-function GSHLogo({ size = 32 }: { size?: number }) {
-  const [loaded, setLoaded] = useState(false)
-  return (
-    <img
-      src="/gsh-icon.png"
-      alt="Global Simulation Hub"
-      onLoad={() => setLoaded(true)}
-      style={{
-        height: size,
-        width: 'auto',
-        maxWidth: 'none',
-        maxHeight: 'none',
-        display: 'block',
-        flexShrink: 0,
-        opacity: loaded ? 1 : 0,
-        transform: loaded ? 'scale(1)' : 'scale(0.9)',
-        transition: 'opacity .5s cubic-bezier(.22,.61,.36,1), transform .5s cubic-bezier(.22,.61,.36,1)',
-      }}
-    />
-  )
-}
+type Item = { to: string; label: string; icon: LucideIcon; end?: boolean }
+type Group = { label: string; items: Item[] }
 
-// ── Topbar brand — logo + jina ───────────────────────────────────────────
-function TopbarBrand() {
-  return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0 }}>
-      <GSHLogo size={28} />
-      <span className="topbar-brand-name" style={{ fontWeight: 700, fontSize: 14, color: '#0A1F6B', whiteSpace: 'nowrap' }}>Global Simulation Hub</span>
-    </div>
-  )
-}
+const ROLE_HOME: Record<string, string> = { client: '/client', expert: '/expert', admin: '/admin', developer: '/developer' }
+const ROLE_LABEL: Record<string, string> = { client: 'Client', expert: 'Expert', admin: 'Admin', developer: 'Developer' }
 
-// ── Icons ──────────────────────────────────────────────────────────────────
-const icons: Record<string, JSX.Element> = {
-  dashboard: <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.8"><rect x="3" y="3" width="7" height="7" rx="1" /><rect x="14" y="3" width="7" height="7" rx="1" /><rect x="3" y="14" width="7" height="7" rx="1" /><rect x="14" y="14" width="7" height="7" rx="1" /></svg>,
-  projects:  <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.8"><path strokeLinecap="round" strokeLinejoin="round" d="M2.25 12.75V12A2.25 2.25 0 014.5 9.75h15A2.25 2.25 0 0121.75 12v.75m-8.69-6.44l-2.12-2.12a1.5 1.5 0 00-1.061-.44H4.5A2.25 2.25 0 002.25 6v12a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9a2.25 2.25 0 00-2.25-2.25h-5.379a1.5 1.5 0 01-1.06-.44z" /></svg>,
-  jobboard:  <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.8"><path strokeLinecap="round" strokeLinejoin="round" d="M20.25 14.15v4.25c0 1.094-.787 2.036-1.872 2.18-2.087.277-4.216.42-6.378.42s-4.291-.143-6.378-.42c-1.085-.144-1.872-1.086-1.872-2.18v-4.25m16.5 0a2.18 2.18 0 00.75-1.661V8.706c0-1.081-.768-2.015-1.837-2.175a48.114 48.114 0 00-3.413-.387m4.5 8.006c-.194.165-.42.295-.673.38A23.978 23.978 0 0112 15.75c-2.648 0-5.195-.429-7.577-1.22a2.016 2.016 0 01-.673-.38m0 0A2.18 2.18 0 013 12.489V8.706c0-1.081.768-2.015 1.837-2.175a48.111 48.111 0 013.413-.387m7.5 0V5.25A2.25 2.25 0 0013.5 3h-3a2.25 2.25 0 00-2.25 2.25v.894m7.5 0a48.667 48.667 0 00-7.5 0" /></svg>,
-  chat:      <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.8"><path strokeLinecap="round" strokeLinejoin="round" d="M8.625 12a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H8.25m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H12m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0h-.375M21 12c0 4.556-4.03 8.25-9 8.25a9.764 9.764 0 01-2.555-.337A5.972 5.972 0 015.41 20.97a5.969 5.969 0 01-.474-.065 4.48 4.48 0 00.978-2.025c.09-.457-.133-.901-.467-1.226C3.93 16.178 3 14.189 3 12c0-4.556 4.03-8.25 9-8.25s9 3.694 9 8.25z" /></svg>,
-  wallet:    <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.8"><path strokeLinecap="round" strokeLinejoin="round" d="M21 12a2.25 2.25 0 00-2.25-2.25H15a3 3 0 11-6 0H5.25A2.25 2.25 0 003 12m18 0v6a2.25 2.25 0 01-2.25 2.25H5.25A2.25 2.25 0 013 18v-6m18 0V9M3 12V9m18-3a2.25 2.25 0 00-2.25-2.25H5.25A2.25 2.25 0 003 6v3m18-3V6" /></svg>,
-  profile:   <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.8"><path strokeLinecap="round" strokeLinejoin="round" d="M17.982 18.725A7.488 7.488 0 0012 15.75a7.488 7.488 0 00-5.982 2.975m11.963 0a9 9 0 10-11.963 0m11.963 0A8.966 8.966 0 0112 21a8.966 8.966 0 01-5.982-2.275M15 9.75a3 3 0 11-6 0 3 3 0 016 0z" /></svg>,
-  users:     <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.8"><path strokeLinecap="round" strokeLinejoin="round" d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.375a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zm8.25 2.25a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z" /></svg>,
-  financial: <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.8"><path strokeLinecap="round" strokeLinejoin="round" d="M2.25 18.75a60.07 60.07 0 0115.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5v.75A.75.75 0 013 6h-.75m0 0v-.375c0-.621.504-1.125 1.125-1.125H20.25M2.25 6v9m18-10.5v.75c0 .414.336.75.75.75h.75m-1.5-1.5h.375c.621 0 1.125.504 1.125 1.125v9.75c0 .621-.504 1.125-1.125 1.125h-.375m1.5-1.5H21a.75.75 0 00-.75.75v.75m0 0H3.75m0 0h-.375a1.125 1.125 0 01-1.125-1.125V15m1.5 1.5v-.75A.75.75 0 003 15h-.75M15 10.5a3 3 0 11-6 0 3 3 0 016 0zm3 0h.008v.008H18V10.5zm-12 0h.008v.008H6V10.5z" /></svg>,
-  recruit:   <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.8"><path strokeLinecap="round" strokeLinejoin="round" d="M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 002.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 00-1.123-.08m-5.801 0c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 00.75-.75 2.25 2.25 0 00-.1-.664m-5.8 0A2.251 2.251 0 0113.5 2.25H15c1.012 0 1.867.668 2.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V8.25m0 0H4.875c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V9.375c0-.621-.504-1.125-1.125-1.125H8.25zM6.75 12h.008v.008H6.75V12zm0 3h.008v.008H6.75V15zm0 3h.008v.008H6.75V18z" /></svg>,
-  settings:  <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.8"><path strokeLinecap="round" strokeLinejoin="round" d="M9.594 3.94c.09-.542.56-.94 1.11-.94h2.593c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87.074.04.147.083.22.127.324.196.72.257 1.075.124l1.217-.456a1.125 1.125 0 011.37.49l1.296 2.247a1.125 1.125 0 01-.26 1.431l-1.003.827c-.293.24-.438.613-.431.992a6.759 6.759 0 010 .255c-.007.378.138.75.43.99l1.005.828c.424.35.534.954.26 1.43l-1.298 2.247a1.125 1.125 0 01-1.369.491l-1.217-.456c-.355-.133-.75-.072-1.076.124a6.57 6.57 0 01-.22.128c-.331.183-.581.495-.644.869l-.213 1.28c-.09.543-.56.941-1.11.941h-2.594c-.55 0-1.02-.398-1.11-.94l-.213-1.281c-.062-.374-.312-.686-.644-.87a6.52 6.52 0 01-.22-.127c-.325-.196-.72-.257-1.076-.124l-1.217.456a1.125 1.125 0 01-1.369-.49l-1.297-2.247a1.125 1.125 0 01.26-1.431l1.004-.827c.292-.24.437-.613.43-.992a6.932 6.932 0 010-.255c.007-.378-.138-.75-.43-.99l-1.004-.828a1.125 1.125 0 01-.26-1.43l1.297-2.247a1.125 1.125 0 011.37-.491l1.216.456c.356.133.751.072 1.076-.124.072-.044.146-.087.22-.128.332-.183.582-.495.644-.869l.214-1.281z" /><path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg>,
-  logout:    <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.8"><path strokeLinecap="round" strokeLinejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15m3 0l3-3m0 0l-3-3m3 3H9" /></svg>,
-  menu:      <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" /></svg>,
-  close:     <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>,
-}
-
-// ── Nav config per role ────────────────────────────────────────────────────
-function navLinks(role: string) {
-  if (role === 'client') return [
-    { to: '/client', label: 'Dashboard', icon: 'dashboard', end: true },
-    { to: '/client/projects', label: 'My Projects', icon: 'projects' },
-    { to: '/client/chat', label: 'Messages', icon: 'chat' },
-    { to: '/client/wallet', label: 'Wallet', icon: 'wallet' },
-    { to: '/client/profile', label: 'Profile', icon: 'profile' },
+function navGroups(role: string): Group[] {
+  if (role === 'client') return [{ label: 'Menu', items: [
+    { to: '/client', label: 'Dashboard', icon: LayoutDashboard, end: true },
+    { to: '/client/projects', label: 'My Projects', icon: FolderKanban },
+    { to: '/client/chat', label: 'Messages', icon: MessageSquare },
+    { to: '/client/wallet', label: 'Wallet', icon: Wallet },
+    { to: '/client/profile', label: 'Profile', icon: UserCircle },
+  ] }]
+  if (role === 'expert') return [{ label: 'Menu', items: [
+    { to: '/expert', label: 'Dashboard', icon: LayoutDashboard, end: true },
+    { to: '/expert/job-board', label: 'Job Board', icon: Briefcase },
+    { to: '/expert/projects', label: 'My Projects', icon: FolderKanban },
+    { to: '/expert/chat', label: 'Messages', icon: MessageSquare },
+    { to: '/expert/profile', label: 'Profile', icon: UserCircle },
+  ] }]
+  const adminItems: Group[] = [
+    { label: 'Overview', items: [
+      { to: '/admin', label: 'Command Center', icon: LayoutDashboard, end: true },
+      { to: '/admin/projects', label: 'All Projects', icon: FolderKanban },
+      { to: '/admin/chat', label: 'Messages', icon: MessageSquare },
+    ] },
+    { label: 'Manage', items: [
+      { to: '/admin/users', label: 'Users', icon: Users },
+      { to: '/admin/financials', label: 'Financials', icon: BadgeDollarSign },
+      { to: '/admin/recruitment', label: 'Recruitment', icon: ClipboardCheck },
+    ] },
+    { label: 'Content', items: [
+      { to: '/admin/test-bank', label: 'Test Bank', icon: ListChecks },
+      { to: '/admin/landing-media', label: 'Landing Media', icon: Images },
+    ] },
   ]
-  if (role === 'expert') return [
-    { to: '/expert', label: 'Dashboard', icon: 'dashboard', end: true },
-    { to: '/expert/job-board', label: 'Job Board', icon: 'jobboard' },
-    { to: '/expert/projects', label: 'My Projects', icon: 'projects' },
-    { to: '/expert/chat', label: 'Messages', icon: 'chat' },
-    { to: '/expert/profile', label: 'Profile', icon: 'profile' },
-  ]
-  if (role === 'admin') return [
-    { to: '/admin', label: 'Command Center', icon: 'dashboard', end: true },
-    { to: '/admin/projects', label: 'All Projects', icon: 'projects' },
-    { to: '/admin/users', label: 'Users', icon: 'users' },
-    { to: '/admin/financials', label: 'Financials', icon: 'financial' },
-    { to: '/admin/recruitment', label: 'Recruitment', icon: 'recruit' },
-    { to: '/admin/test-bank', label: 'Test Bank', icon: 'settings' },
-    { to: '/admin/landing-media', label: 'Landing Media', icon: 'projects' },
-    { to: '/admin/chat', label: 'Messages', icon: 'chat' },
-  ]
+  if (role === 'admin') return adminItems
   if (role === 'developer') return [
-    { to: '/developer', label: 'Dev Dashboard', icon: 'dashboard', end: true },
-    { to: '/admin', label: 'Admin View', icon: 'settings' },
-    { to: '/admin/recruitment', label: 'Recruitment', icon: 'recruit' },
-    { to: '/admin/test-bank', label: 'Test Bank', icon: 'settings' },
-    { to: '/admin/landing-media', label: 'Landing Media', icon: 'projects' },
-    { to: '/developer/commissions', label: 'Commissions', icon: 'financial' },
-    { to: '/developer/system', label: 'System', icon: 'settings' },
+    { label: 'Developer', items: [
+      { to: '/developer', label: 'Dev Dashboard', icon: LayoutDashboard, end: true },
+      { to: '/developer/commissions', label: 'Commissions', icon: Percent },
+      { to: '/developer/system', label: 'System', icon: Server },
+    ] },
+    { label: 'Admin tools', items: [
+      { to: '/admin', label: 'Admin View', icon: ShieldCheck, end: true },
+      { to: '/admin/recruitment', label: 'Recruitment', icon: ClipboardCheck },
+      { to: '/admin/test-bank', label: 'Test Bank', icon: ListChecks },
+      { to: '/admin/landing-media', label: 'Landing Media', icon: Images },
+    ] },
   ]
   return []
 }
 
-// Rangi moja ya brand kwa majukumu yote: orange ya logo kwenye navy
-const ROLE_COLOR: Record<string, string> = { client: '#F0A04B', expert: '#F0A04B', admin: '#F0A04B', developer: '#F0A04B' }
-const ROLE_BG: Record<string, string> = { client: 'rgba(255,255,255,.10)', expert: 'rgba(255,255,255,.10)', admin: 'rgba(255,255,255,.10)', developer: 'rgba(255,255,255,.10)' }
+const QUICK: Record<string, { to: string; label: string; icon: LucideIcon } | undefined> = {
+  client: { to: '/client/projects/new', label: 'New project', icon: Plus },
+  expert: { to: '/expert/job-board', label: 'Find jobs', icon: Search },
+}
+
+function SidebarNav({ groups, onNavigate }: { groups: Group[]; onNavigate: () => void }) {
+  return (
+    <nav className="nav-scroll" aria-label="Main navigation">
+      {groups.map(g => (
+        <div key={g.label}>
+          {groups.length > 1 && <div className="nav-group-label"><span>{g.label}</span></div>}
+          {g.items.map(it => (
+            <NavLink key={it.to} to={it.to} end={it.end} title={it.label} onClick={onNavigate}
+              className={({ isActive }) => `nav-item${isActive ? ' active' : ''}`}>
+              <span className="nav-ico"><it.icon size={19} strokeWidth={1.9} /></span>
+              <span className="nav-label">{it.label}</span>
+            </NavLink>
+          ))}
+        </div>
+      ))}
+    </nav>
+  )
+}
+
+function UserMenu({ onLogout }: { onLogout: () => void }) {
+  const { user } = useAuthStore()
+  const [open, setOpen] = useState(false)
+  const ref = useRef<HTMLDivElement>(null)
+  const role = user?.role || 'client'
+  const name = [user?.first_name, user?.last_name].filter(Boolean).join(' ') || user?.email || 'Account'
+  const initials = (user?.first_name?.[0] || user?.email?.[0] || '?').toUpperCase()
+  const avatar = (user as any)?.avatar ?? undefined
+  const profilePath = role === 'client' ? '/client/profile' : role === 'expert' ? '/expert/profile' : null
+
+  useEffect(() => {
+    if (!open) return
+    const down = (e: MouseEvent) => { if (!ref.current?.contains(e.target as Node)) setOpen(false) }
+    const key = (e: KeyboardEvent) => { if (e.key === 'Escape') setOpen(false) }
+    document.addEventListener('mousedown', down); document.addEventListener('keydown', key)
+    return () => { document.removeEventListener('mousedown', down); document.removeEventListener('keydown', key) }
+  }, [open])
+
+  return (
+    <div className="user-menu" ref={ref}>
+      <button className="user-btn" aria-haspopup="menu" aria-expanded={open} onClick={() => setOpen(o => !o)}>
+        <span className="avatar">{avatar ? <img src={avatar} alt="" /> : initials}</span>
+        <span className="user-meta"><b>{user?.first_name || name}</b><small>{ROLE_LABEL[role]}</small></span>
+        <ChevronDown size={16} className="chev" data-open={open} />
+      </button>
+      {open && (
+        <div className="menu-pop" role="menu">
+          <div className="menu-head">
+            <span className="avatar lg">{avatar ? <img src={avatar} alt="" /> : initials}</span>
+            <div style={{ minWidth: 0 }}>
+              <div className="menu-name">{name}</div>
+              <div className="menu-mail">{user?.email}</div>
+            </div>
+          </div>
+          {profilePath && (
+            <Link to={profilePath} role="menuitem" className="menu-item" onClick={() => setOpen(false)}><UserCircle size={17} /> My profile</Link>
+          )}
+          <button role="menuitem" className="menu-item danger" onClick={() => { setOpen(false); onLogout() }}><LogOut size={17} /> Log out</button>
+        </div>
+      )}
+    </div>
+  )
+}
 
 export default function DashboardLayout() {
   const { user, logout, refreshToken, updateUser } = useAuthStore()
   const navigate = useNavigate()
-  const [sidebarOpen, setSidebarOpen] = useState(false)
-  const [collapsed, setCollapsed] = useState(false)
+  const { pathname } = useLocation()
+  const [open, setOpen] = useState(false)
+  const [collapsed, setCollapsed] = useState(() => { try { return localStorage.getItem('gsh-sidebar') === '1' } catch { return false } })
 
   const role = user?.role || 'client'
-  const links = navLinks(role)
-  const roleColor = ROLE_COLOR[role]
-  const roleBg = ROLE_BG[role]
-
-  // Avatar — tumia picha ya user kama ipo, vinginevyo herufi ya kwanza.
-  // `?? undefined` inazuia null isipite kwenye <img src>, ambayo
-  // inakubali string | undefined pekee (tazama fix ya awali kwenye
-  // ExpertProfile.tsx kwa maelezo zaidi).
-  const avatarSrc = (user as any)?.avatar ?? undefined
-  const initials = (user?.first_name?.[0] || user?.email?.[0] || '?').toUpperCase()
+  const groups = useMemo(() => navGroups(role), [role])
+  const flat = groups.flatMap(g => g.items)
+  const quick = QUICK[role]
 
   const handleLogout = async () => {
-    try { if (refreshToken) await authApi.logout(refreshToken) } catch {}
+    try { if (refreshToken) await authApi.logout(refreshToken) } catch { /* endelea kutoka hata seva ikikataa */ }
     logout()
     navigate('/login')
   }
 
-  // Sasisha taarifa za mtumiaji kutoka seva mara moja kwa kila kikao: profile %, role mpya (mf. expert aliyepitishwa)
+  // Sasisha taarifa za mtumiaji kutoka seva mara moja kwa kikao: profile %, role mpya (mf. expert aliyepitishwa)
   useEffect(() => {
     authApi.me().then(r => {
       const fresh = r.data
       if (user && fresh.role !== user.role) {
         updateUser(fresh)
-        window.location.replace({ client: '/client', expert: '/expert', admin: '/admin', developer: '/developer' }[fresh.role as string] || '/')
+        window.location.replace(ROLE_HOME[fresh.role as string] || '/')
       } else updateUser(fresh)
     }).catch(() => {})
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  // Close sidebar on route change (mobile)
-  useEffect(() => { setSidebarOpen(false) }, [])
+  useEffect(() => { setOpen(false) }, [pathname])
+  useEffect(() => { try { localStorage.setItem('gsh-sidebar', collapsed ? '1' : '0') } catch { /* private mode */ } }, [collapsed])
+  useEffect(() => {
+    document.body.style.overflow = open ? 'hidden' : ''
+    return () => { document.body.style.overflow = '' }
+  }, [open])
 
-  const SidebarContent = () => (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', background: '#0A1F6B', padding: '0' }}>
-      {/* Logo */}
-      <div style={{ padding: collapsed ? '20px 16px' : '20px 20px', borderBottom: '1px solid rgba(255,255,255,.06)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10, overflow: 'hidden' }}>
-          <GSHLogo size={32} />
-          {!collapsed && (
-            <div style={{ overflow: 'hidden' }}>
-              <div style={{ color: '#fff', fontFamily: 'inherit', fontWeight: 700, fontSize: 13, lineHeight: 1.2, whiteSpace: 'nowrap' }}>Global Simulation</div>
-              <div style={{ color: '#A9C8F0', fontSize: 12, fontWeight: 600,}}>Hub — GSH</div>
-            </div>
-          )}
-        </div>
-        <button onClick={() => setCollapsed(!collapsed)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'rgba(255,255,255,.6)', padding: 4, display: 'flex', alignItems: 'center', flexShrink: 0 }}>
-          <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
-            {collapsed
-              ? <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
-              : <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
-            }
-          </svg>
-        </button>
-      </div>
+  // Kichwa cha ukurasa: kiungo kinacholingana zaidi na njia ya sasa
+  const current = [...flat].sort((a, b) => b.to.length - a.to.length).find(i => pathname === i.to || pathname.startsWith(i.to + '/'))
+  const isHome = pathname === ROLE_HOME[role]
+  const title = isHome ? `Welcome back${user?.first_name ? ', ' + user.first_name : ''}` : current?.label || 'Dashboard'
+  const crumb = isHome ? 'Here is what is happening today' : `${ROLE_LABEL[role]} · ${current?.label || ''}`
 
-      {/* Nav links */}
-      <nav style={{ flex: 1, padding: '12px 10px', overflowY: 'auto' }}>
-        {links.map(({ to, label, icon, end }) => (
-          <NavLink key={to} to={to} end={end} style={({ isActive }) => ({
-            display: 'flex', alignItems: 'center', gap: 12, padding: collapsed ? '10px 12px' : '10px 14px',
-            borderRadius: 10, marginBottom: 2, textDecoration: 'none', transition: 'all .2s',
-            background: isActive ? 'rgba(255,255,255,.12)' : 'transparent',
-            color: isActive ? '#fff' : 'rgba(255,255,255,.72)',
-            borderLeft: isActive ? '3px solid #E37914' : '3px solid transparent',
-          })}>
-            <span style={{ flexShrink: 0 }}>{icons[icon]}</span>
-            {!collapsed && <span style={{ fontSize: 13, fontWeight: 500, whiteSpace: 'nowrap' }}>{label}</span>}
-          </NavLink>
-        ))}
-      </nav>
-
-      {/* User section */}
-      <div style={{ borderTop: '1px solid rgba(255,255,255,.06)', padding: '14px 10px' }}>
-        {!collapsed && (
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', marginBottom: 4, background: 'rgba(255,255,255,.03)', borderRadius: 10 }}>
-            <div style={{ width: 32, height: 32, borderRadius: '50%', background: roleBg, border: `1.5px solid ${roleColor}30`, display: 'flex', alignItems: 'center', justifyContent: 'center', color: roleColor, fontWeight: 700, fontSize: 13, fontFamily: 'inherit', flexShrink: 0, overflow: 'hidden' }}>
-              {avatarSrc
-                ? <img src={avatarSrc} alt="Avatar" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                : initials
-              }
-            </div>
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <p style={{ color: '#fff', fontSize: 13, fontWeight: 600, margin: 0, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', fontFamily: 'inherit' }}>
-                {user?.first_name ? `${user.first_name} ${user.last_name}` : user?.email}
-              </p>
-              <span style={{ fontSize: 12, color: roleColor, fontWeight: 600, textTransform: 'capitalize' }}>{role}</span>
-            </div>
-          </div>
-        )}
-        <button onClick={handleLogout} style={{ display: 'flex', alignItems: 'center', gap: 12, width: '100%', padding: collapsed ? '10px 12px' : '10px 14px', borderRadius: 10, background: 'none', border: 'none', cursor: 'pointer', color: 'rgba(255,255,255,.72)', fontSize: 13, fontWeight: 500, transition: 'all .2s', textAlign: 'left' }}
-          onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.background = 'rgba(255,255,255,.08)'; (e.currentTarget as HTMLButtonElement).style.color = '#fff' }}
-          onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.background = 'none'; (e.currentTarget as HTMLButtonElement).style.color = 'rgba(255,255,255,.72)' }}>
-          <span style={{ flexShrink: 0 }}>{icons.logout}</span>
-          {!collapsed && 'Logout'}
-        </button>
-      </div>
-    </div>
-  )
+  const showProfileCard = role === 'client' && user && !user.is_profile_complete
+  const pct = user?.profile_completion ?? 0
 
   return (
-    <div style={{ display: 'flex', minHeight: '100vh', background: '#F5F7FC', fontFamily: 'inherit' }}>
-      <style>{`
-        @media (max-width: 640px) { .topbar-brand-name { display: none !important; } }
-      `}</style>
-
-      {/* Desktop sidebar */}
-      <div style={{ width: collapsed ? 70 : 230, flexShrink: 0, transition: 'width .25s ease', display: 'none', position: 'sticky', top: 0, height: '100vh' }} className="lg-sidebar">
-        <SidebarContent />
-      </div>
-      <style>{`.lg-sidebar { display: flex !important; flex-direction: column; } @media(max-width:768px){.lg-sidebar{display:none !important;}}`}</style>
-
-      {/* Mobile overlay sidebar */}
-      {sidebarOpen && (
-        <div style={{ position: 'fixed', inset: 0, zIndex: 50, display: 'flex' }}>
-          <div style={{ width: 230, flexShrink: 0, height: '100vh' }}><SidebarContent /></div>
-          <div style={{ flex: 1, background: 'rgba(0,0,0,.5)', backdropFilter: 'blur(4px)' }} onClick={() => setSidebarOpen(false)} />
+    <div className="app-shell" data-collapsed={collapsed}>
+      <aside className="app-sidebar" data-open={open} aria-label="Sidebar">
+        <div className="side-brand">
+          <Link to={ROLE_HOME[role]} className="brand-link" aria-label="Home">
+            <span className="brand-tile"><GSHLogo size={28} /></span>
+            <span className="brand-text"><b>Global Simulation Hub</b><small>{ROLE_LABEL[role]} portal</small></span>
+          </Link>
+          <button className="icon-btn mobile-only" onClick={() => setOpen(false)} aria-label="Close menu"><X size={20} /></button>
         </div>
-      )}
 
-      {/* Main area */}
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
-        {/* Top bar */}
-        <header style={{ background: '#fff', borderBottom: '1px solid #EBEFF8', padding: '0 24px', height: 60, display: 'flex', alignItems: 'center', justifyContent: 'space-between', position: 'sticky', top: 0, zIndex: 40 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 16, minWidth: 0 }}>
-            {/* Mobile hamburger */}
-            <button onClick={() => setSidebarOpen(true)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#4E5E82', padding: 4, display: 'flex', alignItems: 'center', flexShrink: 0 }} className="mobile-menu-btn">
-              {icons.menu}
-            </button>
-            <style>{`.mobile-menu-btn { display: none !important; } @media(max-width:768px){.mobile-menu-btn{display:flex !important;}}`}</style>
+        <SidebarNav groups={groups} onNavigate={() => setOpen(false)} />
 
-            {/* Logo + moving brand text */}
-            <TopbarBrand />
+        <div className="side-foot">
+          {showProfileCard && (
+            <Link to="/client/profile" className="profile-card" title="Complete your profile">
+              <div className="pc-top"><span>Complete your profile</span><b>{pct}%</b></div>
+              <div className="pc-bar"><i style={{ width: `${pct}%` }} /></div>
+              <small>Reach 100% to unlock downloads</small>
+            </Link>
+          )}
+          <button className="collapse-btn desktop-only" onClick={() => setCollapsed(c => !c)} aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}>
+            {collapsed ? <PanelLeftOpen size={18} /> : <PanelLeftClose size={18} />}<span className="nav-label">Collapse</span>
+          </button>
+        </div>
+      </aside>
 
-            {/* Breadcrumb */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0 }}>
-              <svg width="12" height="12" fill="none" viewBox="0 0 24 24" stroke="#C3CEE2" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" /></svg>
-              <span style={{ fontSize: 13, color: '#3A4A70', fontWeight: 500, textTransform: 'capitalize', whiteSpace: 'nowrap' }}>{role} Portal</span>
-            </div>
+      <div className="app-scrim" data-open={open} onClick={() => setOpen(false)} />
+
+      <div className="app-main">
+        <header className="app-topbar">
+          <button className="icon-btn mobile-only" onClick={() => setOpen(true)} aria-label="Open menu"><Menu size={20} /></button>
+          <div className="top-title">
+            <h1 key={title}>{title}</h1>
+            <p key={crumb}>{crumb}</p>
           </div>
-
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexShrink: 0 }}>
-            {/* Online indicator */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: 6, background: '#EDF8F1', border: '1px solid #BFE5CF', borderRadius: 999, padding: '4px 12px' }}>
-              <span style={{ width: 6, height: 6, background: '#1B9B63', borderRadius: '50%', display: 'inline-block' }} />
-              <span style={{ fontSize: 12, color: '#137A4E', fontWeight: 600 }}>Online</span>
-            </div>
-
+          <div className="top-actions">
+            {quick && <Link to={quick.to} className="quick-btn"><quick.icon size={16} strokeWidth={2.4} /><span>{quick.label}</span></Link>}
             <NotificationBell />
-
-            {/* Avatar */}
-            <div style={{ width: 34, height: 34, borderRadius: '50%', background: '#0A1F6B', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontWeight: 700, fontSize: 13, fontFamily: 'inherit', cursor: 'default', overflow: 'hidden' }}>
-              {avatarSrc
-                ? <img src={avatarSrc} alt="Avatar" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                : initials
-              }
-            </div>
+            <UserMenu onLogout={handleLogout} />
           </div>
         </header>
-
-        {/* Page content */}
-        <main className="dash-main" style={{ flex: 1, padding: '28px 28px', overflow: 'auto', minWidth: 0 }}>
-          <Outlet />
-        </main>
+        <main className="app-content" key={pathname}><Outlet /></main>
       </div>
     </div>
   )

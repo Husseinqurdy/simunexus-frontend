@@ -43,7 +43,8 @@ const css = `
 .sh-player video { object-fit: contain; background: #000; }
 .sh-play { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; background: rgba(10,31,107,.28); border: none; cursor: pointer; transition: background .15s; }
 .sh-play:hover { background: rgba(10,31,107,.4); }
-.sh-play span { width: 64px; height: 64px; border-radius: 50%; background: #F5BA2E; color: #0A1F6B; display: flex; align-items: center; justify-content: center; }
+.sh-play:hover span { transform: scale(1.1); }
+.sh-play span { width: 64px; height: 64px; border-radius: 50%; background: #fff; color: #0D52CE; box-shadow: 0 8px 24px rgba(7,22,80,.35); transition: transform .25s cubic-bezier(.22,.8,.26,1); display: flex; align-items: center; justify-content: center; }
 .sh-meta { padding: 14px 2px 0; }
 .sh-meta h3 { font-size: 18px; font-weight: 600; color: #0A1F4D; margin: 0 0 4px; line-height: 1.35; }
 .sh-meta p { font-size: 14px; color: #4E5E82; margin: 0; line-height: 1.6; }
@@ -58,6 +59,8 @@ const css = `
 .sh-item-t { font-size: 14px; font-weight: 600; color: #0A1F4D; line-height: 1.35; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 .sh-item-s { font-size: 12px; color: #667697; margin-top: 4px; }
 .sh-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 16px; }
+.sh-card:hover .img img { transform: scale(1.05); }
+.sh-card .img img { transition: transform .5s cubic-bezier(.22,.8,.26,1); }
 .sh-card { background: #fff; border: 1px solid #DCE3F0; border-radius: 12px; overflow: hidden; cursor: pointer; padding: 0; text-align: left; font-family: inherit; transition: border-color .15s, box-shadow .15s; }
 .sh-card:hover { border-color: #C3CEE2; box-shadow: 0 1px 3px rgba(10,31,107,.08); }
 .sh-card .img { position: relative; aspect-ratio: 4/3; background: #EBEFF8; display: flex; align-items: center; justify-content: center; color: #8D9BB8; }
@@ -154,7 +157,7 @@ export default function SimulationShowcase() {
               <>
                 {active.thumbnail_url && <img src={active.thumbnail_url} alt={active.title} loading="lazy" />}
                 <button className="sh-play" onClick={() => setPlaying(true)} aria-label={`Play ${active.title}`}>
-                  <span><Play size={26} fill="#0A1F6B" /></span>
+                  <span><Play size={26} fill="#0D52CE" /></span>
                 </button>
               </>
             )}

@@ -145,7 +145,8 @@ export default function SubmitProjectPublicPage() {
           })}
         </ol>
 
-        <form onSubmit={handleSubmit(d => mutation.mutate(d))} noValidate>
+        {/* Fomu inatuma TU ukiwa hatua ya 3. Enter kwenye hatua 1-2 inaenda hatua inayofuata. */}
+        <form noValidate onSubmit={e => { e.preventDefault(); if (step < 3) { void next(); return } void handleSubmit(d => mutation.mutate(d))(e) }}>
           <div style={card}>
             {/* ── Hatua 1: Akaunti ── */}
             {step === 1 && (
@@ -180,8 +181,8 @@ export default function SubmitProjectPublicPage() {
                 <TextField label="Project title" placeholder="e.g. DC motor speed control simulation" error={field('title')}
                   {...register('title', { required: 'Title is required' })} />
                 <div className="gx-field">
-                  <label className="gx-label">Description</label>
-                  <textarea className={`gx-input${errors.description ? ' invalid' : ''}`} rows={4} style={{ height: 'auto', padding: '10px 14px', resize: 'vertical' }}
+                  <label className="gx-label" htmlFor="sp-desc">Description</label>
+                  <textarea id="sp-desc" className={`gx-input${errors.description ? ' invalid' : ''}`} rows={4} style={{ height: 'auto', padding: '10px 14px', resize: 'vertical' }}
                     placeholder="Describe what you need: inputs, expected outputs, standards, parameters…"
                     {...register('description', { required: 'Description is required', minLength: { value: 20, message: 'Please write at least 20 characters' } })} />
                   {errors.description && <p className="gx-err">{field('description')}</p>}
@@ -298,9 +299,11 @@ export default function SubmitProjectPublicPage() {
               </button>
             )}
             {step < 3 ? (
-              <button type="button" className="gx-btn" style={{ flex: 2 }} onClick={next}>Continue <ArrowRight size={16} /></button>
+              // key tofauti: React isitumie tena kipengele kile kile cha DOM kubadilisha type="button" kuwa "submit"
+              // katikati ya click (hiyo ndiyo iliyosababisha fomu kujituma ikiwa hatua ya 2).
+              <button key="next" type="button" className="gx-btn" style={{ flex: 2 }} onClick={next}>Continue <ArrowRight size={16} /></button>
             ) : (
-              <button type="submit" className="gx-btn" style={{ flex: 2 }} disabled={mutation.isPending || !sw}>
+              <button key="submit" type="submit" className="gx-btn" style={{ flex: 2 }} disabled={mutation.isPending || !sw}>
                 {mutation.isPending ? <><Loader2 size={16} className="spin" /> Submitting…</> : <>Create account & submit</>}
               </button>
             )}

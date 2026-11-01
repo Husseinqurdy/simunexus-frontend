@@ -1,4 +1,4 @@
-import { useState, forwardRef } from 'react'
+import { useState, useId, forwardRef } from 'react'
 import { Link } from 'react-router-dom'
 import { Eye, EyeOff, Check, ArrowLeft } from 'lucide-react'
 
@@ -87,13 +87,16 @@ export const gxStyles = `
 .gx-brand-tile { width: 44px; height: 44px; border-radius: 10px; background: #fff; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
 .gx-brand-name { font-size: 16px; font-weight: 700; line-height: 1.2; }
 .gx-brand-tag { font-size: 12px; color: #A9C8F0; }
-.gx-side h2 { color: #fff; font-size: 28px; font-weight: 700; line-height: 1.25; max-width: 420px; margin: 0 0 24px; }
+.gx-side h2 { animation: gxRise .7s cubic-bezier(.22,.8,.26,1) .1s both; color: #fff; font-size: 28px; font-weight: 700; line-height: 1.25; max-width: 420px; margin: 0 0 24px; }
 .gx-points { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 14px; max-width: 420px; }
-.gx-points li { display: flex; gap: 12px; align-items: flex-start; font-size: 14px; line-height: 1.5; color: #D6E3F8; }
+.gx-points li { animation: gxRise .7s cubic-bezier(.22,.8,.26,1) both; display: flex; gap: 12px; align-items: flex-start; font-size: 14px; line-height: 1.5; color: #D6E3F8; }
+.gx-points li:nth-child(1) { animation-delay: .25s } .gx-points li:nth-child(2) { animation-delay: .4s } .gx-points li:nth-child(3) { animation-delay: .55s }
 .gx-points .tick { width: 20px; height: 20px; border-radius: 50%; background: rgba(227,121,20,.18); color: #F0A04B; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 1px; }
 .gx-side-foot { font-size: 12px; color: #8DA6D6; }
 .gx-main { display: flex; align-items: center; justify-content: center; padding: 40px 24px; }
-.gx-panel { width: 100%; max-width: 420px; animation: gxFade .3s ease both; }
+.gx-panel { width: 100%; max-width: 420px; }
+.gx-panel > * { animation: gxRise .55s cubic-bezier(.22,.8,.26,1) both; }
+.gx-panel > *:nth-child(2) { animation-delay: .05s } .gx-panel > *:nth-child(3) { animation-delay: .1s } .gx-panel > *:nth-child(4) { animation-delay: .15s } .gx-panel > *:nth-child(5) { animation-delay: .2s } .gx-panel > *:nth-child(n+6) { animation-delay: .25s }
 .gx-mobile-brand { display: none; align-items: center; gap: 10px; margin-bottom: 28px; color: #0A1F6B; font-weight: 700; font-size: 15px; text-decoration: none; }
 .gx-title { font-size: 24px; font-weight: 700; color: #0A1F4D; margin: 0 0 6px; line-height: 1.25; }
 .gx-sub { font-size: 14px; color: #4E5E82; margin: 0 0 28px; line-height: 1.5; }
@@ -113,8 +116,9 @@ export const gxStyles = `
 .gx-eye:hover { color: #0D52CE; background: #EAF1FD; }
 .gx-err { font-size: 12px; color: #B92D2D; margin: 6px 0 0; }
 .gx-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-.gx-btn { width: 100%; height: 44px; display: inline-flex; align-items: center; justify-content: center; gap: 8px; background: #0D52CE; color: #fff; border: none; border-radius: 8px; font-size: 14px; font-weight: 600; font-family: inherit; cursor: pointer; text-decoration: none; transition: background .15s; }
-.gx-btn:hover:not(:disabled) { background: #0A42A8; }
+.gx-btn { width: 100%; height: 44px; display: inline-flex; align-items: center; justify-content: center; gap: 8px; background: #0D52CE; color: #fff; border: none; border-radius: 8px; font-size: 14px; font-weight: 600; font-family: inherit; cursor: pointer; text-decoration: none; transition: background .15s, box-shadow .2s, transform .15s; }
+.gx-btn:hover:not(:disabled) { background: #0A42A8; box-shadow: 0 6px 16px rgba(13,82,206,.28); transform: translateY(-1px); }
+.gx-btn:active:not(:disabled) { transform: scale(.98); }
 .gx-btn:disabled { opacity: .6; cursor: not-allowed; }
 .gx-btn-outline { background: #fff; color: #0A1F6B; border: 1px solid #C3CEE2; }
 .gx-btn-outline:hover:not(:disabled) { background: #EAF1FD; border-color: #0D52CE; }
@@ -130,6 +134,8 @@ export const gxStyles = `
 .gx-strength { display: flex; gap: 4px; margin: 8px 0 4px; }
 .gx-strength i { flex: 1; height: 4px; border-radius: 99px; background: #DCE3F0; transition: background .2s; }
 @keyframes gxFade { from { opacity: 0; } to { opacity: 1; } }
+@keyframes gxRise { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
+@keyframes gxFloat { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
 @keyframes gxSpin { to { transform: rotate(360deg); } }
 @media (max-width: 960px) {
   .gx-shell { grid-template-columns: 1fr; }
@@ -138,7 +144,7 @@ export const gxStyles = `
   .gx-main { align-items: flex-start; padding: 32px 20px; }
 }
 @media (max-width: 480px) { .gx-row { grid-template-columns: 1fr; } }
-@media (prefers-reduced-motion: reduce) { .gx-panel { animation: none; } .gx-spin { animation-duration: 1.6s; } }
+@media (prefers-reduced-motion: reduce) { .gx-panel > *, .gx-points li, .gx-side h2 { animation: none !important; } .gx-spin { animation-duration: 1.6s; } }
 `
 
 const POINTS = [
@@ -187,27 +193,31 @@ export function AuthLayout({ title, subtitle, children, footer }: {
 type FieldProps = React.InputHTMLAttributes<HTMLInputElement> & {
   label: React.ReactNode; error?: string; icon?: React.ReactNode
 }
-export const TextField = forwardRef<HTMLInputElement, FieldProps>(function TextField({ label, error, icon, className, ...rest }, ref) {
+export const TextField = forwardRef<HTMLInputElement, FieldProps>(function TextField({ label, error, icon, className, id, ...rest }, ref) {
+  const auto = useId()
+  const fid = id || auto
   return (
     <div className="gx-field">
-      <label className="gx-label">{label}</label>
+      <label className="gx-label" htmlFor={fid}>{label}</label>
       <div className="gx-inputwrap">
         {icon && <span className="gx-icon">{icon}</span>}
-        <input ref={ref} {...rest} className={`gx-input${icon ? ' has-icon' : ''}${error ? ' invalid' : ''}`} />
+        <input id={fid} aria-invalid={!!error || undefined} ref={ref} {...rest} className={`gx-input${icon ? ' has-icon' : ''}${error ? ' invalid' : ''}`} />
       </div>
       {error && <p className="gx-err">{error}</p>}
     </div>
   )
 })
 
-export const PasswordField = forwardRef<HTMLInputElement, FieldProps>(function PasswordField({ label, error, icon, ...rest }, ref) {
+export const PasswordField = forwardRef<HTMLInputElement, FieldProps>(function PasswordField({ label, error, icon, id, ...rest }, ref) {
   const [show, setShow] = useState(false)
+  const auto = useId()
+  const fid = id || auto
   return (
     <div className="gx-field">
-      <label className="gx-label">{label}</label>
+      <label className="gx-label" htmlFor={fid}>{label}</label>
       <div className="gx-inputwrap">
         {icon && <span className="gx-icon">{icon}</span>}
-        <input ref={ref} {...rest} type={show ? 'text' : 'password'} className={`gx-input has-right${icon ? ' has-icon' : ''}${error ? ' invalid' : ''}`} />
+        <input id={fid} aria-invalid={!!error || undefined} ref={ref} {...rest} type={show ? 'text' : 'password'} className={`gx-input has-right${icon ? ' has-icon' : ''}${error ? ' invalid' : ''}`} />
         <button type="button" className="gx-eye" onClick={() => setShow(s => !s)} aria-label={show ? 'Hide password' : 'Show password'} aria-pressed={show}>
           {show ? <EyeOff size={16} /> : <Eye size={16} />}
         </button>
