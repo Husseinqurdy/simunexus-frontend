@@ -3,9 +3,11 @@ import { Link, NavLink, Outlet, useLocation, useNavigate } from 'react-router-do
 import {
   LayoutDashboard, FolderKanban, Briefcase, MessageSquare, Wallet, UserCircle, Users, BadgeDollarSign,
   ClipboardCheck, ListChecks, Images, Settings, ShieldCheck, Percent, Server, LogOut, Menu, X, ChevronDown,
-  PanelLeftClose, PanelLeftOpen, Plus, Search, type LucideIcon,
+  PanelLeftClose, PanelLeftOpen, Plus, Search, Sun, Moon, type LucideIcon,
 } from 'lucide-react'
 import { useAuthStore } from '@/store/authStore'
+import { useThemeStore } from '@/store/themeStore'
+import CommandPalette, { type Command } from '@/components/layout/CommandPalette'
 import { authApi } from '@/api/client'
 import NotificationBell from '@/components/shared/NotificationBell'
 import { GSHLogo } from '@/pages/auth/_shared'
@@ -16,7 +18,7 @@ type Group = { label: string; items: Item[] }
 const ROLE_HOME: Record<string, string> = { client: '/client', expert: '/expert', admin: '/admin', developer: '/developer' }
 const ROLE_LABEL: Record<string, string> = { client: 'Client', expert: 'Expert', admin: 'Admin', developer: 'Developer' }
 
-function navGroups(role: string): Group[] {
+export function navGroups(role: string): Group[] {
   if (role === 'client') return [{ label: 'Menu', items: [
     { to: '/client', label: 'Dashboard', icon: LayoutDashboard, end: true },
     { to: '/client/projects', label: 'My Projects', icon: FolderKanban },
@@ -137,12 +139,18 @@ export default function DashboardLayout() {
   const navigate = useNavigate()
   const { pathname } = useLocation()
   const [open, setOpen] = useState(false)
+  const [palette, setPalette] = useState(false)
+  const { theme, toggle: toggleTheme } = useThemeStore()
   const [collapsed, setCollapsed] = useState(() => { try { return localStorage.getItem('gsh-sidebar') === '1' } catch { return false } })
 
   const role = user?.role || 'client'
   const groups = useMemo(() => navGroups(role), [role])
   const flat = groups.flatMap(g => g.items)
   const quick = QUICK[role]
+  // Mwelekeo wa muundo kwa role: client/expert = 'soft' (hewa, kadi kubwa, kifedha);
+  // admin/developer = 'dense' (mnene, mistari badala ya vivuli, dark mode, kibodi).
+  const dense = role === 'admin' || role === 'developer'
+  const dark = dense && theme === 'dark'
 
   const handleLogout = async () => {
     try { if (refreshToken) await authApi.logout(refreshToken) } catch { /* endelea kutoka hata seva ikikataa */ }
@@ -162,6 +170,23 @@ export default function DashboardLayout() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') { e.preventDefault(); setPalette(p => !p) }
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [])
+
+  const commands: Command[] = useMemo(() => {
+    const go: Command[] = flat.map(i => ({ id: i.to, label: i.label, hint: 'Go to page', icon: i.icon, run: () => navigate(i.to), keywords: i.to }))
+    if (quick) go.unshift({ id: 'quick', label: quick.label, hint: 'Quick action', icon: quick.icon, run: () => navigate(quick.to) })
+    if (dense) go.push({ id: 'theme', label: dark ? 'Switch to light mode' : 'Switch to dark mode', hint: 'Appearance', icon: dark ? Sun : Moon, run: toggleTheme, keywords: 'theme dark light appearance' })
+    go.push({ id: 'logout', label: 'Log out', hint: 'Account', icon: LogOut, run: () => { void handleLogout() }, keywords: 'sign out exit' })
+    return go
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [flat, quick, dense, dark])
+
   useEffect(() => { setOpen(false) }, [pathname])
   useEffect(() => { try { localStorage.setItem('gsh-sidebar', collapsed ? '1' : '0') } catch { /* private mode */ } }, [collapsed])
   useEffect(() => {
@@ -179,7 +204,7 @@ export default function DashboardLayout() {
   const pct = user?.profile_completion ?? 0
 
   return (
-    <div className="app-shell" data-collapsed={collapsed}>
+    <div className="app-shell" data-collapsed={collapsed} data-ui={dense ? 'dense' : 'soft'} data-theme={dark ? 'dark' : 'light'}>
       <aside className="app-sidebar" data-open={open} aria-label="Sidebar">
         <div className="side-brand">
           <Link to={ROLE_HOME[role]} className="brand-link" aria-label="Home">
@@ -215,6 +240,14 @@ export default function DashboardLayout() {
             <p key={crumb}>{crumb}</p>
           </div>
           <div className="top-actions">
+            <button className="search-pill" onClick={() => setPalette(true)} aria-label="Open command palette (Ctrl K)">
+              <Search size={16} /><span>Search…</span><kbd>Ctrl K</kbd>
+            </button>
+            {dense && (
+              <button className="icon-btn theme-btn" onClick={toggleTheme} aria-label={dark ? 'Switch to light mode' : 'Switch to dark mode'} title={dark ? 'Light mode' : 'Dark mode'}>
+                <span key={dark ? 'sun' : 'moon'} className="theme-ico">{dark ? <Sun size={19} /> : <Moon size={19} />}</span>
+              </button>
+            )}
             {quick && <Link to={quick.to} className="quick-btn"><quick.icon size={16} strokeWidth={2.4} /><span>{quick.label}</span></Link>}
             <NotificationBell />
             <UserMenu onLogout={handleLogout} />
@@ -222,6 +255,7 @@ export default function DashboardLayout() {
         </header>
         <main className="app-content" key={pathname}><Outlet /></main>
       </div>
+      <CommandPalette open={palette} onClose={() => setPalette(false)} commands={commands} />
     </div>
   )
 }

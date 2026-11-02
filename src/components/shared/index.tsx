@@ -77,7 +77,7 @@ function AnimatedValue({ value }: { value: string | number }) {
 
 export function StatCard({ label, value, icon, trend }: StatCardProps) {
   return (
-    <div className="ui-stat" style={{ padding: '18px 20px' }}>
+    <div className="ui-stat" style={{ padding: 'var(--stat-pad, 18px 20px)' }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, marginBottom: 10 }}>
         <p style={{ fontSize: 13, fontWeight: 500, color: '#4E5E82', margin: 0 }}>{label}</p>
         {icon && (
@@ -86,7 +86,7 @@ export function StatCard({ label, value, icon, trend }: StatCardProps) {
           </div>
         )}
       </div>
-      <p style={{ fontSize: 26, fontWeight: 700, color: '#0A1F4D', margin: 0, lineHeight: 1.2, fontVariantNumeric: 'tabular-nums' }}><AnimatedValue value={value} /></p>
+      <p style={{ fontSize: 'var(--stat-size, 26px)', fontWeight: 700, color: '#0A1F4D', margin: 0, lineHeight: 1.2, fontVariantNumeric: 'tabular-nums' }}><AnimatedValue value={value} /></p>
       {trend && (
         <p style={{ fontSize: 12, color: trend.value >= 0 ? '#137A4E' : '#B92D2D', margin: '8px 0 0', fontWeight: 600 }}>
           {trend.value >= 0 ? '↑' : '↓'} {Math.abs(trend.value)}% {trend.label}
@@ -234,7 +234,7 @@ export function PageHeader({ title, subtitle, action }: { title: string; subtitl
 export function Card({ children, style, className, onClick }: { children: React.ReactNode; style?: React.CSSProperties; className?: string; onClick?: () => void }) {
   return (
     <div className={`ui-card${onClick ? ' interactive' : ''}${className ? ' ' + className : ''}`} onClick={onClick}
-      style={{ padding: '22px 24px', ...style }}>
+      style={{ padding: 'var(--card-pad, 22px 24px)', ...style }}>
       {children}
     </div>
   )
@@ -283,7 +283,7 @@ export function Table({ headers, children }: { headers: string[]; children: Reac
         <thead>
           <tr style={{ background: '#F5F7FC', borderBottom: '1px solid #DCE3F0' }}>
             {headers.map(h => (
-              <th key={h} style={{ padding: '11px 16px', textAlign: 'left', fontWeight: 600, color: '#4E5E82', fontSize: 13, whiteSpace: 'nowrap' }}>{h}</th>
+              <th key={h} style={{ padding: 'var(--td-pad, 11px 16px)', textAlign: 'left', fontWeight: 600, color: '#4E5E82', fontSize: 13, whiteSpace: 'nowrap' }}>{h}</th>
             ))}
           </tr>
         </thead>
@@ -303,7 +303,7 @@ export function Tr({ children, onClick, className }: { children: React.ReactNode
 }
 
 export function Td({ children, style }: { children?: React.ReactNode; style?: React.CSSProperties }) {
-  return <td style={{ padding: '12px 16px', color: '#2B3A60', verticalAlign: 'middle', ...style }}>{children}</td>
+  return <td style={{ padding: 'var(--td-pad, 12px 16px)', color: '#2B3A60', verticalAlign: 'middle', ...style }}>{children}</td>
 }
 
 // ── Alert Box ──────────────────────────────────────────────────────────────
