@@ -1,647 +1,582 @@
+import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
+import {
+  ArrowRight, BookOpen, Check, ChevronDown, CircleCheck, Clock, Cpu, CreditCard, FolderLock, Lock,
+  Quote, ShieldCheck, Star, UploadCloud, UserCheck, Workflow, Zap, Activity, type LucideIcon,
+} from 'lucide-react'
 import PublicTopbar from '@/components/layout/PublicTopbar'
 import SimulationShowcase from '@/components/public/SimulationShowcase'
-import { useEffect, useRef, useState } from 'react'
+import { GSHLogo } from '@/pages/auth/_shared'
 
-/* ---------------------------------- hooks --------------------------------- */
+/* ───────────────────────────── hooks ───────────────────────────── */
 
-function useCounter(target: number, duration = 2000, started = false) {
-  const [count, setCount] = useState(0)
-  useEffect(() => {
-    if (!started) return
-    let start = 0
-    const step = target / (duration / 16)
-    const timer = setInterval(() => {
-      start += step
-      if (start >= target) { setCount(target); clearInterval(timer) }
-      else setCount(Math.floor(start))
-    }, 16)
-    return () => clearInterval(timer)
-  }, [target, duration, started])
-  return count
-}
+const reduced = () => typeof window !== 'undefined' && !!window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
 
-function useInView(threshold = 0.18) {
-  const ref = useRef<HTMLDivElement>(null)
+/** Inarudisha `inView` mara kipengele kinapoingia kwenye skrini (mara moja tu). */
+function useInView<T extends HTMLElement>(threshold = 0.15) {
+  const ref = useRef<T>(null)
   const [inView, setInView] = useState(false)
   useEffect(() => {
-    const obs = new IntersectionObserver(([e]) => { if (e.isIntersecting) setInView(true) }, { threshold })
-    if (ref.current) obs.observe(ref.current)
+    if (typeof IntersectionObserver === 'undefined' || reduced()) { setInView(true); return }
+    const el = ref.current
+    if (!el) return
+    const obs = new IntersectionObserver(([e]) => { if (e.isIntersecting) { setInView(true); obs.disconnect() } }, { threshold })
+    obs.observe(el)
     return () => obs.disconnect()
   }, [threshold])
   return { ref, inView }
 }
 
-/* Types the given lines out one character at a time, holds, deletes them,
-   pauses, then types them again — a continuous typewriter loop. Falls back
-   to showing the full text immediately when the user prefers reduced motion. */
-function useTypewriter(lines: string[], typeSpeed = 42, deleteSpeed = 24, lineDelay = 260, holdDelay = 1800, restartDelay = 500) {
-  const [pos, setPos] = useState(0)
+function Reveal({ children, delay = 0, className = '' }: { children: React.ReactNode; delay?: number; className?: string }) {
+  const { ref, inView } = useInView<HTMLDivElement>()
+  return <div ref={ref} className={`rv${inView ? ' in' : ''} ${className}`} style={{ transitionDelay: `${delay}ms` }}>{children}</div>
+}
+
+function useCountUp(target: number, start: boolean, ms = 1600) {
+  const [v, setV] = useState(0)
   useEffect(() => {
-    const reduced = typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches
-    const total = lines.reduce((sum, l) => sum + l.length, 0)
-    if (reduced) { setPos(total); return }
-
-    const lineEndPositions: number[] = []
-    let running = 0
-    for (const l of lines) { running += l.length; lineEndPositions.push(running) }
-
-    let p = 0
-    let deleting = false
-    let timer: ReturnType<typeof setTimeout>
-
-    function schedule(delay: number) { timer = setTimeout(step, delay) }
-
-    function step() {
-      if (!deleting) {
-        p++
-        setPos(p)
-        if (p >= total) { deleting = true; schedule(holdDelay); return }
-        schedule(lineEndPositions.includes(p) ? lineDelay : typeSpeed)
-      } else {
-        p--
-        setPos(p)
-        if (p <= 0) { deleting = false; schedule(restartDelay); return }
-        schedule(deleteSpeed)
-      }
+    if (!start) return
+    if (reduced()) { setV(target); return }
+    let raf = 0; const t0 = performance.now()
+    const tick = (now: number) => {
+      const p = Math.min(1, (now - t0) / ms)
+      setV(Math.round(target * (1 - Math.pow(1 - p, 3))))
+      if (p < 1) raf = requestAnimationFrame(tick)
     }
-
-    schedule(600)
-    return () => clearTimeout(timer)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
-
-  const output: string[] = []
-  const activeIndex = (() => {
-    let prevCum = 0
-    let idx = lines.length - 1
-    let found = false
-    for (let i = 0; i < lines.length; i++) {
-      const end = prevCum + lines[i].length
-      const shown = Math.max(0, Math.min(lines[i].length, pos - prevCum))
-      output.push(lines[i].slice(0, shown))
-      if (!found && pos <= end) { idx = i; found = true }
-      prevCum = end
-    }
-    return idx
-  })()
-
-  return { output, activeIndex }
+    raf = requestAnimationFrame(tick)
+    return () => cancelAnimationFrame(raf)
+  }, [target, start, ms])
+  return v
 }
 
-/* --------------------------------- icons ---------------------------------- */
-/* Hand-built line icons (no emoji anywhere on the page) */
-
-type IconName =
-  | 'zap' | 'shield' | 'check-circle' | 'cpu' | 'globe' | 'bar-chart'
-  | 'lock' | 'credit-card' | 'book-open' | 'clock' | 'check' | 'star'
-  | 'quote' | 'arrow-right' | 'menu' | 'x'
-
-function Icon({ name, size = 22, color = 'currentColor', strokeWidth = 1.8 }:
-  { name: IconName; size?: number; color?: string; strokeWidth?: number }) {
-  const common = { width: size, height: size, viewBox: '0 0 24 24', fill: 'none' as const, stroke: color, strokeWidth, strokeLinecap: 'round' as const, strokeLinejoin: 'round' as const }
-  switch (name) {
-    case 'zap': return <svg {...common}><path d="M13 2 3 14h7l-1 8 10-12h-7l1-8Z" /></svg>
-    case 'shield': return <svg {...common}><path d="M12 3l7 3v5.2c0 4.8-3.2 8-7 9.3-3.8-1.3-7-4.5-7-9.3V6l7-3Z" /><path d="M9 12.2l2 2 4-4.4" /></svg>
-    case 'check-circle': return <svg {...common}><circle cx="12" cy="12" r="9" /><path d="M8.4 12.4l2.4 2.4 4.6-5" /></svg>
-    case 'cpu': return <svg {...common}><rect x="6.5" y="6.5" width="11" height="11" rx="2" /><path d="M9.5 3v3M14.5 3v3M9.5 18v3M14.5 18v3M3 9.5h3M3 14.5h3M18 9.5h3M18 14.5h3" /></svg>
-    case 'globe': return <svg {...common}><circle cx="12" cy="12" r="9" /><path d="M3 12h18M12 3c2.4 2.6 3.7 6 3.7 9s-1.3 6.4-3.7 9c-2.4-2.6-3.7-6-3.7-9S9.6 5.6 12 3Z" /></svg>
-    case 'bar-chart': return <svg {...common}><path d="M4.5 20V11M12 20V4M19.5 20v-6.5" /></svg>
-    case 'lock': return <svg {...common}><rect x="5" y="11" width="14" height="9" rx="2.2" /><path d="M8 11V7.5a4 4 0 1 1 8 0V11" /></svg>
-    case 'credit-card': return <svg {...common}><rect x="3" y="6" width="18" height="13" rx="2.2" /><path d="M3 10.2h18" /></svg>
-    case 'book-open': return <svg {...common}><path d="M12 6.2c-2-1.5-5-2-8-1v12.6c3-1 6-.5 8 1 2-1.5 5-2 8-1V5.2c-3-1-6-.5-8 1Z" /><path d="M12 6.2v12.6" /></svg>
-    case 'clock': return <svg {...common}><circle cx="12" cy="12" r="9" /><path d="M12 7.2v5l3.4 2" /></svg>
-    case 'check': return <svg {...common} strokeWidth={strokeWidth || 3}><path d="M4.5 12.75l6 6 9-13.5" /></svg>
-    case 'star': return <svg width={size} height={size} viewBox="0 0 24 24" fill={color}><path d="M12 2.2l3 6.3 6.8.9-5 4.7 1.2 6.9L12 17.6l-6 3.4 1.2-6.9-5-4.7 6.8-.9 3-6.3Z" /></svg>
-    case 'quote': return <svg width={size} height={size} viewBox="0 0 24 24" fill={color}><path d="M8 6.5C5.2 6.5 3 8.9 3 12s2.2 5.4 5 5.4c0 2.4-1.8 4.3-4.2 4.3v2.3C7.8 24 10.2 20.6 10.2 16.6V11c0-2.6-1-4.5-2.2-4.5Zm10.6 0c-2.8 0-5 2.4-5 5.5s2.2 5.4 5 5.4c0 2.4-1.8 4.3-4.2 4.3v2.3c3.9 0 6.3-3.4 6.3-7.4V11c0-2.6-1-4.5-2.1-4.5Z" /></svg>
-    case 'arrow-right': return <svg {...common}><path d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" /></svg>
-    case 'menu': return <svg {...common}><path d="M3.5 6.5h17M3.5 12h17M3.5 17.5h17" /></svg>
-    case 'x': return <svg {...common}><path d="M6 6l12 12M18 6L6 18" /></svg>
-  }
-}
-
-function StarRow({ count, size = 12, color = '#E5A00D' }: { count: number; size?: number; color?: string }) {
+function Stat({ value, suffix, label }: { value: number; suffix: string; label: string }) {
+  const { ref, inView } = useInView<HTMLDivElement>(0.4)
+  const n = useCountUp(value, inView)
   return (
-    <div style={{ display: 'flex', gap: 2 }}>
-      {Array.from({ length: count }).map((_, i) => <Icon key={i} name="star" size={size} color={color} />)}
+    <div ref={ref} className="lp-stat">
+      <div className="lp-stat-n" aria-label={`${value}${suffix} ${label}`}>{n}{suffix}</div>
+      <div className="lp-stat-l">{label}</div>
     </div>
   )
 }
 
-/* Avatar with a real photo when available; falls back to initials-on-gradient
-   automatically if the photo is missing or fails to load — safe to drop in
-   photos later without breaking the layout. */
-function Avatar({ photo, initials, size, gradient }: { photo?: string; initials: string; size: number; gradient: string }) {
-  const [failed, setFailed] = useState(!photo)
-  return (
-    <div style={{
-      width: size, height: size, borderRadius: '50%', flexShrink: 0, position: 'relative',
-      overflow: 'hidden', background: gradient, display: 'flex', alignItems: 'center',
-      justifyContent: 'center', color: '#fff', fontWeight: 700, fontSize: size * 0.34,
-    }}>
-      {initials}
-      {photo && !failed && (
-        <img
-          src={photo}
-          alt=""
-          onError={() => setFailed(true)}
-          style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }}
-        />
-      )}
-    </div>
-  )
-}
+/* ───────────────────────────── data ───────────────────────────── */
 
-function GSHLogo({ size = 40 }: { size?: number }) {
-  return (
-    <img
-      src="/gsh-icon.png"
-      alt="Global Simulation Hub"
-      style={{
-        height: size,
-        width: 'auto',
-        maxWidth: 'none',
-        maxHeight: 'none',
-        display: 'block',
-        flexShrink: 0,
-      }}
-    />
-  )
-}
+const SOFTWARE = ['MATLAB', 'Simulink', 'Proteus', 'ANSYS', 'LabVIEW', 'Multisim', 'PSCAD', 'ETAP', 'HFSS', 'CST Studio', 'LTspice']
 
-/* Soft wave divider blending two light-blue tones together instead of a hard cut. */
-function WaveDivider({ from, to }: { from: string; to: string }) {
-  return (
-    <div style={{ background: from, lineHeight: 0 }}>
-      <svg viewBox="0 0 1440 70" width="100%" height="46" preserveAspectRatio="none">
-        <path d="M0,26 C240,58 480,4 720,22 C960,40 1200,60 1440,18 L1440,70 L0,70 Z" fill={to} />
-      </svg>
-    </div>
-  )
-}
-
-/* --------------------------------- content --------------------------------- */
-
-const tools = ['MATLAB', 'Simulink', 'Proteus', 'ANSYS', 'LabVIEW', 'PSCAD', 'ETAP', 'Multisim', 'HFSS', 'CST Studio']
-
-const steps = [
-  { n: '01', title: 'Submit Project', body: 'Describe your simulation. No account needed — we create one automatically.' },
-  { n: '02', title: 'Expert Matched', body: 'Smart system assigns the best verified expert for your software and deadline.' },
-  { n: '03', title: 'Track Progress', body: 'Watch real-time progress from 0-100% as your expert works on your simulation.' },
-  { n: '04', title: 'QC & Download', body: 'Admin reviews quality first, then you get a secure time-limited download link.' },
+const STEPS: { icon: LucideIcon; title: string; body: string }[] = [
+  { icon: UploadCloud, title: 'Submit your project', body: 'Describe your simulation, attach any files, and create your account in the same step.' },
+  { icon: UserCheck, title: 'Priced & matched', body: 'We review and price your project, then a verified expert with the right skills takes it on.' },
+  { icon: Activity, title: 'Track progress', body: 'Follow progress from 0 to 100% and chat with your expert while the work is done.' },
+  { icon: CircleCheck, title: 'Quality check & download', body: 'Our team reviews the result first. Then you download your files from a secure link.' },
 ]
 
-const features: { icon: IconName; title: string; body: string; tint: string }[] = [
-  { icon: 'zap', title: 'Express Delivery', body: 'Results in 6-12h with our express tier. Urgent (24h) and Standard also available.', tint: '#0D52CE' },
-  { icon: 'shield', title: 'Verified Experts', body: 'Every expert passes a 2-hour live simulation test. Only top 15% accepted.', tint: '#E37914' },
-  { icon: 'check-circle', title: 'Quality Control', body: 'Admin reviews every submission before delivery. No shortcuts, no compromises.', tint: '#0D52CE' },
-  { icon: 'cpu', title: 'Smart Matching', body: 'AI matches your project to the highest-rated available expert by skill.', tint: '#E37914' },
-  { icon: 'globe', title: 'Global Platform', body: 'Multi-currency, multi-timezone. Submit anywhere, get results worldwide.', tint: '#0D52CE' },
-  { icon: 'bar-chart', title: 'Full Transparency', body: 'Track every stage: Received → Assigned → QC → Completed.', tint: '#E37914' },
-  { icon: 'lock', title: 'NDA Support', body: 'Enable confidential mode. Expert must sign NDA before accessing files.', tint: '#0D52CE' },
-  { icon: 'credit-card', title: 'Flexible Payments', body: 'Pay 50% advance, 50% on delivery. Wallet system for repeat clients.', tint: '#E37914' },
-  { icon: 'book-open', title: 'Educational Mode', body: 'Optionally receive a PDF or video explanation of your simulation.', tint: '#0D52CE' },
+const FEATURES: { icon: LucideIcon; title: string; body: string }[] = [
+  { icon: Zap, title: 'Express delivery', body: 'Results in 6–12 hours with Express. Urgent (24 hours) and Standard are also available.' },
+  { icon: ShieldCheck, title: 'Verified experts', body: 'Every expert passes a timed skills test on their own tools before taking projects.' },
+  { icon: CircleCheck, title: 'Quality control', body: 'The GSH team reviews every submission before delivery. No shortcuts.' },
+  { icon: Cpu, title: 'Skill-based matching', body: 'Projects go to experts who work with your software, and experts see jobs that fit their skills.' },
+  { icon: FolderLock, title: 'Private by default', body: 'Only you, your expert and the GSH team can open your files. Downloads use secure links.' },
+  { icon: Workflow, title: 'Full transparency', body: 'See every stage: Received, Assigned, In progress, Quality check, Completed.' },
+  { icon: Lock, title: 'NDA mode', body: 'Mark a project confidential. Its details stay hidden from the job board until an expert claims it.' },
+  { icon: CreditCard, title: 'Flexible payments', body: 'Pay in full or 50% in advance. Top up a wallet once and pay for every project from it.' },
+  { icon: BookOpen, title: 'Learn from the work', body: 'Optionally get an explanation of your simulation so you can understand and defend it.' },
 ]
 
-const levels = [
-  { label: 'Beginner', color: '#4E5E82', projects: '1-10 projects', stars: 1 },
-  { label: 'Verified', color: '#0D52CE', projects: '11-30 projects', stars: 2 },
-  { label: 'Top Expert', color: '#0D52CE', projects: '31-60 projects', stars: 3 },
-  { label: 'Elite Expert', color: '#B85F00', projects: '60+ projects', stars: 4 },
+const TIERS = [
+  { name: 'Standard', time: 'Flexible deadline', price: 'Best price', icon: Clock, accent: false },
+  { name: 'Urgent', time: 'Delivered within 24 hours', price: '2× price', icon: Zap, accent: false },
+  { name: 'Express', time: 'Delivered in 6–12 hours', price: '3× price', icon: Zap, accent: true },
 ]
 
-const testimonials = [
+const LEVELS = [
+  { label: 'Beginner', projects: '1–10 projects', stars: 1 },
+  { label: 'Verified', projects: '11–30 projects', stars: 2 },
+  { label: 'Top Expert', projects: '31–60 projects', stars: 3 },
+  { label: 'Elite Expert', projects: '60+ projects', stars: 4 },
+]
+
+const TESTIMONIALS = [
   { name: 'Ahmed K.', role: 'MSc Electrical Engineering', initials: 'AK', rating: 5, photo: '/testimonials/ahmed-k.jpg', quote: 'My Simulink model was due in 18 hours and the expert delivered in 11, fully documented. The progress tracker made the whole thing feel safe.' },
   { name: 'Fatima N.', role: 'Control Systems Researcher', initials: 'FN', rating: 5, photo: '/testimonials/fatima-n.jpg', quote: 'The QC step is what sold me. I got my ANSYS thermal analysis back with a reviewer note attached, not just a raw file.' },
   { name: 'James O.', role: 'Power Systems Consultant', initials: 'JO', rating: 5, photo: '/testimonials/james-o.jpg', quote: 'I needed an ETAP load-flow study with an NDA in place. Setup took minutes and the expert was clearly vetted.' },
-  { name: 'Grace M.', role: 'Final-Year Mechatronics Student', initials: 'GM', rating: 4, photo: '/testimonials/grace-m.jpg', quote: 'Educational Mode was the real win — the explainer video meant I could defend my Proteus project in my viva with confidence.' },
+  { name: 'Grace M.', role: 'Final-Year Mechatronics Student', initials: 'GM', rating: 4, photo: '/testimonials/grace-m.jpg', quote: 'Educational Mode was the real win. The explanation meant I could defend my Proteus project in my viva with confidence.' },
 ]
 
-const featured = testimonials[0]
+const FAQ = [
+  { q: 'Do I need an account to submit a project?', a: 'You create one as part of the submission. Choose a username and password in the form and your account is ready as soon as you submit, with no email confirmation step.' },
+  { q: 'How is my project priced?', a: 'After you submit, our team reviews the details and sets a price. You are notified and can pay in full, or pay 50% in advance and the balance before delivery.' },
+  { q: 'How do I pay?', a: 'Top up your wallet online, then pay for projects from the wallet. Your balance stays available for the next project.' },
+  { q: 'Are my files and ideas private?', a: 'Yes. Only you, your assigned expert and the GSH team can open your files. For sensitive work, turn on NDA mode so the project details are hidden from the job board until an expert claims it.' },
+  { q: 'When can I download my results?', a: 'Once our team has reviewed the work and marked the project completed. Completing your profile to 100% unlocks the downloads.' },
+  { q: 'Can I work as an expert?', a: 'Yes. Apply, choose the tools you work with, complete a short timed test, and an admin reviews your solution. Approved experts choose jobs from the job board and are paid into their wallet.' },
+]
 
-/* ---------------------------------- page ----------------------------------- */
+/* ───────────────────────────── styles ───────────────────────────── */
 
-function Reveal({ children, delay = 0 }: { children: React.ReactNode; delay?: number }) {
-  const { ref, inView } = useInView()
-  return (
-    <div ref={ref} style={{
-      opacity: inView ? 1 : 0,
-      transform: inView ? 'translateY(0)' : 'translateY(0)',
-      transition: `opacity .6s cubic-bezier(.22,.61,.36,1) ${delay}ms, transform .6s cubic-bezier(.22,.61,.36,1) ${delay}ms`,
-    }}>
-      {children}
-    </div>
-  )
+const css = `
+.lp { font-family: inherit; color: #0A1F4D; background: #F5F7FC; overflow-x: clip; }
+.lp * { box-sizing: border-box; }
+.lp-wrap { max-width: 1200px; margin: 0 auto; padding: 0 clamp(16px, 4vw, 24px); }
+.lp-sec { padding: clamp(56px, 8vw, 96px) 0; }
+.lp-sec.alt { background: #fff; border-top: 1px solid #E3E9F4; border-bottom: 1px solid #E3E9F4; }
+.lp-eyebrow { display: inline-flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 600; color: #0D52CE; background: #EAF1FD; border-radius: 999px; padding: 6px 14px; margin: 0 0 16px; }
+.lp-h2 { font-size: clamp(26px, 3.6vw, 38px); line-height: 1.15; font-weight: 700; color: #0A1F4D; margin: 0 0 12px; letter-spacing: -.01em; }
+.lp-lead { font-size: clamp(15px, 1.6vw, 17px); line-height: 1.7; color: #4E5E82; margin: 0; max-width: 620px; }
+.lp-head { text-align: center; margin: 0 auto clamp(32px, 5vw, 52px); }
+.lp-head .lp-lead { margin: 0 auto; }
+
+/* scroll reveal */
+.rv { opacity: 0; transform: translateY(26px); transition: opacity .7s cubic-bezier(.22,.8,.26,1), transform .7s cubic-bezier(.22,.8,.26,1); }
+.rv.in { opacity: 1; transform: none; }
+
+/* buttons */
+.lp-btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; height: 52px; padding: 0 26px; border-radius: 12px; font-size: 15px; font-weight: 600; text-decoration: none; border: 1px solid transparent; font-family: inherit; cursor: pointer; transition: background .2s, box-shadow .25s, transform .15s, border-color .2s, color .2s; }
+.lp-btn:active { transform: scale(.98); }
+.lp-btn svg { transition: transform .25s cubic-bezier(.22,.8,.26,1); }
+.lp-btn:hover svg { transform: translateX(4px); }
+.lp-primary { background: #0D52CE; color: #fff; }
+.lp-primary:hover { background: #0A42A8; box-shadow: 0 12px 28px rgba(13,82,206,.32); transform: translateY(-2px); }
+.lp-ghost { background: #fff; color: #0A1F6B; border-color: #D5E0F2; }
+.lp-ghost:hover { border-color: #0D52CE; color: #0D52CE; box-shadow: 0 8px 20px rgba(10,31,107,.08); transform: translateY(-2px); }
+.lp-white { background: #fff; color: #0A1F6B; }
+.lp-white:hover { box-shadow: 0 12px 28px rgba(0,0,0,.25); transform: translateY(-2px); }
+.lp-outline-w { background: transparent; color: #fff; border-color: rgba(255,255,255,.45); }
+.lp-outline-w:hover { background: rgba(255,255,255,.1); border-color: #fff; transform: translateY(-2px); }
+
+/* hero */
+.lp-hero { position: relative; padding: clamp(36px, 6vw, 76px) 0 clamp(48px, 7vw, 88px); background-image: linear-gradient(rgba(13,82,206,.05) 1px, transparent 1px), linear-gradient(90deg, rgba(13,82,206,.05) 1px, transparent 1px); background-size: 44px 44px; background-position: center top; }
+.lp-hero::after { content: ''; position: absolute; inset: auto 0 0 0; height: 80px; background: #F5F7FC; mask-image: linear-gradient(to top, #000, transparent); -webkit-mask-image: linear-gradient(to top, #000, transparent); pointer-events: none; }
+.lp-hero-grid { position: relative; z-index: 1; display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(0, .95fr); gap: clamp(28px, 5vw, 64px); align-items: center; }
+.lp-hero h1 { font-size: clamp(34px, 5.2vw, 58px); line-height: 1.07; font-weight: 800; letter-spacing: -.025em; color: #0A1F4D; margin: 0 0 20px; }
+.lp-hero h1 em { font-style: normal; color: #0D52CE; position: relative; white-space: nowrap; }
+.lp-hero h1 em::after { content: ''; position: absolute; left: 0; right: 0; bottom: -2px; height: 8px; border-radius: 4px; background: rgba(13,82,206,.18); transform-origin: left; animation: lpUnderline .9s .8s cubic-bezier(.22,.8,.26,1) both; z-index: -1; }
+.lp-hero .lp-lead { font-size: clamp(16px, 1.8vw, 19px); margin-bottom: 30px; max-width: 540px; }
+.lp-cta { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 30px; }
+.lp-trust { display: flex; flex-wrap: wrap; gap: 10px 22px; font-size: 14px; color: #4E5E82; font-weight: 500; }
+.lp-trust span { display: inline-flex; align-items: center; gap: 8px; }
+.lp-trust svg { color: #137A4E; }
+.lp-anim { animation: lpRise .8s cubic-bezier(.22,.8,.26,1) both; }
+.lp-anim.d1 { animation-delay: .08s } .lp-anim.d2 { animation-delay: .18s } .lp-anim.d3 { animation-delay: .3s } .lp-anim.d4 { animation-delay: .42s }
+
+/* hero mockup */
+.lp-mock-wrap { position: relative; padding: 18px 0 18px 18px; animation: lpRise .9s .25s cubic-bezier(.22,.8,.26,1) both; }
+.lp-mock { background: #fff; border: 1px solid #E3E9F4; border-radius: 20px; padding: clamp(18px, 2.4vw, 26px); box-shadow: 0 30px 70px rgba(10,31,107,.14), 0 2px 6px rgba(10,31,107,.05); animation: lpFloat 7s ease-in-out infinite; }
+.lp-mock-top { display: flex; align-items: center; gap: 12px; margin-bottom: 18px; }
+.lp-mock-ico { width: 44px; height: 44px; border-radius: 12px; background: #EAF1FD; color: #0D52CE; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.lp-mock-title { font-size: 15px; font-weight: 700; color: #0A1F4D; line-height: 1.25; }
+.lp-mock-sub { font-size: 13px; color: #667697; }
+.lp-pill { margin-left: auto; font-size: 12px; font-weight: 600; color: #9A5B00; background: #FFF8E6; border-radius: 999px; padding: 4px 11px; display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; }
+.lp-pill i { width: 7px; height: 7px; border-radius: 50%; background: #E5A00D; animation: lpPulse 1.6s infinite; }
+.lp-bar { height: 8px; border-radius: 8px; background: #EBEFF8; overflow: hidden; margin: 4px 0 6px; }
+.lp-bar i { display: block; height: 100%; width: 72%; border-radius: 8px; background: #0D52CE; animation: lpFill 2.2s .9s cubic-bezier(.22,.8,.26,1) both; }
+.lp-bar-l { display: flex; justify-content: space-between; font-size: 12.5px; color: #667697; margin-bottom: 18px; }
+.lp-bar-l b { color: #0A1F4D; }
+.lp-steps { list-style: none; margin: 0; padding: 0; display: grid; gap: 12px; }
+.lp-steps li { display: flex; align-items: center; gap: 12px; font-size: 14px; color: #2B3A60; font-weight: 500; opacity: 0; animation: lpRise .6s cubic-bezier(.22,.8,.26,1) both; }
+.lp-steps li:nth-child(1) { animation-delay: .7s } .lp-steps li:nth-child(2) { animation-delay: .85s } .lp-steps li:nth-child(3) { animation-delay: 1s } .lp-steps li:nth-child(4) { animation-delay: 1.15s } .lp-steps li:nth-child(5) { animation-delay: 1.3s }
+.lp-dot { width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; background: #EDF8F1; color: #137A4E; }
+.lp-dot.now { background: #EAF1FD; color: #0D52CE; animation: lpPulseBlue 2s infinite; }
+.lp-dot.todo { background: #EBEFF8; color: #8D9BB8; }
+.lp-chip { position: absolute; display: inline-flex; align-items: center; gap: 8px; background: #fff; border: 1px solid #E3E9F4; border-radius: 12px; padding: 10px 14px; font-size: 13px; font-weight: 600; color: #0A1F4D; box-shadow: 0 14px 32px rgba(10,31,107,.14); }
+.lp-chip svg { color: #137A4E; }
+.lp-chip.a { top: -4px; right: -6px; animation: lpFloat 6s 1s ease-in-out infinite, lpPop .6s 1.5s cubic-bezier(.22,.8,.26,1) both; }
+.lp-chip.b { bottom: 6px; left: -4px; animation: lpFloat 8s .4s ease-in-out infinite, lpPop .6s 1.8s cubic-bezier(.22,.8,.26,1) both; }
+
+/* software marquee */
+.lp-marq { padding: 22px 0; background: #fff; border-top: 1px solid #E3E9F4; border-bottom: 1px solid #E3E9F4; overflow: hidden; }
+.lp-marq-lbl { text-align: center; font-size: 13px; font-weight: 600; color: #667697; margin-bottom: 14px; }
+.lp-marq-mask { overflow: hidden; mask-image: linear-gradient(90deg, transparent, #000 10%, #000 90%, transparent); -webkit-mask-image: linear-gradient(90deg, transparent, #000 10%, #000 90%, transparent); }
+.lp-marq-track { display: flex; gap: 14px; width: max-content; animation: lpMarq 34s linear infinite; }
+.lp-marq-mask:hover .lp-marq-track { animation-play-state: paused; }
+.lp-sw { font-size: 15px; font-weight: 600; color: #3A4A70; background: #F5F7FC; border: 1px solid #E3E9F4; border-radius: 10px; padding: 10px 20px; white-space: nowrap; }
+
+/* stats */
+.lp-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+.lp-stat { text-align: center; padding: clamp(18px, 3vw, 28px) 12px; background: #fff; border: 1px solid #E3E9F4; border-radius: 16px; transition: transform .3s cubic-bezier(.22,.8,.26,1), box-shadow .3s; }
+.lp-stat:hover { transform: translateY(-4px); box-shadow: 0 16px 36px rgba(10,31,107,.1); }
+.lp-stat-n { font-size: clamp(30px, 4.4vw, 46px); font-weight: 800; color: #0D52CE; line-height: 1; font-variant-numeric: tabular-nums; letter-spacing: -.02em; }
+.lp-stat-l { font-size: 14px; color: #4E5E82; margin-top: 8px; font-weight: 500; }
+
+/* steps */
+.lp-flow { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; position: relative; }
+.lp-flow::before { content: ''; position: absolute; left: 12%; right: 12%; top: 38px; height: 2px; background: repeating-linear-gradient(90deg, #C4DBF1 0 8px, transparent 8px 16px); z-index: 0; }
+.lp-step { position: relative; z-index: 1; text-align: center; padding: 0 8px; }
+.lp-step-ico { width: 76px; height: 76px; border-radius: 22px; margin: 0 auto 18px; background: #fff; border: 1px solid #E3E9F4; color: #0D52CE; display: flex; align-items: center; justify-content: center; position: relative; box-shadow: 0 8px 22px rgba(10,31,107,.08); transition: transform .35s cubic-bezier(.22,.8,.26,1), background .25s, color .25s; }
+.lp-step:hover .lp-step-ico { transform: translateY(-6px) rotate(-4deg); background: #0D52CE; color: #fff; }
+.lp-step-n { position: absolute; top: -8px; right: -8px; width: 26px; height: 26px; border-radius: 50%; background: #0A1F6B; color: #fff; font-size: 12px; font-weight: 700; display: flex; align-items: center; justify-content: center; }
+.lp-step h3 { font-size: 17px; font-weight: 700; color: #0A1F4D; margin: 0 0 8px; }
+.lp-step p { font-size: 14.5px; line-height: 1.65; color: #4E5E82; margin: 0; }
+
+/* feature cards */
+.lp-grid3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; }
+.lp-card { background: #fff; border: 1px solid #E3E9F4; border-radius: 16px; padding: 26px; transition: transform .3s cubic-bezier(.22,.8,.26,1), box-shadow .3s, border-color .3s; height: 100%; }
+.lp-card:hover { transform: translateY(-5px); box-shadow: 0 18px 40px rgba(10,31,107,.11); border-color: #C4DBF1; }
+.lp-card-ico { width: 48px; height: 48px; border-radius: 13px; background: #EAF1FD; color: #0D52CE; display: flex; align-items: center; justify-content: center; margin-bottom: 18px; transition: background .25s, color .25s, transform .3s cubic-bezier(.22,.8,.26,1); }
+.lp-card:hover .lp-card-ico { background: #0D52CE; color: #fff; transform: scale(1.08) rotate(-5deg); }
+.lp-card h3 { font-size: 17px; font-weight: 700; margin: 0 0 8px; color: #0A1F4D; }
+.lp-card p { font-size: 14.5px; line-height: 1.65; color: #4E5E82; margin: 0; }
+
+/* delivery tiers */
+.lp-tiers { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; max-width: 980px; margin: 0 auto; }
+.lp-tier { position: relative; background: #fff; border: 1px solid #E3E9F4; border-radius: 18px; padding: 30px 26px; text-align: left; transition: transform .3s cubic-bezier(.22,.8,.26,1), box-shadow .3s; display: flex; flex-direction: column; }
+.lp-tier:hover { transform: translateY(-6px); box-shadow: 0 20px 44px rgba(10,31,107,.12); }
+.lp-tier.hot { background: #0A1F6B; border-color: #0A1F6B; color: #fff; }
+.lp-tier.hot .lp-tier-time, .lp-tier.hot li { color: #C9D8F5; }
+.lp-tier.hot h3 { color: #fff; }
+.lp-tag { position: absolute; top: -12px; left: 26px; background: #0D52CE; color: #fff; font-size: 12px; font-weight: 700; border-radius: 999px; padding: 4px 12px; }
+.lp-tier h3 { font-size: 20px; font-weight: 700; margin: 0 0 4px; color: #0A1F4D; display: flex; align-items: center; gap: 8px; }
+.lp-tier-time { font-size: 14px; color: #667697; margin-bottom: 18px; }
+.lp-tier-price { font-size: 30px; font-weight: 800; letter-spacing: -.02em; margin-bottom: 18px; color: #0D52CE; }
+.lp-tier.hot .lp-tier-price { color: #fff; }
+.lp-tier ul { list-style: none; margin: 0 0 24px; padding: 0; display: grid; gap: 10px; flex: 1; }
+.lp-tier li { display: flex; gap: 10px; align-items: center; font-size: 14px; color: #3A4A70; }
+.lp-tier li svg { color: #137A4E; flex-shrink: 0; }
+.lp-tier.hot li svg { color: #7CCBA2; }
+.lp-tier .lp-btn { height: 46px; width: 100%; }
+
+/* levels */
+.lp-levels { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+.lp-level { background: #fff; border: 1px solid #E3E9F4; border-radius: 16px; padding: 22px; text-align: center; position: relative; overflow: hidden; transition: transform .3s cubic-bezier(.22,.8,.26,1), box-shadow .3s; }
+.lp-level:hover { transform: translateY(-4px); box-shadow: 0 14px 32px rgba(10,31,107,.1); }
+.lp-level b { display: block; font-size: 16px; color: #0A1F4D; margin: 10px 0 2px; }
+.lp-level small { font-size: 13px; color: #667697; }
+.lp-stars { display: inline-flex; gap: 3px; color: #E5A00D; }
+.lp-stars .off { color: #DCE3F0; }
+
+/* testimonials */
+.lp-tgrid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 18px; }
+.lp-quote { background: #fff; border: 1px solid #E3E9F4; border-radius: 18px; padding: 28px; display: flex; flex-direction: column; gap: 18px; transition: transform .3s cubic-bezier(.22,.8,.26,1), box-shadow .3s; height: 100%; }
+.lp-quote:hover { transform: translateY(-4px); box-shadow: 0 16px 36px rgba(10,31,107,.1); }
+.lp-quote p { font-size: 15.5px; line-height: 1.7; color: #2B3A60; margin: 0; flex: 1; }
+.lp-who { display: flex; align-items: center; gap: 12px; }
+.lp-ava { position: relative; width: 44px; height: 44px; border-radius: 50%; background: #0A1F6B; color: #fff; font-size: 14px; font-weight: 700; display: flex; align-items: center; justify-content: center; overflow: hidden; flex-shrink: 0; }
+.lp-ava img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.lp-who b { display: block; font-size: 14.5px; color: #0A1F4D; }
+.lp-who small { font-size: 13px; color: #667697; }
+
+/* faq */
+.lp-faq { max-width: 780px; margin: 0 auto; display: grid; gap: 10px; }
+.lp-qa { background: #fff; border: 1px solid #E3E9F4; border-radius: 14px; overflow: hidden; transition: border-color .25s, box-shadow .25s; }
+.lp-qa.open { border-color: #C4DBF1; box-shadow: 0 10px 26px rgba(10,31,107,.07); }
+.lp-qa button { width: 100%; display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 18px 22px; background: none; border: none; text-align: left; font-family: inherit; font-size: 16px; font-weight: 600; color: #0A1F4D; cursor: pointer; }
+.lp-qa button svg { flex-shrink: 0; color: #667697; transition: transform .3s cubic-bezier(.22,.8,.26,1), color .2s; }
+.lp-qa.open button svg { transform: rotate(180deg); color: #0D52CE; }
+.lp-qa-body { display: grid; grid-template-rows: 0fr; transition: grid-template-rows .35s cubic-bezier(.22,.8,.26,1); }
+.lp-qa.open .lp-qa-body { grid-template-rows: 1fr; }
+.lp-qa-body > div { overflow: hidden; }
+.lp-qa-body p { margin: 0; padding: 0 22px 20px; font-size: 15px; line-height: 1.7; color: #4E5E82; }
+
+/* cta band */
+.lp-band { background: #0A1F6B; color: #fff; border-radius: clamp(18px, 3vw, 28px); padding: clamp(36px, 6vw, 68px) clamp(22px, 5vw, 56px); text-align: center; position: relative; overflow: hidden; background-image: linear-gradient(rgba(255,255,255,.05) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.05) 1px, transparent 1px); background-size: 40px 40px; }
+.lp-band h2 { font-size: clamp(26px, 4vw, 42px); font-weight: 800; letter-spacing: -.02em; margin: 0 0 12px; line-height: 1.12; }
+.lp-band p { font-size: clamp(15px, 1.7vw, 18px); color: #C9D8F5; margin: 0 auto 28px; max-width: 560px; line-height: 1.65; }
+.lp-band .lp-cta { justify-content: center; margin: 0; }
+
+/* footer */
+.lp-foot { background: #071650; color: #A9C8F0; padding: clamp(40px, 6vw, 64px) 0 28px; margin-top: clamp(56px, 8vw, 96px); }
+.lp-foot-grid { display: grid; grid-template-columns: 1.5fr repeat(3, 1fr); gap: 32px; margin-bottom: 36px; }
+.lp-foot h4 { font-size: 14px; color: #fff; margin: 0 0 14px; font-weight: 600; }
+.lp-foot a { display: block; color: #A9C8F0; text-decoration: none; font-size: 14px; padding: 5px 0; transition: color .2s, transform .2s; }
+.lp-foot a:hover { color: #fff; transform: translateX(3px); }
+.lp-foot-brand { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; }
+.lp-foot-brand .t { width: 42px; height: 42px; border-radius: 11px; background: #fff; display: flex; align-items: center; justify-content: center; }
+.lp-foot-brand b { color: #fff; font-size: 15px; display: block; }
+.lp-foot-brand small { font-size: 12.5px; }
+.lp-foot p { font-size: 14px; line-height: 1.7; margin: 0; max-width: 340px; }
+.lp-copy { border-top: 1px solid rgba(255,255,255,.12); padding-top: 20px; font-size: 13px; color: #8DA6D6; display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+
+@keyframes lpRise { from { opacity: 0; transform: translateY(24px); } to { opacity: 1; transform: none; } }
+@keyframes lpFloat { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-9px); } }
+@keyframes lpFill { from { width: 0; } }
+@keyframes lpUnderline { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+@keyframes lpPop { from { opacity: 0; transform: scale(.7); } to { opacity: 1; transform: none; } }
+@keyframes lpPulse { 0%,100% { opacity: 1; } 50% { opacity: .35; } }
+@keyframes lpPulseBlue { 0%,100% { box-shadow: 0 0 0 0 rgba(13,82,206,.4); } 50% { box-shadow: 0 0 0 7px rgba(13,82,206,0); } }
+@keyframes lpMarq { to { transform: translateX(calc(-50% - 7px)); } }
+
+@media (max-width: 1000px) {
+  .lp-hero-grid { grid-template-columns: 1fr; }
+  .lp-mock-wrap { max-width: 520px; margin: 0 auto; width: 100%; }
+  .lp-grid3 { grid-template-columns: repeat(2, 1fr); }
+  .lp-levels, .lp-stats { grid-template-columns: repeat(2, 1fr); }
+  .lp-flow { grid-template-columns: repeat(2, 1fr); gap: 32px 20px; }
+  .lp-flow::before { display: none; }
+  .lp-foot-grid { grid-template-columns: 1fr 1fr; }
 }
+@media (max-width: 680px) {
+  .lp-grid3, .lp-tiers, .lp-tgrid { grid-template-columns: 1fr; }
+  .lp-cta .lp-btn { flex: 1 1 100%; }
+  .lp-chip.a { right: 0; } .lp-chip.b { left: 0; }
+  .lp-mock-wrap { padding: 16px 0; }
+  .lp-flow { grid-template-columns: 1fr; }
+  .lp-foot-grid { grid-template-columns: 1fr; }
+  .lp-hero h1 em { white-space: normal; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .lp *, .lp *::before, .lp *::after { animation: none !important; transition: none !important; }
+  .rv { opacity: 1; transform: none; }
+  .lp-steps li { opacity: 1; }
+}
+`
+
+/* ───────────────────────────── page ───────────────────────────── */
 
 export default function LandingPage() {
-  const heroLines = ['Simulation', 'Delivered Fast', 'Globally.']
-  const { output: heroTyped, activeIndex: heroCaretLine } = useTypewriter(heroLines)
-  const statsRef = useInView()
-  const c1 = useCounter(1200, 1800, statsRef.inView)
-  const c2 = useCounter(98, 1800, statsRef.inView)
-  const c3 = useCounter(47, 1800, statsRef.inView)
-  const c4 = useCounter(6, 1800, statsRef.inView)
+  const [open, setOpen] = useState<number | null>(0)
 
   return (
-    <>
-      <style>{`
-        
-        html { scroll-behavior: smooth; }
-        .lp { font-family: inherit; background:#F5F7FC; }
-        .dp { font-family: inherit; }
-        @keyframes fadeUp { from { opacity:0; transform:translateY(0); } to { opacity:1; transform:translateY(0); } }
-        @keyframes floatY { 0%,100% { transform:translateY(0); } 50% { transform:translateY(0); } }
-        @keyframes pulseRing { 0% { box-shadow:0 0 0 0 rgba(13,82,206,.45); } 100% { box-shadow:0 0 0 9px rgba(13,82,206,0); } }
-        @keyframes marquee { from { transform:translateX(0); } to { transform:translateX(-50%); } }
-        @keyframes drift { 0%,100% { transform:translate(0,0) scale(1); } 50% { transform:translate(16px,-12px) scale(1); } }
-        @keyframes slideDown { from { opacity:0; transform:translateY(0); } to { opacity:1; transform:translateY(0); } }
-        @keyframes blink { 50% { opacity:0; } }
-        .caret { display:inline-block; width:3px; height:0.82em; background:currentColor; margin-left:5px; vertical-align:-0.08em; animation:blink 1s steps(1) infinite; border-radius:1px; }
-        .au { animation: fadeUp .6s cubic-bezier(.22,.61,.36,1) both; }
-        .au1 { animation: fadeUp .6s .1s cubic-bezier(.22,.61,.36,1) both; }
-        .au2 { animation: fadeUp .6s .2s cubic-bezier(.22,.61,.36,1) both; }
-        .au3 { animation: fadeUp .6s .3s cubic-bezier(.22,.61,.36,1) both; }
-        .au4 { animation: fadeUp .6s .4s cubic-bezier(.22,.61,.36,1) both; }
-        .mq { animation: marquee 28s linear infinite; }
-        .mq:hover { animation-play-state:paused; }
-        .pr { animation: pulseRing 2s ease-out infinite; }
-        .drift { animation: drift 8s ease-in-out infinite; }
-        .hgrid { background-image:linear-gradient(rgba(13,82,206,.09) 1px,transparent 1px),linear-gradient(90deg,rgba(13,82,206,.09) 1px,transparent 1px); background-size:48px 48px; }
-        .fcard { background:#fff; border:1px solid #DCE3F0; border-radius:16px; padding:24px 22px; transition:box-shadow .3s cubic-bezier(.22,.61,.36,1), border-color .3s cubic-bezier(.22,.61,.36,1), transform .3s cubic-bezier(.22,.61,.36,1); }
-        .fcard:hover { box-shadow:0 14px 34px rgba(13,82,206,.12); border-color:#C4DBF1; transform:translateY(0); }
-        .scard { background:#fff; border:1px solid #DCE3F0; border-radius:18px; padding:26px; transition:box-shadow .3s cubic-bezier(.22,.61,.36,1), transform .3s cubic-bezier(.22,.61,.36,1), border-color .3s cubic-bezier(.22,.61,.36,1); }
-        .scard:hover { box-shadow:0 16px 38px rgba(13,82,206,.12); transform:translateY(0); border-color:#C4DBF1; }
-        .stcard { background:#fff; border-radius:18px; padding:26px 20px; text-align:center; border:1px solid #DCE3F0; transition:all .3s cubic-bezier(.22,.61,.36,1); }
-        .stcard:hover { transform:translateY(0); box-shadow:0 16px 36px rgba(13,82,206,.1); }
-        .tcard { background:#fff; border-radius:18px; padding:24px; border:1px solid #DCE3F0; transition:box-shadow .3s cubic-bezier(.22,.61,.36,1), transform .3s cubic-bezier(.22,.61,.36,1), border-color .3s cubic-bezier(.22,.61,.36,1); position:relative; overflow:hidden; }
-        .tcard:hover { transform:translateY(0); box-shadow:0 18px 40px rgba(13,82,206,.14); border-color:#F6C48F; }
-        .tcard::before { content:""; position:absolute; top:0; left:0; right:0; height:3px; background:#0D52CE; opacity:.0; transition:opacity .3s; }
-        .tcard:hover::before { opacity:1; }
-        .btncta { display:inline-flex; align-items:center; gap:8px; background:#0D52CE; color:#fff; font-family: inherit; font-weight:700; font-size:14px; padding:13px 26px; border-radius:11px; border:none; cursor:pointer; transition:background-position .35s cubic-bezier(.22,.61,.36,1), transform .22s cubic-bezier(.22,.61,.36,1), box-shadow .22s cubic-bezier(.22,.61,.36,1); text-decoration:none; background-size:170% 170%; background-position:0% 50%; }
-        .btncta:hover { background-position:100% 50%; transform:translateY(0); box-shadow:0 10px 26px rgba(13,82,206,.28); color:#fff; }
-        .btngl { display:inline-flex; align-items:center; gap:8px; background:#fff; color:#0A1F6B; font-family: inherit; font-weight:500; font-size:14px; padding:12px 21px; border-radius:11px; border:1px solid #C4DBF1; cursor:pointer; transition:background .22s cubic-bezier(.22,.61,.36,1), border-color .22s cubic-bezier(.22,.61,.36,1); text-decoration:none; }
-        .btngl:hover { background:#EAF1FD; border-color:#0D52CE; }
-        .navglass { background:#F5F7FC; border-bottom:1px solid #DCE3F0; }
-        .navsolid { background:#F5F7FC; border-bottom:1px solid #DCE3F0; }
-        .navbtn-outline { display:inline-flex; align-items:center; justify-content:center; gap:8px; background:#fff; color:#0A1F6B; font-family: inherit; font-weight:500; border:1px solid rgba(13,82,206,.3); border-radius:11px; cursor:pointer; text-decoration:none; transition:background .2s cubic-bezier(.22,.61,.36,1), border-color .2s cubic-bezier(.22,.61,.36,1); }
-        .navbtn-outline:hover { background:rgba(13,82,206,.08); border-color:rgba(13,82,206,.55); }
-        .nav-desktop-actions { display:flex; align-items:center; gap:6px; }
-        .nav-toggle { display:none; align-items:center; justify-content:center; width:38px; height:38px; border-radius:10px; border:1px solid #DCE3F0; background:#fff; color:#0A1F6B; cursor:pointer; flex-shrink:0; transition:background .2s, border-color .2s; }
-        .nav-toggle:hover { background:#EAF1FD; border-color:#C4DBF1; }
-        
-        .nav-mobile-panel { background:#F5F7FC; border-top:1px solid #DCE3F0; animation:slideDown .2s cubic-bezier(.22,.61,.36,1) both; }
-        @media (min-width: 641px) { .nav-mobile-panel { display:none !important; } }
-        .lcard { background:#fff; border-radius:18px; padding:22px 18px; border:1px solid #DCE3F0; text-align:center; transition:all .3s cubic-bezier(.22,.61,.36,1); }
-        .lcard:hover { box-shadow:0 14px 34px rgba(13,82,206,.1); transform:translateY(0); }
-        .blob { position:absolute; border-radius:50%; filter:blur(74px); pointer-events:none; }
-        .iconwrap { width:42px; height:42px; border-radius:11px; display:flex; align-items:center; justify-content:center; margin-bottom:14px; }
-        .navlink { color:#2B3A60; font-size:13px; font-weight:500; padding:8px 14px; border-radius:8px; text-decoration:none; transition:color .2s, background .2s; }
-        .navlink:hover { color:#0A1F6B; background:rgba(13,82,206,.08); }
-        * { box-sizing:border-box; }
+    <div className="lp">
+      <style>{css}</style>
+      <PublicTopbar />
 
-        /* ---- Responsive scale: tablets ---- */
-        @media (max-width: 900px) {
-          .grid-2 { grid-template-columns:1fr !important; }
-          .grid-3 { grid-template-columns:1fr 1fr !important; }
-          .grid-4 { grid-template-columns:1fr 1fr !important; }
-        }
-
-        /* ---- Responsive scale: small tablets / large phones ---- */
-        @media (max-width: 640px) {
-          .grid-3 { grid-template-columns:1fr !important; }
-          .nav-subtitle { display:none; }
-          .nav-desktop-actions { display:none !important; }
-          .nav-toggle { display:flex !important; }
-        }
-
-        /* ---- Responsive scale: phones ---- */
-        @media (max-width: 480px) {
-          .grid-4 { grid-template-columns:1fr 1fr !important; gap:12px !important; }
-          .btncta, .btngl, .navbtn-outline { font-size:13px !important; padding:11px 18px !important; }
-        }
-
-        @media (prefers-reduced-motion: reduce) {
-          .au, .au1, .au2, .au3, .au4, .mq, .pr, .drift, .nav-mobile-panel { animation: none !important; }
-          .fcard, .scard, .stcard, .tcard, .lcard, .btncta, .btngl, .navbtn-outline, .nav-toggle { transition: none !important; }
-        }
-      `}</style>
-      <div className="lp">
-        <PublicTopbar />
-
-        {/* HERO — light blue, the color that carries the whole page */}
-        <section style={{ minHeight: 'auto', background: '#F5F7FC', position: 'relative', display: 'flex', alignItems: 'center', paddingTop: 'clamp(32px,6vw,56px)', paddingBottom: 'clamp(44px,7vw,56px)', overflow: 'hidden' }} >
-          <div style={{ maxWidth: 1200, margin: '0 auto', padding: '0 clamp(16px,4vw,24px)', width: '100%', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'clamp(28px,6vw,56px)', alignItems: 'center', position: 'relative' }} className="grid-2">
-            <div>
-              <div className="au" style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: '#fff', border: '1px solid #C4DBF1', borderRadius: 999, padding: '6px 15px', marginBottom: 22 }}>
-                <span className="pr" style={{ width: 7, height: 7, borderRadius: '50%', background: '#0D52CE', display: 'inline-block', flexShrink: 0 }} />
-                <span style={{ color: '#0A42A8', fontSize: 12, fontWeight: 600,}}>Engineering Simulation Marketplace</span>
-              </div>
-              <h1 className="dp au1" style={{ fontSize: 'clamp(30px, 3.6vw, 44px)', fontWeight: 700, lineHeight: 1.14, color: '#0A1F6B', margin: '0 0 18px', minHeight: 'calc(3 * 1.14 * clamp(30px, 3.6vw, 44px))' }}>
-                {heroTyped[0]}
-                {heroCaretLine === 0 && <span className="caret" style={{ color: '#0A1F6B' }} />}
-                <br />
-                <span style={{ background: '#0D52CE', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>{heroTyped[1]}</span>
-                {heroCaretLine === 1 && <span className="caret" style={{ color: '#B85F00' }} />}
-                <br />
-                {heroTyped[2]}
-                {heroCaretLine === 2 && <span className="caret" style={{ color: '#0A1F6B' }} />}
-              </h1>
-              <p className="au2" style={{ color: '#3A4A70', fontSize: 16, lineHeight: 1.7, maxWidth: 430, margin: '0 0 28px' }}>
-                Connect with verified engineers for MATLAB, Proteus, ANSYS & more. Submit your project in 60 seconds — no account needed.
-              </p>
-              <div className="au3" style={{ display: 'flex', gap: 12, flexWrap: 'wrap', marginBottom: 30 }}>
-                <Link to="/submit" className="btncta" style={{ fontSize: 14, padding: '14px 27px' }}>
-                  Submit a Project
-                  <Icon name="arrow-right" size={15} />
-                </Link>
-                <Link to="/apply-expert" className="btngl" style={{ fontSize: 14, padding: '14px 24px' }}>Join as Expert</Link>
-              </div>
-              <div className="au4" style={{ display: 'flex', gap: 20, flexWrap: 'wrap' }}>
-                {['No account needed', 'Secure delivery', 'Expert-verified'].map((t) => (
-                  <div key={t} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                    <Icon name="check" size={13} color="#0D52CE" strokeWidth={3} />
-                    <span style={{ color: '#4E5E82', fontSize: 13 }}>{t}</span>
-                  </div>
-                ))}
-              </div>
+      {/* ── Hero ── */}
+      <section className="lp-hero" aria-labelledby="hero-title">
+        <div className="lp-wrap lp-hero-grid">
+          <div>
+            <span className="lp-eyebrow lp-anim"><ShieldCheck size={15} /> Verified simulation experts</span>
+            <h1 id="hero-title" className="lp-anim d1">Engineering simulations, <em>delivered fast</em> by experts you can trust.</h1>
+            <p className="lp-lead lp-anim d2">Send us your MATLAB, Simulink, Proteus, ANSYS or LabVIEW project. A verified expert builds it, our team checks the quality, and you download the results.</p>
+            <div className="lp-cta lp-anim d3">
+              <Link to="/submit" className="lp-btn lp-primary">Submit a project <ArrowRight size={18} /></Link>
+              <Link to="/apply-expert" className="lp-btn lp-ghost">Become an expert</Link>
             </div>
-            {/* Floating card */}
-            <div className="au" style={{ position: 'relative', padding: '18px 0' }}>
-              <div style={{ background: '#fff', border: '1px solid #DCE3F0', borderRadius: 16, padding: 'clamp(20px,3vw,26px)', boxShadow: '0 1px 3px rgba(10,31,107,.08)', animation: 'floatY 6s ease-in-out infinite' }}>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 18, gap: 10, flexWrap: 'wrap' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 12, minWidth: 0 }}>
-                    <div style={{ width: 38, height: 38, background: '#0D52CE', borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontWeight: 700, fontSize: 13, fontFamily: 'inherit', flexShrink: 0 }}>M</div>
-                    <div style={{ minWidth: 0 }}>
-                      <p style={{ color: '#0A1F6B', fontSize: 14, fontWeight: 600, margin: 0, lineHeight: 1.3 }}>DC Motor Speed Control</p>
-                      <p style={{ color: '#667697', fontSize: 12, margin: 0 }}>MATLAB/Simulink · R2024a</p>
-                    </div>
-                  </div>
-                  <span style={{ padding: '5px 12px', background: '#FFF8E6', color: '#9A5B00', fontSize: 12, borderRadius: 999, border: '1px solid #FCE3B0', fontWeight: 600, whiteSpace: 'nowrap' }}>In Progress</span>
-                </div>
-                <div style={{ marginBottom: 18 }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', color: '#667697', fontSize: 12, marginBottom: 8 }}>
-                    <span>Expert progress</span><span style={{ color: '#0D52CE', fontWeight: 600 }}>73%</span>
-                  </div>
-                  <div style={{ height: 7, background: '#E8F0FC', borderRadius: 99, overflow: 'hidden' }}>
-                    <div style={{ height: '100%', width: '73%', background: '#0D52CE', borderRadius: 99, transition: 'width 1.2s ease' }} />
-                  </div>
-                </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 15px', background: '#F2F6FD', borderRadius: 12, border: '1px solid #DCE3F0', marginBottom: 14 }}>
-                  <div style={{ width: 34, height: 34, borderRadius: '50%', background: '#E37914', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontWeight: 700, fontSize: 12, flexShrink: 0 }}>AK</div>
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <p style={{ color: '#0A1F6B', fontSize: 13, fontWeight: 600, margin: 0 }}>Ahmed K.</p>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                      <StarRow count={5} size={10} />
-                      <span style={{ color: '#667697', fontSize: 12, marginLeft: 2 }}>4.9 · Elite</span>
-                    </div>
-                  </div>
-                  <div style={{ width: 8, height: 8, background: '#1B9B63', borderRadius: '50%', flexShrink: 0 }} />
-                </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, color: '#667697', flexWrap: 'wrap', gap: 8 }}>
-                  <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}><Icon name="clock" size={12} color="#667697" />Est. 4h remaining</span>
-                  <span style={{ color: '#0D52CE', fontWeight: 600 }}>Urgent delivery</span>
-                </div>
-              </div>
-              <div style={{ position: 'absolute', top: -8, right: -8, background: '#1B9B63', color: '#fff', fontSize: 12, fontWeight: 700, padding: '6px 13px 6px 11px', borderRadius: 999, boxShadow: '0 1px 3px rgba(10,31,107,.08)', animation: 'floatY 4s .5s ease-in-out infinite', display: 'flex', alignItems: 'center', gap: 5 }}>
-                <Icon name="check" size={11} color="#fff" strokeWidth={3.2} />QC Passed
-              </div>
-              <div style={{ position: 'absolute', bottom: -8, left: -8, background: '#fff', color: '#0A1F6B', fontSize: 12, fontWeight: 700, padding: '6px 13px', borderRadius: 999, border: '1px solid #DCE3F0', boxShadow: '0 1px 3px rgba(10,31,107,.08)', display: 'flex', alignItems: 'center', gap: 6, animation: 'floatY 5s 1s ease-in-out infinite' }}>
-                <span style={{ width: 7, height: 7, background: '#0D52CE', borderRadius: '50%' }} />1,200+ Projects Delivered
-              </div>
+            <div className="lp-trust lp-anim d4">
+              <span><Check size={16} strokeWidth={3} /> Quality-checked delivery</span>
+              <span><Check size={16} strokeWidth={3} /> NDA mode</span>
+              <span><Check size={16} strokeWidth={3} /> Track every stage</span>
             </div>
           </div>
-        </section>
 
-        {/* MARQUEE */}
-        <div style={{ background: '#F5F7FC', padding: '13px 0', overflow: 'hidden', borderTop: '1px solid #DCE3F0', borderBottom: '1px solid #DCE3F0' }}>
-          <div className="mq" style={{ display: 'flex', width: 'max-content' }}>
-            {[...tools, ...tools].map((t, i) => (
-              <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 18, padding: '0 26px' }}>
-                <span style={{ color: '#5B7DB8', fontSize: 12, fontWeight: 600, whiteSpace: 'nowrap' }}>{t}</span>
-                <span style={{ width: 4, height: 4, background: '#A9C8F0', borderRadius: '50%' }} />
+          <div className="lp-mock-wrap" aria-hidden="true">
+            <div className="lp-mock">
+              <div className="lp-mock-top">
+                <div className="lp-mock-ico"><Cpu size={22} /></div>
+                <div><div className="lp-mock-title">DC Motor Speed Control</div><div className="lp-mock-sub">MATLAB / Simulink · R2024a</div></div>
+                <span className="lp-pill"><i /> In progress</span>
               </div>
+              <div className="lp-bar"><i /></div>
+              <div className="lp-bar-l"><span>Progress</span><b>72%</b></div>
+              <ul className="lp-steps">
+                <li><span className="lp-dot"><Check size={14} strokeWidth={3} /></span> Project received</li>
+                <li><span className="lp-dot"><Check size={14} strokeWidth={3} /></span> Expert assigned</li>
+                <li><span className="lp-dot now"><Activity size={14} /></span> Simulation in progress</li>
+                <li><span className="lp-dot todo"><ShieldCheck size={14} /></span> Quality check</li>
+                <li><span className="lp-dot todo"><Check size={14} strokeWidth={3} /></span> Ready to download</li>
+              </ul>
+            </div>
+            <span className="lp-chip a"><CircleCheck size={16} /> Expert assigned</span>
+            <span className="lp-chip b"><ShieldCheck size={16} /> Reviewed by GSH</span>
+          </div>
+        </div>
+      </section>
+
+      {/* ── Software marquee ── */}
+      <div className="lp-marq" aria-label="Supported software">
+        <div className="lp-marq-lbl">Works with the tools engineers use</div>
+        <div className="lp-marq-mask">
+          <div className="lp-marq-track">
+            {[...SOFTWARE, ...SOFTWARE].map((s, i) => <span key={i} className="lp-sw" aria-hidden={i >= SOFTWARE.length}>{s}</span>)}
+          </div>
+        </div>
+      </div>
+
+      {/* ── Stats ── */}
+      <section className="lp-sec" style={{ paddingBottom: 0 }} aria-label="Platform statistics">
+        <div className="lp-wrap lp-stats">
+          <Stat value={1200} suffix="+" label="Projects delivered" />
+          <Stat value={98} suffix="%" label="Client satisfaction" />
+          <Stat value={47} suffix="" label="Expert engineers" />
+          <Stat value={6} suffix="h" label="Fastest delivery" />
+        </div>
+      </section>
+
+      {/* ── How it works ── */}
+      <section id="how" className="lp-sec" aria-labelledby="how-title">
+        <div className="lp-wrap">
+          <Reveal className="lp-head">
+            <span className="lp-eyebrow">How it works</span>
+            <h2 id="how-title" className="lp-h2">Four steps from brief to results</h2>
+            <p className="lp-lead">No back-and-forth. You describe it once and follow it all the way to delivery.</p>
+          </Reveal>
+          <div className="lp-flow">
+            {STEPS.map((s, i) => (
+              <Reveal key={s.title} delay={i * 110} className="lp-step">
+                <div className="lp-step-ico"><s.icon size={30} strokeWidth={1.7} /><span className="lp-step-n">{i + 1}</span></div>
+                <h3>{s.title}</h3><p>{s.body}</p>
+              </Reveal>
             ))}
           </div>
         </div>
+      </section>
 
-        {/* STATS */}
-        <section ref={statsRef.ref} style={{ padding: 'clamp(44px,7vw,60px) clamp(16px,4vw,24px) clamp(50px,8vw,68px)', background: '#F5F7FC' }}>
-          <div style={{ maxWidth: 900, margin: '0 auto', display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 14 }} className="grid-4">
-            {[
-              { value: c1, suffix: '+', label: 'Projects Delivered' },
-              { value: c2, suffix: '%', label: 'Client Satisfaction' },
-              { value: c3, suffix: '', label: 'Expert Engineers' },
-              { value: c4, suffix: 'h', label: 'Min Delivery Time' },
-            ].map(({ value, suffix, label }) => (
-              <div key={label} className="stcard">
-                <p className="dp" style={{ fontSize: 'clamp(24px,4vw,30px)', fontWeight: 700, color: '#0A1F6B', margin: '0 0 6px', lineHeight: 1 }}>{value}{suffix}</p>
-                <p style={{ color: '#667697', fontSize: 13, margin: 0 }}>{label}</p>
-              </div>
+      {/* ── Features ── */}
+      <section id="features" className="lp-sec alt" aria-labelledby="feat-title">
+        <div className="lp-wrap">
+          <Reveal className="lp-head">
+            <span className="lp-eyebrow">Why GSH</span>
+            <h2 id="feat-title" className="lp-h2">Built for engineers who need it right</h2>
+            <p className="lp-lead">Speed matters, but so do accuracy, privacy and knowing exactly where your project stands.</p>
+          </Reveal>
+          <div className="lp-grid3">
+            {FEATURES.map((f, i) => (
+              <Reveal key={f.title} delay={(i % 3) * 90}>
+                <div className="lp-card">
+                  <div className="lp-card-ico"><f.icon size={23} strokeWidth={1.8} /></div>
+                  <h3>{f.title}</h3><p>{f.body}</p>
+                </div>
+              </Reveal>
             ))}
           </div>
-        </section>
+        </div>
+      </section>
 
-        {/* HOW IT WORKS */}
-        <section style={{ padding: 'clamp(48px,8vw,80px) clamp(16px,4vw,24px)', background: '#F5F7FC' }}>
-          <div style={{ maxWidth: 1100, margin: '0 auto' }}>
-            <Reveal>
-              <div style={{ textAlign: 'center', marginBottom: 42 }}>
-                <span style={{ color: '#B85F00', fontSize: 12, fontWeight: 700, display: 'block', marginBottom: 10 }}>How It Works</span>
-                <h2 className="dp" style={{ fontSize: 'clamp(22px,2.4vw,28px)', fontWeight: 700, color: '#0A1F6B', margin: 0 }}>Four steps to results</h2>
-              </div>
-            </Reveal>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 16 }} className="grid-4">
-              {steps.map((s, i) => (
-                <Reveal key={i} delay={i * 80}>
-                  <div className="scard">
-                    <div className="dp" style={{ fontSize: 'clamp(26px,3.2vw,32px)', fontWeight: 700, background: '#0D52CE', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', lineHeight: 1, marginBottom: 12, opacity: 0.35 }}>{s.n}</div>
-                    <h3 className="dp" style={{ fontSize: 16, fontWeight: 700, color: '#0A1F6B', margin: '0 0 8px' }}>{s.title}</h3>
-                    <p style={{ color: '#4E5E82', fontSize: 14, lineHeight: 1.65, margin: 0 }}>{s.body}</p>
-                    <div style={{ width: 28, height: 3, background: '#0D52CE', borderRadius: 99, marginTop: 16 }} />
-                  </div>
-                </Reveal>
-              ))}
-            </div>
-          </div>
-        </section>
+      {/* ── Simulations showcase (video + picha kutoka backend) ── */}
+      <section id="simulations" className="lp-sec" aria-label="Simulations in action">
+        <div className="lp-wrap"><SimulationShowcase /></div>
+      </section>
 
-        {/* SIMULATIONS — video + picha (data kutoka backend) */}
-        <section id="simulations" style={{ padding: 'clamp(44px,7vw,72px) clamp(16px,4vw,24px)', background: '#F5F7FC', borderTop: '1px solid #DCE3F0' }}>
-          <SimulationShowcase />
-        </section>
-
-        {/* FEATURES */}
-        <section style={{ padding: 'clamp(32px,5vw,44px) clamp(16px,4vw,24px) clamp(32px,5vw,44px)', background: '#F5F7FC', position: 'relative', overflow: 'hidden' }}>
-          <div className="blob" style={{ width: 400, height: 400, background: 'rgba(227,121,20,.08)', top: '-8%', right: '-6%' }} />
-          <div style={{ maxWidth: 1100, margin: '0 auto', position: 'relative' }}>
-            <Reveal>
-              <div style={{ textAlign: 'center', marginBottom: 42 }}>
-                <span style={{ color: '#0A42A8', fontSize: 12, fontWeight: 700, display: 'block', marginBottom: 10 }}>Platform Features</span>
-                <h2 className="dp" style={{ fontSize: 'clamp(22px,2.4vw,28px)', fontWeight: 700, color: '#0A1F6B', margin: 0 }}>Why engineers choose GSH</h2>
-              </div>
-            </Reveal>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 14 }} className="grid-3">
-              {features.map(({ icon, title, body, tint }, i) => (
-                <Reveal key={title} delay={(i % 3) * 80}>
-                  <div className="fcard">
-                    <div className="iconwrap" style={{ background: `${tint}14`, border: `1px solid ${tint}33` }}>
-                      <Icon name={icon} size={19} color={tint} />
-                    </div>
-                    <h3 className="dp" style={{ color: '#0A1F6B', fontWeight: 700, fontSize: 15, margin: '0 0 7px' }}>{title}</h3>
-                    <p style={{ color: '#4E5E82', fontSize: 13, lineHeight: 1.6, margin: 0 }}>{body}</p>
-                  </div>
-                </Reveal>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        {/* TESTIMONIALS */}
-        <section style={{ padding: 'clamp(32px,5vw,44px) clamp(16px,4vw,24px) clamp(32px,5vw,44px)', background: '#F5F7FC' }}>
-          <div style={{ maxWidth: 1100, margin: '0 auto' }}>
-            <Reveal>
-              <div style={{ textAlign: 'center', marginBottom: 40 }}>
-                <span style={{ color: '#0D52CE', fontSize: 12, fontWeight: 700, display: 'block', marginBottom: 10 }}>Client Voices</span>
-                <h2 className="dp" style={{ fontSize: 'clamp(22px,2.4vw,28px)', fontWeight: 700, color: '#0A1F6B', margin: '0 0 10px' }}>Trusted by engineers worldwide</h2>
-                <p style={{ color: '#667697', fontSize: 14, maxWidth: 460, margin: '0 auto' }}>Real results from students and professionals who needed simulations done right.</p>
-              </div>
-            </Reveal>
-
-            <Reveal>
-              <div style={{ background: '#0D52CE', borderRadius: 16, padding: 'clamp(28px,5vw,40px) clamp(20px,5vw,44px)', marginBottom: 24, position: 'relative', overflow: 'hidden' }}>
-                <div className="blob" style={{ width: 240, height: 240, background: 'rgba(227,121,20,.20)', top: '-30%', left: '-6%' }} />
-                <div className="blob" style={{ width: 200, height: 200, background: 'rgba(255,255,255,.14)', bottom: '-40%', right: '4%' }} />
-                <div style={{ position: 'relative', maxWidth: 660, margin: '0 auto', textAlign: 'center' }}>
-                  <Icon name="quote" size={26} color="#F6C48F" />
-                  <p className="dp" style={{ color: '#fff', fontSize: 'clamp(16px,2.1vw,19px)', lineHeight: 1.55, fontWeight: 600, margin: '16px 0 20px' }}>
-                    "{featured.quote}"
-                  </p>
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 12, flexWrap: 'wrap' }}>
-                    <Avatar photo={featured.photo} initials={featured.initials} size={38} gradient="#E37914" />
-                    <div style={{ textAlign: 'left' }}>
-                      <p style={{ color: '#fff', fontWeight: 600, fontSize: 13, margin: 0 }}>{featured.name}</p>
-                      <p style={{ color: 'rgba(255,255,255,.75)', fontSize: 12, margin: 0 }}>{featured.role}</p>
-                    </div>
-                    <StarRow count={featured.rating} color="#F6C48F" />
-                  </div>
-                </div>
-              </div>
-            </Reveal>
-
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 14 }} className="grid-3">
-              {testimonials.slice(1).map((t, i) => (
-                <Reveal key={t.name} delay={i * 90}>
-                  <div className="tcard">
-                    <Icon name="quote" size={18} color="#9CC2F8" />
-                    <p style={{ color: '#2B3A60', fontSize: 14, lineHeight: 1.65, margin: '12px 0 18px' }}>{t.quote}</p>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                      <Avatar photo={t.photo} initials={t.initials} size={34} gradient={i % 2 === 0 ? '#0D52CE' : '#E37914'} />
-                      <div style={{ flex: 1, minWidth: 0 }}>
-                        <p style={{ color: '#0A1F6B', fontWeight: 600, fontSize: 13, margin: 0 }}>{t.name}</p>
-                        <p style={{ color: '#667697', fontSize: 12, margin: 0 }}>{t.role}</p>
-                      </div>
-                    </div>
-                    <div style={{ marginTop: 12 }}><StarRow count={t.rating} /></div>
-                  </div>
-                </Reveal>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        {/* EXPERT LEVELS */}
-        <section style={{ padding: 'clamp(32px,5vw,44px) clamp(16px,4vw,24px) clamp(32px,5vw,44px)', background: '#F5F7FC' }}>
-          <div style={{ maxWidth: 900, margin: '0 auto' }}>
-            <Reveal>
-              <div style={{ textAlign: 'center', marginBottom: 40 }}>
-                <span style={{ color: '#B85F00', fontSize: 12, fontWeight: 700, display: 'block', marginBottom: 10 }}>Expert Tiers</span>
-                <h2 className="dp" style={{ fontSize: 'clamp(22px,2.4vw,28px)', fontWeight: 700, color: '#0A1F6B', margin: '0 0 10px' }}>Ranked by performance</h2>
-                <p style={{ color: '#667697', fontSize: 14, maxWidth: 460, margin: '0 auto' }}>Every expert advances based on completed projects, ratings, and success rate.</p>
-              </div>
-            </Reveal>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 12 }} className="grid-4">
-              {levels.map((l, i) => (
-                <Reveal key={l.label} delay={i * 80}>
-                  <div className="lcard">
-                    <div style={{ width: 44, height: 44, borderRadius: '50%', background: l.color + '14', margin: '0 auto 10px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 1 }}>
-                      <StarRow count={l.stars} size={9} color={l.color} />
-                    </div>
-                    <p className="dp" style={{ fontWeight: 700, color: '#0A1F6B', margin: '0 0 4px', fontSize: 14 }}>{l.label}</p>
-                    <p style={{ color: '#667697', fontSize: 12, margin: '0 0 10px' }}>{l.projects}</p>
-                    <div style={{ height: 5, background: '#E8F0FC', borderRadius: 99, overflow: 'hidden' }}>
-                      <div style={{ height: '100%', width: `${(i + 1) * 25}%`, background: l.color, borderRadius: 99, transition: 'width 1s ease' }} />
-                    </div>
-                  </div>
-                </Reveal>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        {/* CTA */}
-        <section style={{ padding: 'clamp(56px,9vw,84px) clamp(16px,4vw,24px)', background: '#0D52CE', position: 'relative', overflow: 'hidden', textAlign: 'center' }}>
-          <Reveal>
-            <div style={{ position: 'relative', maxWidth: 620, margin: '0 auto' }}>
-              <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: 'rgba(255,255,255,.14)', border: '1px solid rgba(255,255,255,.22)', borderRadius: 999, padding: '6px 16px', marginBottom: 26 }}>
-                <span style={{ width: 7, height: 7, background: '#BFE5CF', borderRadius: '50%', display: 'inline-block' }} />
-                <span style={{ color: 'rgba(255,255,255,.85)', fontSize: 12, fontWeight: 500 }}>Platform live — accepting projects now</span>
-              </div>
-              <h2 className="dp" style={{ fontSize: 'clamp(24px,3.1vw,34px)', fontWeight: 700, color: '#fff', margin: '0 0 16px', lineHeight: 1.15 }}>
-                Ready to get your<br />
-                <span style={{ color: '#F6C48F' }}>simulation done?</span>
-              </h2>
-              <p style={{ color: 'rgba(255,255,255,.85)', fontSize: 14, margin: '0 0 30px', lineHeight: 1.7 }}>No account needed. Describe your project and we'll set everything up automatically.</p>
-              <div style={{ display: 'flex', gap: 14, justifyContent: 'center', flexWrap: 'wrap' }}>
-                <Link to="/submit" className="btncta" style={{ fontSize: 14, padding: '15px 32px', background: '#fff', color: '#0A42A8' }}>
-                  Submit a Project
-                  <Icon name="arrow-right" size={15} color="#0A42A8" />
-                </Link>
-                <Link to="/apply-expert" className="btngl" style={{ fontSize: 14, padding: '15px 28px', background: 'rgba(255,255,255,.1)', color: '#fff', border: '1px solid rgba(255,255,255,.32)' }}>Become an Expert</Link>
-              </div>
-            </div>
+      {/* ── Delivery tiers ── */}
+      <section id="pricing" className="lp-sec alt" aria-labelledby="tier-title">
+        <div className="lp-wrap">
+          <Reveal className="lp-head">
+            <span className="lp-eyebrow">Delivery options</span>
+            <h2 id="tier-title" className="lp-h2">Choose how fast you need it</h2>
+            <p className="lp-lead">Every option includes progress tracking, quality review and a secure download.</p>
           </Reveal>
-        </section>
-
-        {/* FOOTER — a deeper blue anchor at the base of the page */}
-        <footer style={{ background: 'linear-gradient(180deg,#0F2A7E,#0A1F6B)', padding: '48px clamp(16px,4vw,24px) 24px' }}>
-          <div style={{ maxWidth: 1100, margin: '0 auto' }}>
-            <div style={{ display: 'grid', gridTemplateColumns: '280px 1fr', gap: 36, marginBottom: 40 }} className="grid-2">
-              <div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 14 }}>
-                  <GSHLogo size={34} />
-                  <div>
-                    <p className="dp" style={{ color: '#fff', fontWeight: 700, fontSize: 14, margin: 0 }}>Global Simulation Hub</p>
-                    <p style={{ color: '#A9C8F0', fontSize: 12, margin: 0 }}>Engineering excellence, delivered.</p>
-                  </div>
+          <div className="lp-tiers">
+            {TIERS.map((t, i) => (
+              <Reveal key={t.name} delay={i * 110}>
+                <div className={`lp-tier${t.accent ? ' hot' : ''}`}>
+                  {t.accent && <span className="lp-tag">Fastest</span>}
+                  <h3><t.icon size={20} /> {t.name}</h3>
+                  <div className="lp-tier-time">{t.time}</div>
+                  <div className="lp-tier-price">{t.price}</div>
+                  <ul>
+                    <li><Check size={16} strokeWidth={3} /> Verified expert</li>
+                    <li><Check size={16} strokeWidth={3} /> Progress tracking and chat</li>
+                    <li><Check size={16} strokeWidth={3} /> Quality review before delivery</li>
+                  </ul>
+                  <Link to="/submit" className={`lp-btn ${t.accent ? 'lp-white' : 'lp-ghost'}`}>Submit a project <ArrowRight size={16} /></Link>
                 </div>
-                <p style={{ color: '#A9C8F0', fontSize: 13, lineHeight: 1.7, margin: 0 }}>Connecting the world's best simulation engineers with clients who need results — fast, verified, and secure.</p>
-              </div>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 26 }} className="grid-3">
-                {[
-                  { title: 'Platform', links: [['Submit Project', '/submit'], ['Become Expert', '/apply-expert'], ['Login', '/login'], ['Register', '/register']] },
-                  { title: 'Software', links: [['MATLAB/Simulink', '#'], ['Proteus', '#'], ['ANSYS', '#'], ['LabVIEW', '#'], ['PSCAD', '#']] },
-                  { title: 'Delivery', links: [['Express · 6-12h', '#'], ['Urgent · 24h', '#'], ['Standard · Flexible', '#']] },
-                ].map(({ title, links }) => (
-                  <div key={title}>
-                    <p style={{ color: '#fff', fontWeight: 600, fontSize: 13, margin: '0 0 12px' }}>{title}</p>
-                    {links.map(([label, href]) => (
-                      <Link key={label} to={href} style={{ display: 'block', color: '#A9C8F0', fontSize: 12, margin: '0 0 9px', textDecoration: 'none' }}>{label}</Link>
-                    ))}
+              </Reveal>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── Expert levels ── */}
+      <section className="lp-sec" aria-labelledby="lvl-title">
+        <div className="lp-wrap">
+          <Reveal className="lp-head">
+            <span className="lp-eyebrow">For experts</span>
+            <h2 id="lvl-title" className="lp-h2">Grow from Beginner to Elite</h2>
+            <p className="lp-lead">Experts advance by completing projects, earning ratings and delivering on time.</p>
+          </Reveal>
+          <div className="lp-levels">
+            {LEVELS.map((l, i) => (
+              <Reveal key={l.label} delay={i * 90}>
+                <div className="lp-level">
+                  <span className="lp-stars" aria-label={`${l.stars} of 4 stars`}>
+                    {[1, 2, 3, 4].map(n => <Star key={n} size={18} fill="currentColor" className={n <= l.stars ? '' : 'off'} />)}
+                  </span>
+                  <b>{l.label}</b><small>{l.projects}</small>
+                </div>
+              </Reveal>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── Testimonials ── */}
+      <section className="lp-sec alt" aria-labelledby="test-title">
+        <div className="lp-wrap">
+          <Reveal className="lp-head">
+            <span className="lp-eyebrow">Testimonials</span>
+            <h2 id="test-title" className="lp-h2">What engineers say</h2>
+            <p className="lp-lead">Students and professionals who needed their simulations done right.</p>
+          </Reveal>
+          <div className="lp-tgrid">
+            {TESTIMONIALS.map((t, i) => (
+              <Reveal key={t.name} delay={(i % 2) * 110}>
+                <figure className="lp-quote" style={{ margin: 0 }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <Quote size={26} color="#C4DBF1" fill="#C4DBF1" />
+                    <span className="lp-stars" aria-label={`${t.rating} out of 5`}>
+                      {[1, 2, 3, 4, 5].map(n => <Star key={n} size={15} fill="currentColor" className={n <= t.rating ? '' : 'off'} />)}
+                    </span>
                   </div>
-                ))}
-              </div>
-            </div>
-            <div style={{ borderTop: '1px solid rgba(255,255,255,.06)', paddingTop: 20, display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
-              <p style={{ color: '#8DA6D6', fontSize: 12, margin: 0 }}>© {new Date().getFullYear()} Global Simulation Hub. All rights reserved.</p>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
-                <span style={{ width: 7, height: 7, background: '#5BC08C', borderRadius: '50%' }} />
-                <span style={{ color: '#8DA6D6', fontSize: 12 }}>All systems operational</span>
-              </div>
+                  <p>“{t.quote}”</p>
+                  <figcaption className="lp-who">
+                    <span className="lp-ava">
+                      <span aria-hidden>{t.initials}</span>
+                      <img src={t.photo} alt="" loading="lazy" onError={e => { (e.currentTarget as HTMLImageElement).style.display = 'none' }} />
+                    </span>
+                    <span><b>{t.name}</b><small>{t.role}</small></span>
+                  </figcaption>
+                </figure>
+              </Reveal>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── FAQ ── */}
+      <section id="faq" className="lp-sec" aria-labelledby="faq-title">
+        <div className="lp-wrap">
+          <Reveal className="lp-head">
+            <span className="lp-eyebrow">FAQ</span>
+            <h2 id="faq-title" className="lp-h2">Questions, answered</h2>
+          </Reveal>
+          <div className="lp-faq">
+            {FAQ.map((f, i) => {
+              const isOpen = open === i
+              return (
+                <Reveal key={f.q} delay={i * 60}>
+                  <div className={`lp-qa${isOpen ? ' open' : ''}`}>
+                    <button type="button" aria-expanded={isOpen} aria-controls={`faq-${i}`} id={`faq-btn-${i}`} onClick={() => setOpen(isOpen ? null : i)}>
+                      <span>{f.q}</span><ChevronDown size={20} />
+                    </button>
+                    <div className="lp-qa-body" id={`faq-${i}`} role="region" aria-labelledby={`faq-btn-${i}`}>
+                      <div><p>{f.a}</p></div>
+                    </div>
+                  </div>
+                </Reveal>
+              )
+            })}
+          </div>
+        </div>
+      </section>
+
+      {/* ── CTA band ── */}
+      <section className="lp-wrap" aria-label="Get started">
+        <Reveal>
+          <div className="lp-band">
+            <h2>Ready to get your simulation done?</h2>
+            <p>Describe your project, create your account and we take it from there.</p>
+            <div className="lp-cta">
+              <Link to="/submit" className="lp-btn lp-white">Submit a project <ArrowRight size={18} /></Link>
+              <Link to="/apply-expert" className="lp-btn lp-outline-w">Become an expert</Link>
             </div>
           </div>
-        </footer>
-      </div>
-    </>
+        </Reveal>
+      </section>
+
+      {/* ── Footer ── */}
+      <footer className="lp-foot">
+        <div className="lp-wrap">
+          <div className="lp-foot-grid">
+            <div>
+              <div className="lp-foot-brand"><span className="t"><GSHLogo size={30} /></span><span><b>Global Simulation Hub</b><small>Engineering excellence, delivered.</small></span></div>
+              <p>Connecting simulation engineers with clients who need results that are fast, verified and secure.</p>
+            </div>
+            <div><h4>Platform</h4><Link to="/submit">Submit project</Link><Link to="/apply-expert">Become expert</Link><Link to="/login">Login</Link><Link to="/register">Register</Link></div>
+            <div><h4>Explore</h4><a href="#how">How it works</a><a href="#features">Why GSH</a><a href="#simulations">Simulations</a><a href="#faq">FAQ</a></div>
+            <div><h4>Delivery</h4><a href="#pricing">Express · 6–12h</a><a href="#pricing">Urgent · 24h</a><a href="#pricing">Standard · Flexible</a></div>
+          </div>
+          <div className="lp-copy"><span>© {new Date().getFullYear()} Global Simulation Hub. All rights reserved.</span><span>MATLAB · Simulink · Proteus · ANSYS · LabVIEW</span></div>
+        </div>
+      </footer>
+    </div>
   )
 }
