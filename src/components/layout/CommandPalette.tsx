@@ -18,26 +18,33 @@ export default function CommandPalette({ open, onClose, commands }: { open: bool
     return commands.filter(c => `${c.label} ${c.hint || ''} ${c.keywords || ''}`.toLowerCase().includes(s))
   }, [q, commands])
 
-  useEffect(() => { if (open) { setQ(''); setActive(0); setTimeout(() => input.current?.focus(), 30) } }, [open])
+  useEffect(() => { if (open) { setQ(''); setActive(0) } }, [open])
   useEffect(() => { setActive(0) }, [q])
   useEffect(() => { list.current?.children[active]?.scrollIntoView({ block: 'nearest' }) }, [active])
 
+  const choose = (c?: Command) => { if (!c) return; onClose(); setTimeout(c.run, 0) }
+
+  useEffect(() => {
+    if (!open) return
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') { e.preventDefault(); onClose() }
+      else if (e.key === 'ArrowDown') { e.preventDefault(); setActive(a => Math.min(a + 1, Math.max(results.length - 1, 0))) }
+      else if (e.key === 'ArrowUp') { e.preventDefault(); setActive(a => Math.max(a - 1, 0)) }
+      else if (e.key === 'Enter') { e.preventDefault(); choose(results[active]) }
+    }
+    document.addEventListener('keydown', onKey)
+    return () => document.removeEventListener('keydown', onKey)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, results, active])
+
   if (!open) return null
 
-  const choose = (c?: Command) => { if (!c) return; onClose(); setTimeout(c.run, 0) }
-  const onKey = (e: React.KeyboardEvent) => {
-    if (e.key === 'Escape') { e.preventDefault(); onClose() }
-    else if (e.key === 'ArrowDown') { e.preventDefault(); setActive(a => Math.min(a + 1, results.length - 1)) }
-    else if (e.key === 'ArrowUp') { e.preventDefault(); setActive(a => Math.max(a - 1, 0)) }
-    else if (e.key === 'Enter') { e.preventDefault(); choose(results[active]) }
-  }
-
   return (
-    <div className="cmd-overlay" role="dialog" aria-modal="true" aria-label="Command palette" onClick={onClose} onKeyDown={onKey}>
+    <div className="cmd-overlay" role="dialog" aria-modal="true" aria-label="Command palette" onClick={onClose}>
       <div className="cmd-box" onClick={e => e.stopPropagation()}>
         <div className="cmd-input">
           <Search size={18} />
-          <input ref={input} value={q} onChange={e => setQ(e.target.value)} placeholder="Search pages and actions…" aria-label="Search" />
+          <input ref={input} autoFocus value={q} onChange={e => setQ(e.target.value)} placeholder="Search pages and actions…" aria-label="Search" />
           <kbd>Esc</kbd>
         </div>
         <ul ref={list} className="cmd-list" role="listbox">

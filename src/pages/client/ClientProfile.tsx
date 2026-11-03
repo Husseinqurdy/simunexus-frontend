@@ -1,3 +1,4 @@
+import AvatarEditor from '@/components/shared/AvatarEditor'
 import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
@@ -113,9 +114,7 @@ export default function ClientProfile() {
 
       {/* Avatar + email row */}
       <div className="fu" style={{ background:'#fff', borderRadius:16, border:'1px solid #EBEFF8', padding:'20px 24px', marginBottom:16, display:'flex', alignItems:'center', gap:16 }}>
-        <div style={{ width:60, height:60, borderRadius:'50%', background:'linear-gradient(135deg,#0D52CE,#0A1F6B)', display:'flex', alignItems:'center', justifyContent:'center', fontFamily: 'inherit', fontWeight:700, fontSize:24, color:'#fff', flexShrink:0 }}>
-          {(user?.first_name?.[0] || user?.email?.[0] || '?').toUpperCase()}
-        </div>
+        <AvatarEditor avatar={user?.avatar} initials={(user?.first_name?.[0] || user?.email?.[0] || '?').toUpperCase()} size={72} />
         <div style={{ flex:1, minWidth:0 }}>
           <p style={{ fontFamily: 'inherit', fontWeight:700, fontSize:16, color:'#0A1F4D', margin:0 }}>
             {user?.first_name ? `${user.first_name} ${user.last_name}` : 'Set your name below'}

@@ -1,3 +1,4 @@
+import AvatarEditor from '@/components/shared/AvatarEditor'
 import { useState, useEffect, useRef } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { authApi } from '@/api/client'
@@ -22,8 +23,6 @@ type ExpertForm = { bio: string; skills: string[]; is_available: boolean }
 
 export default function ExpertProfile() {
   const qc = useQueryClient()
-  const fileInputRef = useRef<HTMLInputElement>(null)
-  const [avatarPreview, setAvatarPreview] = useState<string | null>(null)
   const [basicForm, setBasicForm] = useState<BasicForm>({ first_name: '', last_name: '', phone: '', whatsapp: '', country: '' })
   const [expertForm, setExpertForm] = useState<ExpertForm>({ bio: '', skills: [], is_available: true })
   const [skillInput, setSkillInput] = useState('')
@@ -66,20 +65,6 @@ export default function ExpertProfile() {
     onError: (e: any) => toast.error(e.response?.data?.detail || 'Failed to update profile.'),
   })
 
-  const avatarMutation = useMutation({
-    mutationFn: (file: File) => {
-      const fd = new FormData()
-      fd.append('avatar', file)
-      return authApi.updateMe(fd)
-    },
-    onSuccess: (res) => {
-      toast.success('Photo updated.')
-      qc.invalidateQueries({ queryKey: ['me'] })
-      useAuthStore.getState().updateUser(res.data as User)
-    },
-    onError: () => toast.error('Failed to upload photo.'),
-  })
-
   // `/auth/profile/expert/` inarudisha ExpertProfile fields TU (sio User
   // mzima), kwa hiyo tunachanganya (merge) na user wa sasa kutoka store
   // kabla ya kuihifadhi — vinginevyo tungefuta first_name/email/n.k.
@@ -99,22 +84,6 @@ export default function ExpertProfile() {
     onError: (e: any) => toast.error(e.response?.data?.detail || 'Failed to update expert profile.'),
   })
 
-  const handleAvatarClick = () => fileInputRef.current?.click()
-
-  const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (!file) return
-
-    const MAX_SIZE_MB = 5
-    if (file.size > MAX_SIZE_MB * 1024 * 1024) {
-      toast.error(`Picha ni kubwa mno. Kiwango cha juu ni ${MAX_SIZE_MB}MB.`)
-      return
-    }
-
-    setAvatarPreview(URL.createObjectURL(file))
-    avatarMutation.mutate(file)
-  }
-
   const addSkill = () => {
     const s = skillInput.trim()
     if (!s) return
@@ -133,7 +102,6 @@ export default function ExpertProfile() {
   const ep = (me as any)?.expert_profile
   const levelCfg = LEVEL_CFG[ep?.level] || LEVEL_CFG.beginner
   const initials = (me?.first_name?.[0] || me?.email?.[0] || '?').toUpperCase()
-  const avatarSrc = avatarPreview ?? me?.avatar ?? undefined
 
   const inp: React.CSSProperties = {
     width: '100%', padding: '10px 13px', borderRadius: 10,
@@ -195,33 +163,7 @@ export default function ExpertProfile() {
       <div className="ep-grid">
         {/* Left column — avatar + summary */}
         <div className="ep-fu" style={{ background: '#fff', borderRadius: 12, border: '1px solid #EBEFF8', padding: 24, textAlign: 'center' }}>
-          <div style={{ position: 'relative', width: 96, height: 96, margin: '0 auto 16px' }}>
-            <div style={{
-              width: 96, height: 96, borderRadius: '50%', overflow: 'hidden',
-              background: 'linear-gradient(135deg,#0A1F6B,#12348C)', display: 'flex',
-              alignItems: 'center', justifyContent: 'center', color: '#fff',
-              fontFamily: 'inherit', fontWeight: 700, fontSize: 32,
-            }}>
-              {avatarSrc
-                ? <img src={avatarSrc} alt="Avatar" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                : initials
-              }
-            </div>
-            <button
-              className="ep-avatar-btn"
-              onClick={handleAvatarClick}
-              disabled={avatarMutation.isPending}
-              style={{
-                position: 'absolute', bottom: -2, right: -2, width: 30, height: 30, borderRadius: '50%',
-                background: '#0D52CE', border: '2.5px solid #fff', display: 'flex', alignItems: 'center',
-                justifyContent: 'center', cursor: 'pointer', color: '#fff',
-              }}
-              title="Change photo"
-            >
-              {avatarMutation.isPending ? <Loader2 size={13} className="ep-spin" /> : <Camera size={13} />}
-            </button>
-            <input ref={fileInputRef} type="file" accept="image/*" onChange={handleAvatarChange} style={{ display: 'none' }} />
-          </div>
+          <div style={{ margin: '0 auto 16px' }}><AvatarEditor avatar={me?.avatar} initials={initials} size={96} /></div>
 
           <p style={{ fontFamily: 'inherit', fontWeight: 700, fontSize: 16, color: '#0A1F4D', margin: '0 0 3px' }}>
             {me?.first_name || me?.last_name ? `${me?.first_name} ${me?.last_name}` : me?.email}

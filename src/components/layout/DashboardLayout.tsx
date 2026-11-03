@@ -90,6 +90,13 @@ function SidebarNav({ groups, onNavigate }: { groups: Group[]; onNavigate: () =>
   )
 }
 
+/** Picha ya mtumiaji; ikishindwa kupakia (kiungo kibovu/offline) inarudi kwenye herufi za jina. */
+function AvatarFace({ src, initials }: { src?: string; initials: string }) {
+  const [failed, setFailed] = useState<string | null>(null)
+  if (src && failed !== src) return <img src={src} alt="" onError={() => setFailed(src)} />
+  return <>{initials}</>
+}
+
 function UserMenu({ onLogout }: { onLogout: () => void }) {
   const { user } = useAuthStore()
   const [open, setOpen] = useState(false)
@@ -111,14 +118,14 @@ function UserMenu({ onLogout }: { onLogout: () => void }) {
   return (
     <div className="user-menu" ref={ref}>
       <button className="user-btn" aria-haspopup="menu" aria-expanded={open} onClick={() => setOpen(o => !o)}>
-        <span className="avatar">{avatar ? <img src={avatar} alt="" /> : initials}</span>
+        <span className="avatar"><AvatarFace src={avatar} initials={initials} /></span>
         <span className="user-meta"><b>{user?.first_name || name}</b><small>{ROLE_LABEL[role]}</small></span>
         <ChevronDown size={16} className="chev" data-open={open} />
       </button>
       {open && (
         <div className="menu-pop" role="menu">
           <div className="menu-head">
-            <span className="avatar lg">{avatar ? <img src={avatar} alt="" /> : initials}</span>
+            <span className="avatar lg"><AvatarFace src={avatar} initials={initials} /></span>
             <div style={{ minWidth: 0 }}>
               <div className="menu-name">{name}</div>
               <div className="menu-mail">{user?.email}</div>

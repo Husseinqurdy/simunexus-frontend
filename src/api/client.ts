@@ -48,6 +48,7 @@ export const authApi = {
   register:            (data: object) => api.post('/auth/register/', data),
   logout:              (refresh: string) => api.post('/auth/logout/', { refresh }),
   me:                  () => api.get('/auth/me/'),
+  removeAvatar:        () => api.delete('/auth/me/avatar/'),
   updateMe: (data: object | FormData) => api.patch('/auth/me/', data),
   setPassword:         (data: object) => api.post('/auth/set-password/', data),
   changePassword:      (data: object) => api.post('/auth/change-password/', data),
